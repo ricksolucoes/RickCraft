@@ -1,25 +1,25 @@
 # Registry de grupos de Specifications
 
-- **Estado do Registry:** PROPOSTA
+- **Estado do Registry:** VIGENTE
 - **Autoridade para aprovação:** responsável pelo projeto
 - **Fonte normativa:** POL-0000000001 — Governança documental; POL-0000000002 — Processo de desenvolvimento orientado por Specification
 - **Finalidade:** propor domínios, códigos e Decision Owners conceituais para organizar futuras Specifications.
 
-Este Registry é uma proposta submetida à aprovação. Seus grupos e Decision Owners não estão vigentes, não autorizam atribuição de IDs `SPEC` nem criação de Specifications funcionais. Os códigos abaixo são candidatos associados às propostas; tornam-se alocações vigentes somente após aprovação deste Registry. Policies permanecem no namespace `POL-` e não pertencem ao grupo 000.
+Este Registry está aprovado e vigente. Os sete grupos e Decision Owners conceituais marcados `VIGENTE` foram aprovados; esta ativação não cria Specifications funcionais nem atribui IDs `SPEC`. Os códigos ativos estão alocados aos respectivos domínios aprovados. Códigos omitidos permanecem não reservados. Policies permanecem no namespace `POL-` e não pertencem ao grupo 000.
 
-## Grupos propostos
+## Grupos vigentes
 
 | Código | Domínio | Responsabilidade | Decision Owner conceitual | Estado | Observações |
 |---|---|---|---|---|---|
-| `000` | Core do RickCraft | Definir o comportamento essencial, o escopo funcional e os contratos transversais do próprio RickCraft quando não houver domínio mais específico. | RickCraft Core Specialist | PROPOSTO | Não é grupo guarda-chuva. Não decide Policies nem substitui o responsável pelo projeto; não assume decisões atribuídas aos domínios especializados. |
-| `002` | Design Patterns | Avaliar necessidade de Pattern, adequação, inadequação, opção por não aplicar Pattern ou necessidade de contexto adicional. | Design Patterns Specialist | PROPOSTO | Decisão técnica exclusiva de seleção e adequação de Patterns; outros domínios podem apontar restrições e pedir reconsideração. |
-| `003` | SOLID | Avaliar conformidade com SRP, OCP, LSP, ISP e DIP e determinar se há violação desses princípios. | SOLID Specialist | PROPOSTO | Pode solicitar reconsideração estrutural, mas não escolhe Pattern, não redefine requisitos e não assume decisões de arquitetura de interfaces. |
-| `004` | Arquitetura de Interfaces | Decidir quando contratos de interface são necessários e definir fronteiras, responsabilidades e composição desses contratos. | Interface Architecture Specialist | PROPOSTO | Abrange a regra genérica de interfaces como contratos; exemplos de clientes/repositórios no README não limitam o domínio a esses conceitos. SOLID avalia conformidade com ISP/DIP. |
-| `005` | Clean Code | Decidir a interpretação de critérios genéricos de legibilidade, clareza, coesão de métodos, Code Smells e simplificação do RickCraft. | Clean Code Specialist | PROPOSTO | Não é proprietário de toda regra apresentada na seção Clean Code do README: convenções Delphi explícitas são verificações normativas, e decisões Delphi específicas cabem a Engenharia Delphi. Não impõe Pattern, redefine SOLID nem altera limites de Toxicity Metrics. |
-| `006` | Engenharia Delphi/Object Pascal | Decidir questões de sintaxe, semântica, recursos, compatibilidade e ecossistema Delphi/Object Pascal; interpretar convenções Delphi vigentes quando sua aplicação for ambígua. | Delphi Engineering Specialist | PROPOSTO | Não precisa executar toda checagem normativa. Prefixos, formatos e estruturas objetivos podem ser verificados por Guards; interpretação de regra Delphi ambígua pertence a este domínio. Não redefine requisitos, Patterns, avaliação SOLID nem arquitetura de interfaces. |
-| `008` | Qualidade e Auditoria | Avaliar conformidade com Policies e artefatos aprovados, consistência entre SPEC/PLAN/TASKS/implementação, rastreabilidade e suficiência das evidências; determinar o resultado do gate segundo critérios vigentes. | Quality Auditor | PROPOSTO | Consome resultados de verificações normativas e análises dos domínios; não precisa executar cada verificação especializada. Pode registrar não conformidade e bloquear avanço, mas encaminha a correção técnica ao Decision Owner responsável. |
+| `000` | Core do RickCraft | Definir o comportamento essencial, o escopo funcional e os contratos transversais do próprio RickCraft quando não houver domínio mais específico. | RickCraft Core Specialist | VIGENTE | Não é grupo guarda-chuva. Não decide Policies nem substitui o responsável pelo projeto; não assume decisões atribuídas aos domínios especializados. |
+| `002` | Design Patterns | Avaliar necessidade de Pattern, adequação, inadequação, opção por não aplicar Pattern ou necessidade de contexto adicional. | Design Patterns Specialist | VIGENTE | Decisão técnica exclusiva de seleção e adequação de Patterns; outros domínios podem apontar restrições e pedir reconsideração. |
+| `003` | SOLID | Avaliar conformidade com SRP, OCP, LSP, ISP e DIP e determinar se há violação desses princípios. | SOLID Specialist | VIGENTE | Pode solicitar reconsideração estrutural, mas não escolhe Pattern, não redefine requisitos e não assume decisões de arquitetura de interfaces. |
+| `004` | Arquitetura de Interfaces | Decidir quando contratos de interface são necessários e definir fronteiras, responsabilidades e composição desses contratos. | Interface Architecture Specialist | VIGENTE | Abrange a regra genérica de interfaces como contratos; exemplos de clientes/repositórios no README não limitam o domínio a esses conceitos. SOLID avalia conformidade com ISP/DIP. |
+| `005` | Clean Code | Decidir a interpretação de critérios genéricos de legibilidade, clareza, coesão de métodos, Code Smells e simplificação do RickCraft. | Clean Code Specialist | VIGENTE | Não é proprietário de toda regra apresentada na seção Clean Code do README: convenções Delphi explícitas são verificações normativas, e decisões Delphi específicas cabem a Engenharia Delphi. Não impõe Pattern, redefine SOLID nem altera limites de Toxicity Metrics. |
+| `006` | Engenharia Delphi/Object Pascal | Decidir questões de sintaxe, semântica, recursos, compatibilidade e ecossistema Delphi/Object Pascal; interpretar convenções Delphi vigentes quando sua aplicação for ambígua. | Delphi Engineering Specialist | VIGENTE | Não precisa executar toda checagem normativa. Prefixos, formatos e estruturas objetivos podem ser verificados por Guards; interpretação de regra Delphi ambígua pertence a este domínio. Não redefine requisitos, Patterns, avaliação SOLID nem arquitetura de interfaces. |
+| `008` | Qualidade e Auditoria | Avaliar conformidade com Policies e artefatos aprovados, consistência entre SPEC/PLAN/TASKS/implementação, rastreabilidade e suficiência das evidências; determinar o resultado do gate segundo critérios vigentes. | Quality Auditor | VIGENTE | Consome resultados de verificações normativas e análises dos domínios; não precisa executar cada verificação especializada. Pode registrar não conformidade e bloquear avanço, mas encaminha a correção técnica ao Decision Owner responsável. |
 
-Códigos omitidos nesta proposta não são reservados. Inclusão, alteração ou aposentadoria futura deve obedecer às Policies vigentes; um código associado a domínio aprovado não poderá representar outro domínio.
+Códigos omitidos neste Registry permanecem não reservados. Inclusão, alteração ou aposentadoria futura deve obedecer às Policies vigentes; um código associado a domínio aprovado não poderá representar outro domínio.
 
 ## Matriz de decisão e participação
 
@@ -55,14 +55,14 @@ O Quality Auditor possui autoridade sobre o resultado de auditoria/gate, não so
 | `010` Plugin | Adiado | Tecnologia/forma potencial de distribuição, sem responsabilidade atual demonstrada no estado local. |
 | `011` MCP / Tools | Adiado | Tecnologia ou mecanismo potencial; não há necessidade concreta nem autoridade de domínio atual demonstrada. |
 | `012` Evals | Adiado | Método potencial de avaliação. Quality/Audit já cobre a decisão de conformidade e evidência; não há responsabilidade decisória independente de Evals comprovada agora. |
-| `008` Qualidade / Auditoria | Mantido com escopo limitado | Apesar da hipótese reunir conceitos amplos, a responsabilidade distinta de avaliar conformidade, evidência e gates existe no processo vigente. O grupo proposto não toma decisões técnicas de remediação. |
+| `008` Qualidade / Auditoria | Mantido com escopo limitado | Apesar da hipótese reunir conceitos amplos, a responsabilidade distinta de avaliar conformidade, evidência e gates existe no processo vigente. O grupo vigente não toma decisões técnicas de remediação. |
 | `005` Clean Code | Mantido com fronteira genérica | É um dos pilares explícitos do README e possui critérios próprios de clareza, coesão, Code Smells e análise de métodos. As convenções de linguagem continuam com Engenharia Delphi. |
 
 ## Fundamento local
 
-O `README_PTBr.md` identifica quatro pilares — Design Patterns, SOLID, Programação Orientada a Interfaces e Clean Code — e descreve a finalidade do RickCraft em governança técnica, arquitetura, qualidade e engenharia Delphi/Object Pascal. Também define regras de interfaces, convenções Delphi, limites de Toxicity Metrics, análise crítica e o papel de justificativas arquiteturais. Esses fatos fundamentam os domínios propostos, sem converter exemplos específicos em regras de domínio.
+O `README_PTBr.md` identifica quatro pilares — Design Patterns, SOLID, Programação Orientada a Interfaces e Clean Code — e descreve a finalidade do RickCraft em governança técnica, arquitetura, qualidade e engenharia Delphi/Object Pascal. Também define regras de interfaces, convenções Delphi, limites de Toxicity Metrics, análise crítica e o papel de justificativas arquiteturais. Esses fatos fundamentam os domínios aprovados, sem converter exemplos específicos em regras de domínio.
 
-O README não especifica uma arquitetura final de agentes nem proprietários executáveis. Os nomes de Decision Owners acima são papéis conceituais propostos, não agentes implementados.
+O README não especifica uma arquitetura final de agentes nem proprietários executáveis. Os nomes de Decision Owners acima são papéis conceituais aprovados, não agentes implementados.
 
 ## Auditoria de cobertura das regras do README
 
@@ -114,4 +114,4 @@ A responsabilidade por verificar pode ser automatizada ou executada por uma ferr
 Não foi identificada família atual de regras com decisão própria coesa que falhe nos critérios para novo grupo. Não se propõe Decision Owner adicional. As fronteiras entre Clean Code, Engenharia Delphi, Arquitetura de Interfaces e Auditoria ficam mais explícitas nesta revisão; nenhum Guard é implementado ou aprovado.
 ## Aprovação e uso
 
-Todos os grupos e Decision Owners deste Registry estão `PROPOSTO`. A aprovação do responsável pelo projeto deve mudar o estado do Registry e dos grupos aprovados para `VIGENTE`, mantendo o artefato e o registro consistentes. Somente então os códigos aprovados podem ser usados para atribuir IDs de Specifications. Grupos não aprovados continuam sem alocação; nenhuma Specification funcional é criada por este Registry.
+O Registry e os sete grupos listados estão `VIGENTE`; seus Decision Owners conceituais estão formalizados. Os códigos omitidos não estão reservados nem alocados. A aprovação deste Registry não cria uma Specification funcional nem atribui um ID `SPEC`; isso depende de autorização própria para iniciar uma unidade SDD.

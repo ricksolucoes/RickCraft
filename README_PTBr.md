@@ -10,9 +10,12 @@
 
 </div>
 
-🌐 Idioma: Português | [English](README.md)
+Idioma: Português | [English](README.md)
+<div align="right">
 
----
+[Ver Sumário](#sumário)
+
+</div>
 
 ## Sobre o RickCraft
 
@@ -899,6 +902,75 @@ O objetivo final do RickCraft não é produzir código sofisticado.
 - simples quando possível;
 - consistente com o restante do projeto;
 - sustentável ao longo do tempo.
+
+---
+
+## Sumário
+
+- [Sobre o RickCraft](#sobre-o-rickcraft)
+- [Objetivos](#objetivos)
+- [Pilares Técnicos](#pilares-técnicos)
+- [1. Design Patterns](#1-design-patterns)
+  - [Padrões Criacionais](#padrões-criacionais)
+    - [Factory Method](#factory-method)
+    - [Abstract Factory](#abstract-factory)
+    - [Builder](#builder)
+    - [Prototype](#prototype)
+    - [Singleton](#singleton)
+  - [Padrões Estruturais](#padrões-estruturais)
+    - [Adapter](#adapter)
+    - [Bridge](#bridge)
+    - [Composite](#composite)
+    - [Decorator](#decorator)
+    - [Facade](#facade)
+    - [Flyweight](#flyweight)
+    - [Proxy](#proxy)
+  - [Padrões Comportamentais](#padrões-comportamentais)
+    - [Chain of Responsibility](#chain-of-responsibility)
+    - [Command](#command)
+    - [Interpreter](#interpreter)
+    - [Iterator](#iterator)
+    - [Mediator](#mediator)
+    - [Memento](#memento)
+    - [Observer](#observer)
+    - [State](#state)
+    - [Strategy](#strategy)
+    - [Template Method](#template-method)
+    - [Visitor](#visitor)
+- [2. Princípios SOLID](#2-princípios-solid)
+  - [S — Single Responsibility Principle (SRP)](#s--single-responsibility-principle-srp)
+  - [O — Open/Closed Principle (OCP)](#o--openclosed-principle-ocp)
+  - [L — Liskov Substitution Principle (LSP)](#l--liskov-substitution-principle-lsp)
+  - [I — Interface Segregation Principle (ISP)](#i--interface-segregation-principle-isp)
+  - [D — Dependency Inversion Principle (DIP)](#d--dependency-inversion-principle-dip)
+- [3. Programação Orientada a Interfaces](#3-programação-orientada-a-interfaces)
+  - [Contrato e Implementação Básicos](#contrato-e-implementação-básicos)
+  - [Dependência Entre Interfaces e Retorno ao Contexto Anterior](#dependência-entre-interfaces-e-retorno-ao-contexto-anterior)
+    - [Relação com Inversão de Dependência](#relação-com-inversão-de-dependência)
+- [4. Clean Code](#4-clean-code)
+  - [Convenção de Nomenclatura Delphi](#convenção-de-nomenclatura-delphi)
+  - [Declaração de Variáveis](#declaração-de-variáveis)
+  - [Regra para Constantes](#regra-para-constantes)
+  - [Enumerados com Escopo](#enumerados-com-escopo)
+  - [Criação de Classes por New](#criação-de-classes-por-new)
+  - [Métodos Curtos e Coesos](#métodos-curtos-e-coesos)
+  - [Method Toxicity Metrics](#method-toxicity-metrics)
+    - [Function Length — 20](#function-length--20)
+    - [Parameter Count — 6](#parameter-count--6)
+    - [If Depth — 5](#if-depth--5)
+    - [Cyclomatic Complexity — 6](#cyclomatic-complexity--6)
+    - [Aplicação pelo RickCraft](#aplicação-pelo-rickcraft)
+- [Postura de Revisão do RickCraft](#postura-de-revisão-do-rickcraft)
+- [Protocolo de Resposta](#protocolo-de-resposta)
+  - [1. Análise Crítica](#1-análise-crítica)
+  - [2. Refatoração RickCraft](#2-refatoração-rickcraft)
+  - [3. Justificativa Arquitetural](#3-justificativa-arquitetural)
+- [Evitar Overengineering](#evitar-overengineering)
+- [Uso com Inteligência Artificial](#uso-com-inteligência-artificial)
+- [Resultado Esperado](#resultado-esperado)
+- [Licença](#licença)
+- [Idiomas](#idiomas)
+- [RickCraft](#rickcraft)
 
 ---
 

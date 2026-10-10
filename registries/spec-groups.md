@@ -3,7 +3,7 @@
 - **Estado do Registry:** VIGENTE
 - **Autoridade para aprovação:** responsável pelo projeto
 - **Fonte normativa:** POL-0000000001 — Governança documental; POL-0000000002 — Processo de desenvolvimento orientado por Specification
-- **Finalidade:** propor domínios, códigos e Decision Owners conceituais para organizar futuras Specifications.
+- **Finalidade:** registrar os domínios, códigos e Decision Owners conceituais vigentes utilizados para organizar futuras Specifications.
 
 Este Registry está aprovado e vigente. Os sete grupos e Decision Owners conceituais marcados `VIGENTE` foram aprovados; esta ativação não cria Specifications funcionais nem atribui IDs `SPEC`. Os códigos ativos estão alocados aos respectivos domínios aprovados. Códigos omitidos permanecem não reservados. Policies permanecem no namespace `POL-` e não pertencem ao grupo 000.
 

@@ -10,11 +10,11 @@
 
 ## Estado atual
 
-- **Etapa atual:** ANALYZE
+- **Etapa atual:** TASKS
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
-- **ANALYZE:** FAIL
+- **ANALYZE:** INVALIDATED
 - **IMPLEMENT:** NOT_STARTED
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** Nenhum
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `EDEB0FD50798298BFD8F6963F10A14B68B3973FEDE47A406ADC07759948E1D94` | Fatiamento de 13 tarefas preservado; redação de TASK-013 sincronizada com a ordem ANALYZE pré-IMPLEMENT e CONVERGE pós-evidências; TASK-012 e CA-015 delimitam pt-BR no Debug e Release inglês somente após autorização explícita, sem gerar conteúdo de Release. Verificações planejadas, não executadas. TASKS COMPLETE não é ANALYZE PASS e não autoriza IMPLEMENT. |
+| `tasks.md` | COMPLETE | SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8` | 13 tarefas preservadas. TASK-002 e TASK-008 explicitam a reavaliação D-04 no início das operações e antes de cada tentativa de publicação, incluindo mudanças de raiz, `workspace_root_kind` e colisões. ANALYZE anterior foi invalidado por esta alteração material. Verificações planejadas, não executadas. |
 
 ## Histórico de estado
 
@@ -52,14 +52,20 @@
 | 2026-10-10 | TASKS | COMPLETE | Corrigida a distinção entre a avaliação pré-IMPLEMENT de ANALYZE e a avaliação posterior de evidências por CONVERGE; ajustada a fronteira de idioma/Release em TASK-012 e CA-015. Nenhuma nova arquitetura ou aprovação foi criada. Nova referência de `tasks.md` registrada acima; ANALYZE, IMPLEMENT e CONVERGE permanecem NOT_STARTED. Nenhum teste, sonda, implementação ou Release foi executado/produzido. |
 | 2026-10-10 | ANALYZE | IN_PROGRESS | Início autorizado do gate sobre as versões exatas registradas na tabela de artefatos. Execução `ANALYZE-2026-10-10-SPEC-0000000001-01`; escopo: consistência SPEC/PLAN/TASKS, cobertura RF/CA/D, origem e dependências das tarefas, fronteiras de estágio, D-02, publicação, proveniência, autoridade e limites Debug/Release. IMPLEMENT permaneceu NOT_STARTED. |
 | 2026-10-10 | ANALYZE | FAIL | Gate concluído sobre SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `EDEB0FD50798298BFD8F6963F10A14B68B3973FEDE47A406ADC07759948E1D94`. Foi identificado um achado bloqueante de cobertura de D-04 em TASKS: a reavaliação da raiz preferencial antes de cada publicação não está explicitada. RF e CA possuem cobertura/estratégias identificadas; demais decisões D-01–D-03 e D-05–D-14 estão cobertas. IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece Nenhum. Nenhum teste de IMPLEMENT ou D-02 foi executado. |
+| 2026-10-10 | TASKS | IN_PROGRESS | Início da correção material do achado `ANALYZE-001` em TASKS, execução de origem `ANALYZE-2026-10-10-SPEC-0000000001-01`. Versão de entrada de `tasks.md`: SHA-256 `EDEB0FD50798298BFD8F6963F10A14B68B3973FEDE47A406ADC07759948E1D94`. A alteração limita-se à resolução recorrente da raiz e ao fluxo de publicação; SPEC e PLAN permanecem inalterados. |
+| 2026-10-10 | TASKS | COMPLETE | TASK-002 e TASK-008 agora cobrem explicitamente D-04 antes de cada publicação e nova tentativa, mudanças de prioridade, erros desconhecidos, metadados `workspace_root_kind` e coerência de temporário/destino após colisão. Nova versão de `tasks.md`: SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. Por alteração material da entrada TASKS, o resultado ANALYZE da execução `ANALYZE-2026-10-10-SPEC-0000000001-01`, originalmente FAIL para o hash anterior, passa a INVALIDATED; o FAIL permanece como histórico e requer novo gate. Nenhum novo ANALYZE foi iniciado. IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece Nenhum. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** Corrigir o achado `ANL-001` no artefato proprietário TASKS e executar novamente ANALYZE sobre versões COMPLETE e verificáveis.
-- **Etapas invalidadas:** Nenhuma etapa posterior a TASKS foi iniciada. A versão COMPLETE anterior de PLAN foi invalidada pela revisão material; a versão atual está COMPLETE e aprovada explicitamente pelo responsável em 2026-10-10, conforme SHA-256 registrado acima. TASKS está COMPLETE conforme a versão registrada acima. O resultado atual de ANALYZE é FAIL e não constitui gate válido para IMPLEMENT.
+- **Mudanças pendentes:** A correção de TASKS para `ANALYZE-001` foi materializada; aguarda confirmação por nova execução de ANALYZE sobre o hash atual de TASKS.
+- **Etapas invalidadas:** Nenhuma etapa posterior a TASKS foi iniciada. A versão COMPLETE anterior de PLAN foi invalidada pela revisão material; a versão atual está COMPLETE e aprovada explicitamente pelo responsável em 2026-10-10, conforme SHA-256 registrado acima. TASKS está COMPLETE conforme a versão registrada acima. O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01`, feito sobre o hash anterior de TASKS, está INVALIDATED pela alteração material e permanece no histórico; não é gate válido para IMPLEMENT.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. A sonda D-02 continua sendo critério operacional obrigatório antes de usar cada raiz; a prova auxiliar em TEMP foi inconclusiva por restrição de acesso do ambiente desta sessão.
-- **Bloqueios:** `ANALYZE-001` — D-04 requer reavaliar a raiz preferencial antes de cada publicação. TASKS não explicita essa verificação como pré-condição do publicador; ver evidência detalhada abaixo. O resultado da sonda D-02 continua determinando operacionalmente se cada raiz pode ser usada e se o fallback normativo se aplica; falha desconhecida bloqueia a operação afetada. D-02 não foi executada nesta análise.
-- **Próxima autorização necessária:** Corrigir somente a cobertura de D-04 em TASKS e executar novamente ANALYZE após registrar a nova versão verificável; ANALYZE FAIL não autoriza IMPLEMENT.
+- **Bloqueios:** Nenhum novo bloqueio identificado nesta correção. `ANALYZE-001` foi corrigido no artefato proprietário e aguarda confirmação por novo ANALYZE; D-02 continua sendo verificação operacional futura obrigatória antes do uso de cada raiz e não foi executada.
+- **Próxima autorização necessária:** Revisar a correção publicada e, posteriormente, autorizar nova execução de ANALYZE sobre a versão atual de SPEC, PLAN e TASKS.
+
+## Validade do ANALYZE anterior
+
+A seção de evidência abaixo registra a execução `ANALYZE-2026-10-10-SPEC-0000000001-01` e seu resultado FAIL sobre TASKS SHA-256 `EDEB0FD50798298BFD8F6963F10A14B68B3973FEDE47A406ADC07759948E1D94`. Esse resultado permanece legítimo como histórico da versão analisada, mas está INVALIDATED após a mudança material para TASKS SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. A correção de TASKS não declara `ANALYZE-001` aprovado/resolvido pelo gate; isso depende de novo ANALYZE.
 
 ## Evidência do ANALYZE
 

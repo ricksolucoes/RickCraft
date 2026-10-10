@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `31F053C159012019D3D10D838DF97D69376F1434A5509977134C7BE7A1971889` | Fatiamento revisado contra a SPEC aprovada e o PLAN aprovado; matrizes cobrem RF-001–RF-014, CA-001–CA-015 e D-01–D-14. Inclui verificações planejadas, não executadas. TASKS COMPLETE não é ANALYZE PASS e não autoriza IMPLEMENT. |
+| `tasks.md` | COMPLETE | SHA-256 `EDEB0FD50798298BFD8F6963F10A14B68B3973FEDE47A406ADC07759948E1D94` | Fatiamento de 13 tarefas preservado; redação de TASK-013 sincronizada com a ordem ANALYZE pré-IMPLEMENT e CONVERGE pós-evidências; TASK-012 e CA-015 delimitam pt-BR no Debug e Release inglês somente após autorização explícita, sem gerar conteúdo de Release. Verificações planejadas, não executadas. TASKS COMPLETE não é ANALYZE PASS e não autoriza IMPLEMENT. |
 
 ## Histórico de estado
 
@@ -48,6 +48,8 @@
 | 2026-10-10 | Correção documental do status | Registrada | Sincronizadas as referências atuais à aprovação já registrada; nenhuma nova decisão ou aprovação foi concedida. |
 | 2026-10-10 | TASKS | IN_PROGRESS | Início explicitamente autorizado pelo responsável para decompor a versão aprovada de SPEC e PLAN. Hash de entrada do PLAN confirmado: `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. ANALYZE, IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece Nenhum. |
 | 2026-10-10 | TASKS | COMPLETE | Decomposição concluída em 13 tarefas ordenadas, com rastreabilidade de todos os RF, CA e decisões aplicáveis do PLAN. Versão de `tasks.md`: SHA-256 `31F053C159012019D3D10D838DF97D69376F1434A5509977134C7BE7A1971889`. Nenhum teste, ANALYZE ou IMPLEMENT foi executado. |
+| 2026-10-10 | TASKS | IN_PROGRESS | Início da correção autorizada de lifecycle e fronteira de Release; escopo limitado à redação de TASK-012, TASK-013 e CA-015. As 13 tarefas, arquitetura e dependências foram preservadas. Nenhum teste ou implementação foi executado. |
+| 2026-10-10 | TASKS | COMPLETE | Corrigida a distinção entre a avaliação pré-IMPLEMENT de ANALYZE e a avaliação posterior de evidências por CONVERGE; ajustada a fronteira de idioma/Release em TASK-012 e CA-015. Nenhuma nova arquitetura ou aprovação foi criada. Nova referência de `tasks.md` registrada acima; ANALYZE, IMPLEMENT e CONVERGE permanecem NOT_STARTED. Nenhum teste, sonda, implementação ou Release foi executado/produzido. |
 
 ## Pendências e invalidações
 

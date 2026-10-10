@@ -169,11 +169,11 @@
 - **Origem no PLAN:** D-14; seções 10, 11, 12, 13 e 14; POL-0000000003.
 - **Dependências:** TASK-001, TASK-003, TASK-008, TASK-010, TASK-011.
 - **Artefatos/componentes previstos:** Fixtures temporárias de inventário/manifesto; testes com interfaces externas observadas por doubles/spies.
-- **Trabalho autorizado:** Verificar a lista positiva dos arquivos estáticos necessários em fixture de pacote e exclusão defensiva de `.workspace/**`, inclusive fallback fisicamente sob `RickCraftRoot`; verificar que o protocolo não invoca Git add/commit/push, rede, upload ou sincronização. Confirmar pt-BR nos artefatos internos Debug e conformidade do conteúdo operacional distribuível futuro com a regra de inglês da Policy quando aplicável ao inventário-fixture.
-- **Verificações/testes previstos:** Workspace preferencial e fallback ausentes do inventário; hooks/spies de Git, rede, upload e sync sem chamadas; nenhuma geração de Release real; sem duplicação automática pt-BR/inglês do mesmo artefato operacional.
+- **Trabalho autorizado:** Verificar a lista positiva dos arquivos estáticos necessários em fixture de classificação e exclusão de `.workspace/**`, inclusive fallback fisicamente sob `RickCraftRoot`; verificar que o protocolo não invoca Git add/commit/push, rede, upload ou sincronização. Confirmar que a documentação interna/Debug permanece em pt-BR, sem conversão antecipada para inglês nem duplicatas automáticas. A obrigação de produzir conteúdo operacional distribuível em inglês permanece condicionada à autorização explícita futura de Release, conforme POL-0000000003; esta tarefa não materializa conteúdo de Release.
+- **Verificações/testes previstos:** Workspace preferencial e fallback ausentes do inventário-fixture; hooks/spies de Git, rede, upload e sync sem chamadas; nenhuma geração de Release real nem conteúdo operacional em inglês para simulá-lo; sem duplicação automática pt-BR/inglês do mesmo artefato operacional; fixture verifica somente classificação e exclusões, sem materializar conteúdo de Release.
 - **Evidência esperada:** Manifestos-fixture e resultados de spies; registro explícito de que Release real não foi produzido.
-- **Critérios de conclusão:** Estado operacional `.workspace` é excluído das duas localizações; persistência local não publica dados; fronteira de idioma Debug/Release segue POL-0000000003.
-- **Exclusões/limites:** Não implementar empacotador/Release, publicar ou enviar dados, ou traduzir os artefatos SDD internos.
+- **Critérios de conclusão:** Estado operacional `.workspace` é excluído das duas localizações; persistência local não publica dados; artefatos internos/Debug permanecem em pt-BR, sem conversão prematura nem duplicação automática; a futura obrigação de inglês permanece subordinada à POL-0000000003 e à autorização explícita de Release.
+- **Exclusões/limites:** Não implementar empacotador/Release, produzir conteúdo operacional de Release em inglês, traduzir ou duplicar os artefatos SDD internos, publicar ou enviar dados.
 
 ### TASK-013 — Executar suíte de integração, regressão e cobertura dos critérios
 
@@ -185,7 +185,7 @@
 - **Trabalho autorizado:** Integrar os testes já previstos nas tarefas; cobrir fluxos de criação, persistência, recuperação, comparação, falha e continuidade; executar em contexto novo sem memória compartilhada; registrar versões das entradas, resultados, falhas e limitações. Executar as validações tecnicamente disponíveis no ambiente IMPLEMENT sem declarar prova que não foi produzida.
 - **Verificações/testes previstos:** Matriz CA-001–CA-015; rastreabilidade requisito/decisão/tarefa; teste concorrente e colisões controladas; preservação de histórico; recuperação interexecução; falhas de sonda/fallback; exclusões de publicação; regressão dos documentos anteriores. A raiz real somente pode ser usada se sua sonda D-02 passar; teste-fixture não substitui esse resultado.
 - **Evidência esperada:** Resultados individualizados por CA, entradas/versões, logs determinísticos e referências reproduzíveis; resultados negativos preservados; matriz final de cobertura.
-- **Critérios de conclusão:** Todos os critérios aplicáveis possuem evidência ou limitação/bloqueio explícito; nenhum sucesso é inferido de ausência de erro; a evidência está pronta para avaliação por ANALYZE/CONVERGE nas etapas próprias.
+- **Critérios de conclusão:** Todos os critérios aplicáveis possuem evidência ou limitação/bloqueio explícito; nenhum sucesso é inferido de ausência de erro. Antes de IMPLEMENT, ANALYZE avaliará a consistência, cobertura e suficiência das TASKS e da estratégia de evidências planejada; não avaliará resultados de testes ainda não executados. Os resultados reais produzidos por esta TASK durante IMPLEMENT serão entradas para a avaliação posterior de CONVERGE. Esta TASK não produz evidência retroativamente para ANALYZE.
 - **Exclusões/limites:** Esta TASKS não executa os testes. Esta tarefa futura não declara PASS de ANALYZE ou CONVERGED; não inicia etapas/gates por si só.
 
 ## Matriz de rastreabilidade RF → decisão do PLAN → TASK
@@ -225,7 +225,7 @@
 | CA-012 | TASK-006, TASK-009, TASK-011 | Fonte normativa prevalece sobre documento de workspace conflitante; divergência fica evidenciada. |
 | CA-013 | TASK-012 | Manifesto-fixture exclui `.workspace` preferencial e fallback interno. |
 | CA-014 | TASK-012 | Spies comprovam ausência de chamadas externas/Git; inventário e evidência localizados. |
-| CA-015 | TASK-012, TASK-013 | Revisão dos artefatos internos pt-BR e fixture do conteúdo runtime distribuível conforme POL-0000000003. |
+| CA-015 | TASK-012, TASK-013 | Verificar documentação interna/Debug em pt-BR, ausência de conversão prematura para inglês e de duplicatas automáticas; registrar que inglês para conteúdo operacional distribuível só será exigido após autorização explícita de Release conforme POL-0000000003. Não gerar conteúdo de Release nesta unidade. |
 
 ## Cobertura das decisões D-01 a D-14
 

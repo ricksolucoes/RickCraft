@@ -41,7 +41,11 @@ O responsável pelo projeto é a autoridade de aprovação das Policies e de dec
 
 Cada Policy deve declarar escopo, autoridade de aprovação e dependências. Uma Policy não pode alterar silenciosamente outra Policy, uma Specification aprovada ou decisão cujo proprietário seja outro domínio.
 
-Em caso de conflito, prevalece nesta ordem: decisão explícita do responsável pelo projeto; Policy aprovada de escopo mais específico; Policy aprovada de escopo geral; documentos não normativos. Uma Policy não pode sobrepor decisão explícita posterior do responsável. Conflitos entre Policies de mesmo nível são questão em aberto até resolução explícita; não devem ser resolvidos por interpretação silenciosa.
+Uma Policy somente pode restringir, especializar ou substituir regra de outra Policy quando a relação estiver explicitamente declarada em ambas as Policies ou na Policy que estabelece a relação, com referência às cláusulas afetadas, escopo, autoridade que aprovou e condições da relação. Não se presume precedência pela especificidade aparente do escopo, data, nome ou interpretação de quem executa.
+
+Se duas Policies `VIGENTE` forem incompatíveis e não houver relação explícita autorizada que resolva o conflito, a unidade afetada fica `BLOQUEADA` até decisão do responsável pelo projeto. Nenhum agente ou executor escolhe qual regra seguir.
+
+O responsável pelo projeto pode decidir uma mudança normativa. Para governar execuções futuras em caráter permanente, a decisão deve ser incorporada à Policy ou ao artefato normativo correspondente antes de ser aplicada. Uma exceção restrita a uma unidade SDD deve ser registrada no `status.md` dessa unidade, identificando autoridade, data, escopo, regra afetada, decisão, justificativa e referências aos artefatos impactados; ela não altera a regra geral. Uma conversa ou memória de agente, isoladamente, não constitui fonte normativa persistente.
 
 ## 5. Ciclo de vida
 
@@ -53,6 +57,8 @@ Estados controlados: `PROPOSTA`, `VIGENTE`, `SUBSTITUÍDA` e `APOSENTADA`.
 - `APOSENTADA`: deixou de ser aplicável sem sucessor direto.
 
 A aprovação, alteração, substituição ou aposentadoria deve ser autorizada pelo responsável pelo projeto ou por autoridade formalmente delegada. A alteração mantém o ID, registra a mudança e identifica impactos em documentos dependentes. IDs aposentados não são reutilizados.
+
+Na aprovação, o estado da Policy e sua entrada em `registries/policies.md` devem mudar de `PROPOSTA` para `VIGENTE` e permanecer consistentes. A aprovação só é efetiva para execuções após ambos os registros refletirem `VIGENTE`. Se houver divergência, o estado é inválido para uso normativo e a aplicação da Policy fica `BLOQUEADA` até sincronização pela autoridade competente. O mesmo requisito de consistência aplica-se a mudanças posteriores de estado.
 
 ## 6. Registry de Policies
 

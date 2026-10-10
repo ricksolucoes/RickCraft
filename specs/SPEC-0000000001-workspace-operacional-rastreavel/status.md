@@ -24,7 +24,7 @@
 
 | Artefato | Estado | Referência verificável | Observação |
 |---|---|---|---|
-| `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; pronta para revisão/aprovação. |
+| `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | NOT_STARTED | Sem versão | Ausência válida enquanto PLAN não iniciar. |
 | `tasks.md` | NOT_STARTED | Sem versão | Ausência válida enquanto TASKS não iniciar. |
 

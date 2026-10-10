@@ -1,19 +1,20 @@
 <div align="center">
 
-<h1>🛠️ RickCraft (Skill) — Governança Técnica & Arquitetura Delphi</h1>
+# RickCraft (Skill) — Governança Técnica & Arquitetura Delphi
 
 [![Delphi](https://img.shields.io/badge/Delphi-Object%20Pascal-red?logo=delphi)](https://www.embarcadero.com/products/delphi)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20%26%20SOLID-blue)](#-pilares-técnicos)
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20%26%20SOLID-blue)](#pilares-tecnicos)
 [![Design Patterns](https://img.shields.io/badge/Design%20Patterns-GoF-purple)](#1-design-patterns)
-[![AI Skill](https://img.shields.io/badge/AI-Skill-green)](#-sobre-o-rickcraft)
+[![AI Skill](https://img.shields.io/badge/AI-Skill-green)](#sobre-o-rickcraft)
 [![License](https://img.shields.io/badge/License-MIT%20LICENSE-lightgrey)](LICENSE)
 
 </div>
 
-🌐 **Idioma:** 🇧🇷 Português | [🇺🇸 English](README.md)
+🌐 Idioma: Português | [English](README.md)
 
+---
 
-## 📖 Sobre o RickCraft
+## Sobre o RickCraft
 
 **RickCraft** é uma skill especializada em **governança técnica, arquitetura de software, qualidade de código e engenharia Delphi/Object Pascal**.
 
@@ -26,7 +27,7 @@ Seu objetivo é atuar como uma camada de governança para desenvolvimento assist
 - criação de novas classes e interfaces;
 - aplicação de padrões de projeto;
 - avaliação de acoplamento e responsabilidades;
-- identificação de *Code Smells*;
+- identificação de **Code Smells**;
 - manutenção e evolução de sistemas Delphi.
 
 O RickCraft não deve simplesmente gerar código que compile.
@@ -35,38 +36,25 @@ O código produzido ou revisado deve buscar **clareza, baixo acoplamento, alta c
 
 Este repositório funciona como uma **fonte técnica de referência** para as regras e princípios utilizados pela skill.
 
+---
 
-
-## 🎯 Objetivos
+## Objetivos
 
 O RickCraft foi projetado para auxiliar na manutenção de um padrão arquitetural consistente em projetos Delphi.
 
 Seus principais objetivos são:
 
-- **Garantir consistência arquitetural**  
-  Manter padrões técnicos previsíveis independentemente de quem escreveu ou gerou o código.
+- **Garantir consistência arquitetural:** manter padrões técnicos previsíveis independentemente de quem escreveu ou gerou o código.
+- **Promover baixo acoplamento:** reduzir dependências desnecessárias entre classes, módulos e camadas.
+- **Aumentar a coesão:** manter cada unidade de código concentrada em responsabilidades bem definidas.
+- **Melhorar a testabilidade:** favorecer abstrações e estruturas que permitam testes unitários e isolamento de dependências.
+- **Reduzir débito técnico:** identificar decisões estruturais que podem comprometer manutenção, evolução ou estabilidade futura.
+- **Identificar Code Smells:** detectar sinais de problemas arquiteturais ou estruturais antes que se tornem falhas difíceis de corrigir.
+- **Favorecer código sustentável:** produzir código compreensível, previsível e preparado para evolução.
 
-- **Promover baixo acoplamento**  
-  Reduzir dependências desnecessárias entre classes, módulos e camadas.
+---
 
-- **Aumentar a coesão**  
-  Manter cada unidade de código concentrada em responsabilidades bem definidas.
-
-- **Melhorar a testabilidade**  
-  Favorecer abstrações e estruturas que permitam testes unitários e isolamento de dependências.
-
-- **Reduzir débito técnico**  
-  Identificar decisões estruturais que podem comprometer manutenção, evolução ou estabilidade futura.
-
-- **Identificar Code Smells**  
-  Detectar sinais de problemas arquiteturais ou estruturais antes que se tornem falhas difíceis de corrigir.
-
-- **Favorecer código sustentável**  
-  Produzir código compreensível, previsível e preparado para evolução.
-
-
-
-# 🧠 Pilares Técnicos
+## Pilares Técnicos
 
 O RickCraft analisa e produz código considerando quatro pilares principais:
 
@@ -79,11 +67,12 @@ Esses conceitos não devem ser aplicados mecanicamente.
 
 Um padrão, abstração ou camada adicional deve existir quando resolver um problema concreto de arquitetura, manutenção, extensibilidade, testabilidade ou desacoplamento.
 
+> [!IMPORTANT]
 > **Regra fundamental:** arquitetura deve reduzir complexidade, não criá-la.
 
+---
 
-
-# 1. Design Patterns
+## 1. Design Patterns
 
 O RickCraft utiliza como referência os **23 padrões clássicos do catálogo Gang of Four — GoF**.
 
@@ -95,35 +84,26 @@ Os padrões são divididos em três grupos:
 
 Eles devem ser utilizados quando houver justificativa arquitetural para sua aplicação.
 
-## 🏗️ Padrões Criacionais
+### Padrões Criacionais
 
 Tratam da criação e instanciação de objetos.
 
-### Factory Method
-
+#### Factory Method
 Define uma abstração para criação de objetos, permitindo que implementações específicas determinem qual classe concreta será instanciada.
 
-### Abstract Factory
-
+#### Abstract Factory
 Permite criar famílias de objetos relacionados sem acoplar o código cliente às classes concretas.
 
-### Builder
+#### Builder
+Separa o processo de construção de um objeto complexo de sua representação final. É especialmente útil quando um objeto possui muitas configurações ou etapas de inicialização.
 
-Separa o processo de construção de um objeto complexo de sua representação final.
-
-É especialmente útil quando um objeto possui muitas configurações ou etapas de inicialização.
-
-### Prototype
-
+#### Prototype
 Permite criar novos objetos a partir da cópia de uma instância existente.
 
-### Singleton
-
+#### Singleton
 Garante uma única instância de determinada classe e fornece um ponto controlado de acesso a ela.
 
 No RickCraft, quando o Singleton for realmente necessário, a criação e a liberação da instância devem permanecer centralizadas na própria classe.
-
-Exemplo conceitual:
 
 ```pascal
 interface
@@ -134,7 +114,6 @@ type
     constructor Create;
   public
     destructor Destroy; override;
-
     class function GetInstance: TSessionPadrao;
     class procedure ReleaseInstance;
   end;
@@ -158,7 +137,6 @@ class function TSessionPadrao.GetInstance: TSessionPadrao;
 begin
   if not Assigned(FInstance) then
     FInstance := TSessionPadrao.Create;
-
   Result := FInstance;
 end;
 
@@ -176,106 +154,83 @@ end.
 
 O construtor permanece privado para impedir que o consumidor crie instâncias fora do ponto de acesso controlado.
 
+> [!WARNING]
 > O uso de Singleton deve ser avaliado criteriosamente devido ao risco de introdução de estado global e aumento de acoplamento. O exemplo acima também não implementa sincronização para acesso concorrente; em cenários multithread, a criação e a liberação da instância exigem proteção apropriada.
 
-
-
-## 🧱 Padrões Estruturais
+### Padrões Estruturais
 
 Tratam da composição e organização entre classes e objetos.
 
-### Adapter
-
+#### Adapter
 Permite integrar componentes com interfaces incompatíveis através de uma camada de adaptação.
 
-### Bridge
-
+#### Bridge
 Separa uma abstração de sua implementação, permitindo que ambas evoluam independentemente.
 
-### Composite
-
+#### Composite
 Permite representar hierarquias de objetos através de estruturas em árvore e tratar objetos individuais e composições de maneira uniforme.
 
-### Decorator
-
+#### Decorator
 Adiciona responsabilidades dinamicamente a um objeto sem modificar sua implementação original.
 
-### Facade
-
+#### Facade
 Fornece uma interface simplificada para um conjunto complexo de classes ou subsistemas.
 
-### Flyweight
-
+#### Flyweight
 Reduz consumo de memória através do compartilhamento de estados comuns entre múltiplos objetos.
 
-### Proxy
-
+#### Proxy
 Cria um objeto intermediário responsável por controlar o acesso a outro objeto.
 
-
-
-## 🔄 Padrões Comportamentais
+### Padrões Comportamentais
 
 Tratam da comunicação, colaboração e distribuição de responsabilidades entre objetos.
 
-### Chain of Responsibility
-
+#### Chain of Responsibility
 Encaminha uma solicitação através de uma cadeia de manipuladores até que algum deles seja responsável por processá-la.
 
-### Command
-
+#### Command
 Encapsula uma operação ou solicitação em um objeto independente.
 
-### Interpreter
-
+#### Interpreter
 Define uma representação para uma linguagem ou expressão e fornece mecanismos para interpretá-la.
 
-### Iterator
-
+#### Iterator
 Permite percorrer uma coleção sem expor sua estrutura interna.
 
-### Mediator
-
+#### Mediator
 Centraliza a comunicação entre diferentes objetos, reduzindo dependências diretas entre eles.
 
-### Memento
-
+#### Memento
 Permite armazenar e restaurar o estado interno de um objeto preservando seu encapsulamento.
 
-### Observer
-
+#### Observer
 Define um mecanismo de notificação onde múltiplos objetos podem reagir às mudanças de estado de outro objeto.
 
-### State
-
+#### State
 Permite alterar o comportamento de um objeto conforme seu estado interno.
 
-### Strategy
-
+#### Strategy
 Encapsula diferentes algoritmos ou comportamentos atrás de uma mesma abstração, permitindo que sejam substituídos sem alterar o código consumidor.
 
-### Template Method
-
+#### Template Method
 Define a estrutura geral de um algoritmo enquanto permite que determinadas etapas sejam especializadas.
 
-### Visitor
-
+#### Visitor
 Permite adicionar operações sobre uma estrutura de objetos sem modificar diretamente as classes que compõem essa estrutura.
 
+---
 
-
-# 2. Princípios SOLID
+## 2. Princípios SOLID
 
 Os princípios SOLID são utilizados como referência para avaliação da qualidade estrutural e das responsabilidades do código.
 
-## S — Single Responsibility Principle — SRP
+### S — Single Responsibility Principle (SRP)
 
 Uma classe, módulo ou método deve possuir uma responsabilidade claramente definida.
 
-### Exemplo
-
+#### Exemplo
 Uma `TForm` não deve concentrar simultaneamente:
-
 - regras de negócio;
 - persistência;
 - validação;
@@ -285,50 +240,30 @@ Uma `TForm` não deve concentrar simultaneamente:
 
 Cada responsabilidade deve permanecer na camada adequada.
 
+### O — Open/Closed Principle (OCP)
 
+O código deve estar **aberto para extensão e fechado para modificação**.
 
-## O — Open/Closed Principle — OCP
+Novos comportamentos devem, sempre que possível, ser adicionados sem exigir alterações constantes em código estável. Polimorfismo, Strategy, Factory e outras abstrações podem ser utilizados quando apropriados.
 
-O código deve estar:
+### L — Liskov Substitution Principle (LSP)
 
-> **aberto para extensão e fechado para modificação.**
+Implementações derivadas devem poder substituir suas abstrações sem alterar o comportamento esperado do sistema. Uma implementação não deve quebrar contratos definidos por sua classe base ou interface.
 
-Novos comportamentos devem, sempre que possível, ser adicionados sem exigir alterações constantes em código estável.
+### I — Interface Segregation Principle (ISP)
 
-Polimorfismo, Strategy, Factory e outras abstrações podem ser utilizados quando apropriados.
+Interfaces devem ser específicas e coesas. Evite interfaces excessivamente grandes que obriguem implementações a depender de métodos que não utilizam. Prefira contratos pequenos e direcionados a responsabilidades específicas.
 
+### D — Dependency Inversion Principle (DIP)
 
-
-## L — Liskov Substitution Principle — LSP
-
-Implementações derivadas devem poder substituir suas abstrações sem alterar o comportamento esperado do sistema.
-
-Uma implementação não deve quebrar contratos definidos por sua classe base ou interface.
-
-
-
-## I — Interface Segregation Principle — ISP
-
-Interfaces devem ser específicas e coesas.
-
-Evite interfaces excessivamente grandes que obriguem implementações a depender de métodos que não utilizam.
-
-Prefira contratos pequenos e direcionados a responsabilidades específicas.
-
-
-
-## D — Dependency Inversion Principle — DIP
-
-Módulos de alto nível não devem depender diretamente de implementações concretas.
-
-Ambos devem depender de abstrações.
+Módulos de alto nível não devem depender diretamente de implementações concretas. Ambos devem depender de abstrações.
 
 Sempre que apropriado:
 
 ```text
 Regra de negócio
       ↓
-   Interface
+  Interface
       ↓
 Implementação
 ```
@@ -343,9 +278,9 @@ Classe concreta
 
 Isso reduz acoplamento e facilita substituição, testes e evolução.
 
+---
 
-
-# 3. Programação Orientada a Interfaces
+## 3. Programação Orientada a Interfaces
 
 Interfaces são utilizadas como contratos entre componentes sempre que o desacoplamento arquitetural justificar sua existência.
 
@@ -363,7 +298,7 @@ No padrão adotado pelo RickCraft:
 - variáveis locais utilizam prefixo `L`;
 - interfaces devem possuir GUID válido e único.
 
-## Contrato e implementação básicos
+### Contrato e Implementação Básicos
 
 ```pascal
 interface
@@ -377,13 +312,11 @@ type
   TClienteRepository = class(TInterfacedObject, IClienteRepository)
   private
   protected
-    {Metodos da Interfaces}
+    { Metodos da Interface }
     function BuscarPorID(const AID: Integer): IClienteRepository;
-
     constructor Create;
   public
     destructor Destroy; override;
-
     class function New: IClienteRepository;
   end;
 
@@ -415,20 +348,18 @@ end.
 
 Nesse modelo, o consumidor trabalha com `IClienteRepository` e não precisa conhecer `TClienteRepository`.
 
-
-
-## Dependência entre interfaces e retorno ao contexto anterior
+### Dependência Entre Interfaces e Retorno ao Contexto Anterior
 
 Quando uma operação precisa disponibilizar um resultado especializado sem quebrar o encadeamento por interfaces, o contrato pode separar a operação principal do resultado.
 
-O exemplo abaixo representa conceitualmente:
+O fluxo estrutural funciona da seguinte forma:
 
 ```text
 IClienteRepository
         │
         │ Result
         ▼
- IClienteResult
+  IClienteResult
         │
         │ ToBack
         ▼
@@ -465,14 +396,12 @@ type
   private
     FResult: IClienteResult;
   protected
-    {Metodos da Interfaces}
+    { Metodos da Interface }
     function BuscarPorID(const AID: Integer): IClienteRepository;
     function Result: IClienteResult;
-
     constructor Create;
   public
     destructor Destroy; override;
-
     class function New: IClienteRepository;
   end;
 
@@ -504,7 +433,6 @@ function TClienteRepository.Result: IClienteResult;
 begin
   if not Assigned(FResult) then
     FResult := TClienteResult.New(Self);
-
   Result := FResult;
 end;
 ```
@@ -531,18 +459,15 @@ type
   private
     [weak]
     FParent: IClienteRepository;
-
     procedure SetupStart;
   protected
-    {Metodos da Interfaces}
+    { Metodos da Interface }
     function Cliente(out AClient: TClient): IClienteResult;
     function ToBack: IClienteRepository;
-
     constructor Create; overload;
     constructor Create(const AValue: IClienteRepository); overload;
   public
     destructor Destroy; override;
-
     class function New: IClienteResult; overload;
     class function New(const AValue: IClienteRepository): IClienteResult; overload;
   end;
@@ -555,9 +480,7 @@ begin
   SetupStart;
 end;
 
-constructor TClienteResult.Create(
-  const AValue: IClienteRepository
-);
+constructor TClienteResult.Create(const AValue: IClienteRepository);
 begin
   inherited Create;
   FParent := AValue;
@@ -593,10 +516,7 @@ end;
 function TClienteResult.ToBack: IClienteRepository;
 begin
   if not Assigned(FParent) then
-    raise Exception.Create(
-      'O Parent da interface não foi informado para retornar.'
-    );
-
+    raise Exception.Create('O Parent da interface não foi informado para retornar.');
   Result := FParent;
 end;
 
@@ -613,7 +533,7 @@ IClienteRepository
   .ToBack
 ```
 
-### Relação com Inversão de Dependência
+#### Relação com Inversão de Dependência
 
 Na fronteira pública, a dependência está orientada às abstrações:
 
@@ -635,7 +555,7 @@ FResult := TClienteResult.New(Self);
 
 Portanto, esse ponto específico é uma dependência concreta de construção. Quando houver necessidade real de inversão também nesse nível, a criação deve ser delegada a uma fábrica ou recebida por injeção de dependência.
 
-O RickCraft não deve adicionar essa abstração automaticamente. Ela deve ser introduzida somente quando houver justificativa arquitetural, preservando o princípio de evitar *overengineering*.
+O RickCraft não deve adicionar essa abstração automaticamente. Ela deve ser introduzida somente quando houver justificativa arquitetural, preservando o princípio de evitar **overengineering**.
 
 Essa abordagem favorece:
 
@@ -647,13 +567,13 @@ Essa abordagem favorece:
 - isolamento de responsabilidades;
 - evolução independente entre componentes.
 
+---
 
-
-# 4. Clean Code
+## 4. Clean Code
 
 O código deve priorizar legibilidade, previsibilidade e manutenção.
 
-## 🏷️ Convenção de Nomenclatura Delphi
+### Convenção de Nomenclatura Delphi
 
 O RickCraft adota as seguintes convenções:
 
@@ -667,9 +587,7 @@ O RickCraft adota as seguintes convenções:
 | Constante | CAIXA ALTA, iniciando e terminando com `_` | `_NOME_` |
 | Constante composta | Palavras separadas por `_` | `_NOME_COMPLETO_` |
 
-
-
-## 📍 Declaração de Variáveis
+### Declaração de Variáveis
 
 Variáveis devem:
 
@@ -698,9 +616,7 @@ var
   LDescricaoCliente: string;
 ```
 
-
-
-## 🔒 Regra para Constantes
+### Regra para Constantes
 
 Constantes Delphi devem obrigatoriamente:
 
@@ -727,9 +643,7 @@ const
   TempoLimiteConexao = 30;
 ```
 
-
-
-## 🔢 Enumerados com Escopo
+### Enumerados com Escopo
 
 Quando um enumerado precisar de escopo explícito, utilizar `{$SCOPEDENUMS ON}` na região da declaração.
 
@@ -737,11 +651,9 @@ Exemplo:
 
 ```pascal
 {$SCOPEDENUMS ON}
+
 type
-  TMyEnum = (
-    One,
-    Two
-  );
+  TMyEnum = (One, Two);
 {$SCOPEDENUMS OFF}
 ```
 
@@ -750,12 +662,10 @@ Com `SCOPEDENUMS` ativo, os valores devem ser acessados através do tipo:
 ```pascal
 LValue := TMyEnum.One;
 ```
+>[!NOTE]
+>O `{$SCOPEDENUMS OFF}` pode ser utilizado após a declaração quando a diretiva não deve afetar o restante da unit.
 
-O `{$SCOPEDENUMS OFF}` pode ser utilizado após a declaração quando a diretiva não deve afetar o restante da unit.
-
-
-
-## 🏗️ Criação de Classes por `New`
+### Criação de Classes por New
 
 Quando uma classe concreta adotar o método de criação `New`, o método deve concentrar a criação e retornar o tipo declarado pela própria API.
 
@@ -782,9 +692,7 @@ end.
 
 Para classes que implementam interfaces, prevalece a regra da seção **Programação Orientada a Interfaces**: `New` deve retornar a interface correspondente e o `constructor Create` deve permanecer em `protected`.
 
-
-
-## ✂️ Métodos Curtos e Coesos
+### Métodos Curtos e Coesos
 
 Métodos devem possuir responsabilidade claramente identificável.
 
@@ -800,9 +708,75 @@ Quando um método realiza muitas operações diferentes, deve ser analisado para
 
 O objetivo não é reduzir métodos arbitrariamente, mas manter cada método compreensível e responsável por uma operação coerente.
 
+### Method Toxicity Metrics
 
+Além dos critérios qualitativos de Clean Code, o RickCraft utiliza as **Toxicity Metrics configuradas no Delphi** como limites objetivos para identificar métodos que exigem análise estrutural.
 
-# 🔍 Postura de Revisão do RickCraft
+Essas métricas não substituem a avaliação arquitetural. Elas funcionam como **limiares de alerta**: quando um método ultrapassa um dos valores configurados, o RickCraft deve tratá-lo como um ponto que precisa ser revisado antes de ser considerado adequado.
+
+A configuração adotada pelo projeto é:
+
+| Métrica | Limite |
+|---|---:|
+| Function Length | `20` |
+| Parameter Count | `6` |
+| If Depth | `5` |
+| Cyclomatic Complexity | `6` |
+
+#### Function Length — 20
+Métodos com mais de `20` linhas devem ser analisados quanto a:
+- excesso de responsabilidades;
+- possibilidade de extração de comportamento;
+- mistura entre regra de negócio, infraestrutura e apresentação;
+- dificuldade de leitura e manutenção.
+
+O limite não significa que todo método acima de `20` linhas deva ser dividido automaticamente. A revisão deve considerar coesão, clareza e responsabilidade antes de qualquer alteração.
+
+#### Parameter Count — 6
+Métodos com mais de `6` parâmetros devem ser analisados quanto a:
+- excesso de dependências;
+- responsabilidade ampla demais;
+- necessidade de agrupar dados relacionados em uma estrutura apropriada;
+- dificuldade de leitura, chamada e teste.
+
+A criação de novos objetos ou abstrações apenas para reduzir a quantidade de parâmetros não deve ocorrer sem justificativa arquitetural.
+
+#### If Depth — 5
+Estruturas condicionais com profundidade superior a `5` níveis devem ser analisadas quanto a:
+- excesso de aninhamento;
+- dificuldade de compreensão do fluxo;
+- possibilidade de uso de cláusulas de guarda;
+- separação de responsabilidades;
+- aplicação de polimorfismo ou padrões comportamentais quando houver justificativa.
+
+O objetivo é reduzir complexidade acidental sem substituir estruturas simples por abstrações desnecessárias.
+
+#### Cyclomatic Complexity — 6
+Métodos com complexidade ciclomática superior a `6` devem ser analisados quanto a:
+- quantidade excessiva de caminhos de execução;
+- concentração de regras de negócio;
+- condicionais ou ramificações em excesso;
+- dificuldade de teste;
+- possibilidade de decomposição em operações menores e coesas.
+
+A redução da complexidade deve preservar o comportamento existente e respeitar os princípios de simplicidade e de evitar overengineering.
+
+#### Aplicação pelo RickCraft
+Durante a análise de código, o RickCraft deve:
+
+1. considerar os quatro limites configurados;
+2. identificar qual métrica foi ultrapassada;
+3. avaliar a causa estrutural antes de propor mudanças;
+4. explicar tecnicamente a violação encontrada;
+5. propor refatoração somente quando ela melhorar clareza, coesão, testabilidade ou manutenção;
+6. não alterar os limites definidos pelo projeto por conveniência.
+
+> [!NOTE]
+> Ultrapassar um limite de Toxicity Metrics exige análise; não autoriza refatoração automática.
+
+---
+
+## Postura de Revisão do RickCraft
 
 RickCraft não deve simplesmente aceitar código porque ele:
 
@@ -825,36 +799,31 @@ Durante uma revisão, devem ser considerados aspectos como:
 - duplicação;
 - complexidade;
 - legibilidade;
+- limites configurados de Method Toxicity Metrics;
 - aplicação inadequada de padrões;
 - abstrações desnecessárias;
-- *Code Smells*.
+- **Code Smells**.
 
+---
 
+## Protocolo de Resposta
 
-# 🚀 Protocolo de Resposta
+Quando solicitado a revisar ou melhorar código, o RickCraft deve estruturar sua análise em três etapas principais:
 
-Quando solicitado a revisar ou melhorar código, o RickCraft deve estruturar sua análise em três etapas principais.
-
-## 1. 🔍 Análise Crítica
-
+### 1. Análise Crítica
 Identificar objetivamente:
-
 - problemas encontrados;
 - regras violadas;
 - riscos arquiteturais;
-- *Code Smells*;
-- responsabilidades inadequadas;
+- **Code Smells**;
+- responsabilidades inadequada;
 - acoplamentos desnecessários;
 - impacto potencial das decisões existentes.
 
-
-
-## 2. 🛠️ Refatoração RickCraft
-
+### 2. Refatoração RickCraft
 Quando a solicitação permitir alterações no código, apresentar uma implementação compatível com as regras estabelecidas pela skill.
 
 A solução deve buscar:
-
 - clareza;
 - baixo acoplamento;
 - alta coesão;
@@ -862,21 +831,17 @@ A solução deve buscar:
 - testabilidade;
 - manutenção sustentável.
 
-
-
-## 3. 💡 Justificativa Arquitetural
-
+### 3. Justificativa Arquitetural
 Cada alteração relevante deve possuir justificativa técnica.
 
-Exemplo:
-
-> Foi aplicado o padrão Strategy para remover a seleção de comportamento baseada em um grande bloco `case`, permitindo que novas estratégias sejam adicionadas sem modificar o código consumidor.
+> [!NOTE]
+> **Exemplo:** Foi aplicado o padrão Strategy para remover a seleção de comportamento baseada em um grande bloco `case`, permitindo que novas estratégias sejam adicionadas sem modificar o código consumidor.
 
 A justificativa deve explicar **qual problema está sendo resolvido**, e não apenas citar o nome de um padrão.
 
+---
 
-
-# ⚠️ Evitar Overengineering
+## Evitar Overengineering
 
 RickCraft não deve introduzir padrões, interfaces, classes ou camadas sem necessidade técnica.
 
@@ -893,11 +858,12 @@ Antes de adicionar uma abstração, deve existir uma justificativa baseada em pe
 - eliminação de duplicação;
 - redução comprovável de complexidade.
 
-> **Simplicidade também é uma decisão arquitetural.**
+> [!IMPORTANT]
+> Simplicidade também é uma decisão arquitetural.
 
+---
 
-
-# 🤖 Uso com Inteligência Artificial
+## Uso com Inteligência Artificial
 
 RickCraft foi projetado para atuar como referência de governança durante processos de desenvolvimento assistidos por IA.
 
@@ -916,9 +882,9 @@ Clean Code, Design Patterns e convenções Delphi.
 
 A skill deve compreender que sua função é realizar uma avaliação técnica do código antes de propor alterações.
 
+---
 
-
-# ✅ Resultado Esperado
+## Resultado Esperado
 
 O objetivo final do RickCraft não é produzir código sofisticado.
 
@@ -934,30 +900,33 @@ O objetivo final do RickCraft não é produzir código sofisticado.
 - consistente com o restante do projeto;
 - sustentável ao longo do tempo.
 
+---
 
-
-# 📄 Licença
+## Licença
 
 Este projeto é distribuído de acordo com os termos definidos no arquivo [`LICENSE`](LICENSE) deste repositório.
 
 Antes de utilizar, modificar, redistribuir ou incorporar o RickCraft em outro projeto, consulte o conteúdo integral da licença para conhecer os direitos, limitações e condições aplicáveis.
 
+> [!NOTE]
 > O arquivo `LICENSE` é a referência oficial para os termos de licenciamento deste projeto.
 
+---
 
-
-## 🌐 Idiomas
+## Idiomas
 
 Este projeto possui documentação em dois idiomas:
 
-- 🇺🇸 [English — README.md](README.md)
-- 🇧🇷 **Português — README_PTBr.md**
+- [English — README.md](README.md)
+- **Português — README_PTBr.md**
 
+---
 
-
-## 📌 RickCraft
+## RickCraft
 
 **Governança técnica, arquitetura e qualidade de código para Delphi/Object Pascal.**
 
-> Código que funciona é o início.  
+> Código que funciona é o início.
+>
 > Código que pode evoluir com segurança é o objetivo.
+

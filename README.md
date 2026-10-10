@@ -10,9 +10,12 @@
 
 </div>
 
-🌐 Language: English | [Portuguese](README_PTBr.md)
+🌐 Language: English | [Portuguese](README_PTBr.md) 
+<div align="right">
 
----
+📑 [Documentation Index](#table-of-contents)
+
+</div>
 
 ## About RickCraft
 
@@ -902,6 +905,74 @@ It is to produce code that is:
 
 ---
 
+## Table of Contents
+
+- [About RickCraft](#about-rickcraft)
+- [Objectives](#objectives)
+- [Technical Pillars](#technical-pillars)
+- [1. Design Patterns](#1-design-patterns)
+  - [Creational Patterns](#creational-patterns)
+    - [Factory Method](#factory-method)
+    - [Abstract Factory](#abstract-factory)
+    - [Builder](#builder)
+    - [Prototype](#prototype)
+    - [Singleton](#singleton)
+  - [Structural Patterns](#structural-patterns)
+    - [Adapter](#adapter)
+    - [Bridge](#bridge)
+    - [Composite](#composite)
+    - [Decorator](#decorator)
+    - [Facade](#facade)
+    - [Flyweight](#flyweight)
+    - [Proxy](#proxy)
+  - [Behavioral Patterns](#behavioral-patterns)
+    - [Chain of Responsibility](#chain-of-responsibility)
+    - [Command](#command)
+    - [Interpreter](#interpreter)
+    - [Iterator](#iterator)
+    - [Mediator](#mediator)
+    - [Memento](#memento)
+    - [Observer](#observer)
+    - [State](#state)
+    - [Strategy](#strategy)
+    - [Template Method](#template-method)
+    - [Visitor](#visitor)
+- [2. SOLID Principles](#2-solid-principles)
+  - [Single Responsibility Principle — SRP](#s--single-responsibility-principle-srp)
+  - [Open/Closed Principle — OCP](#o--openclosed-principle-ocp)
+  - [Liskov Substitution Principle — LSP](#l--liskov-substitution-principle-lsp)
+  - [Interface Segregation Principle — ISP](#i--interface-segregation-principle-isp)
+  - [Dependency Inversion Principle — DIP](#d--dependency-inversion-principle-dip)
+- [3. Interface-Oriented Programming](#3-interface-oriented-programming)
+  - [Basic Contract and Implementation](#basic-contract-and-implementation)
+  - [Dependencies Between Interfaces and Returning to the Previous Context](#dependencies-between-interfaces-and-returning-to-the-previous-context)
+    - [Relationship to Dependency Inversion](#relationship-to-dependency-inversion)
+- [4. Clean Code](#4-clean-code)
+  - [Delphi Naming Conventions](#delphi-naming-conventions)
+  - [Variable Declarations](#variable-declarations)
+  - [Rules for Constants](#rules-for-constants)
+  - [Scoped Enumerations](#scoped-enumerations)
+  - [Class Creation via New](#class-creation-via-new)
+  - [Short, Cohesive Methods](#short-cohesive-methods)
+  - [Method Toxicity Metrics](#method-toxicity-metrics)
+    - [Function Length — 20](#function-length--20)
+    - [Parameter Count — 6](#parameter-count--6)
+    - [If Depth — 5](#if-depth--5)
+    - [Cyclomatic Complexity — 6](#cyclomatic-complexity--6)
+    - [Application by RickCraft](#application-by-rickcraft)
+- [RickCraft Review Approach](#rickcraft-review-approach)
+- [Response Protocol](#response-protocol)
+  - [1. Critical Analysis](#1-critical-analysis)
+  - [2. RickCraft Refactoring](#2-rickcraft-refactoring)
+  - [3. Architectural Rationale](#3-architectural-rationale)
+- [Avoiding Overengineering](#avoiding-overengineering)
+- [Use with Artificial Intelligence](#use-with-artificial-intelligence)
+- [Expected Outcome](#expected-outcome)
+- [License](#license)
+- [Languages](#languages)
+- [RickCraft](#rickcraft)
+
+---
 ## License
 
 This project is distributed under the terms defined in the [`LICENSE`](LICENSE) file in this repository.

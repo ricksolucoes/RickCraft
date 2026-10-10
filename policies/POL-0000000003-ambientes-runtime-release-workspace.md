@@ -1,6 +1,6 @@
 # POL-0000000003 — Ambientes, Runtime, Release e Workspace Operacional
 
-- **Estado:** PROPOSTA
+- **Estado:** VIGENTE
 - **Escopo:** regras transversais para ambiente de desenvolvimento, árvore canônica do RickCraft, Release, idioma do runtime e workspace operacional
 - **Autoridade:** responsável pelo projeto
 - **Dependências:** POL-0000000001 — Governança documental; POL-0000000002 — Processo de desenvolvimento orientado por Specification
@@ -69,6 +69,6 @@ Esta Policy estabelece invariantes transversais. Specifications futuras podem de
 
 ## 8. Aprovação e limites
 
-Esta Policy permanece `PROPOSTA` até aprovação explícita do responsável pelo projeto e sincronização do estado em `registries/policies.md`, conforme a POL-0000000001. Enquanto proposta, não é requisito normativo vigente.
+Esta Policy foi aprovada pelo responsável pelo projeto e está `VIGENTE`, em consistência com `registries/policies.md`, conforme a POL-0000000001.
 
 Esta Policy não cria workspace, IDANALISE, artefatos de runtime, Skill, Agents, Specifications, PLAN, Release ou código, nem autoriza sua implementação.

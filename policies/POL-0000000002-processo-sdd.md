@@ -11,12 +11,18 @@ Definir o fluxo normativo mínimo de desenvolvimento e os gates entre etapas, pr
 
 ## 2. Unidade de trabalho
 
-Cada unidade funcional aprovada possui uma pasta em `specs/` cujo nome começa pelo ID e slug da Specification. Contém, no mínimo:
+Após autorização explícita da unidade e alocação do ID em `registries/specifications.md`, cria-se uma pasta em `specs/` cujo nome começa pelo ID e slug da Specification. Ao longo de seu ciclo, a unidade possui:
 
 - `spec.md` — o que deve existir: requisitos, comportamento, restrições e critérios de aceitação;
 - `plan.md` — como será construído: decisões técnicas e arquitetura necessárias;
 - `tasks.md` — divisão ordenada do trabalho em tarefas pequenas, executáveis, verificáveis e rastreáveis;
 - `status.md` — registro persistente obrigatório do estado atual da unidade, dos estados e versões dos artefatos, gates, invalidações e referências às evidências.
+
+Na inicialização, materializar somente `spec.md` e `status.md`, com SPEC em `IN_PROGRESS`. Não criar arquivos vazios como placeholders para etapas não iniciadas. Ao iniciar PLAN, criar `plan.md` e registrar PLAN como `IN_PROGRESS` na mesma execução. Ao iniciar TASKS, criar `tasks.md` e registrar TASKS como `IN_PROGRESS` na mesma execução. ANALYZE, IMPLEMENT e CONVERGE não exigem arquivos próprios. Evidências adicionais persistentes só devem ser introduzidas quando houver necessidade definida.
+
+Quando PLAN estiver `NOT_STARTED`, a ausência de `plan.md` é válida; quando TASKS estiver `NOT_STARTED`, a ausência de `tasks.md` é válida. A ausência do artefato correspondente é inválida a partir de `IN_PROGRESS` e em qualquer estado subsequente dessa etapa. Os arquivos materializados permanecem na unidade se a etapa for depois falha, bloqueada ou invalidada.
+
+O estado inicial registrado em `status.md`, após alocação válida do ID e criação da pasta, `spec.md` e `status.md`, deve ser: etapa atual SPEC; SPEC `IN_PROGRESS`; PLAN `NOT_STARTED`; TASKS `NOT_STARTED`; ANALYZE `NOT_STARTED`; IMPLEMENT `NOT_STARTED`; CONVERGE `NOT_STARTED`; último gate válido: nenhum. A inicialização, por si só, não autoriza qualquer etapa posterior.
 
 `status.md` é um registro transversal, não uma etapa do pipeline e não substitui SPEC, PLAN, TASKS, ANALYZE, IMPLEMENT ou CONVERGE. ANALYZE, IMPLEMENT e CONVERGE continuam sendo etapas/gates, não arquivos próprios. O registro deve ser atualizado na mesma execução em que um estado muda e antes de outro executor usar esse estado. Estado ausente, incompleto, contraditório ou sem referência verificável não autoriza avançar.
 
@@ -32,11 +38,13 @@ Não se pode iniciar IMPLEMENT a partir de SPEC, PLAN ou TASKS sem ANALYZE com e
 
 `status.md` deve permitir a qualquer sessão determinar a etapa atual e o estado de cada etapa. Para SPEC, PLAN e TASKS, usar `NOT_STARTED`, `IN_PROGRESS`, `COMPLETE`, `FAILED`, `BLOCKED` ou `INVALIDATED`. `COMPLETE` indica que o artefato está pronto para alimentar o estágio seguinte; não substitui aprovação exigida por um gate. Para IMPLEMENT, usar os mesmos estados, em que `IN_PROGRESS` comprova início e `COMPLETE` comprova conclusão das tarefas autorizadas. Para toda etapa ainda não iniciada, registrar `NOT_STARTED`.
 
-ANALYZE usa exclusivamente `PASS`, `FAIL`, `BLOCKED` ou `INVALIDATED`. Só `PASS` válido autoriza IMPLEMENT. `FAIL`, `BLOCKED` ou `INVALIDATED` impedem iniciar ou continuar novo trabalho de implementação dependente até que a causa seja resolvida e ANALYZE volte a `PASS`.
+ANALYZE usa `NOT_STARTED`, `IN_PROGRESS`, `PASS`, `FAIL`, `BLOCKED` ou `INVALIDATED`. `NOT_STARTED` indica gate ainda não executado; `IN_PROGRESS` indica avaliação em execução, ainda sem resultado válido; `PASS` indica gate concluído sem achado bloqueante e com evidência suficiente; `FAIL` indica gate concluído com achado bloqueante; `BLOCKED` indica impedimento à conclusão; `INVALIDATED` indica que um resultado anterior perdeu validade por mudança em dependência. Somente `PASS` válido autoriza IMPLEMENT. `IN_PROGRESS` nunca autoriza IMPLEMENT. `FAIL`, `BLOCKED` ou `INVALIDATED` impedem iniciar ou continuar novo trabalho de implementação dependente até que a causa seja resolvida e ANALYZE volte a `PASS`.
 
-CONVERGE usa exclusivamente `CONVERGED`, `NOT_CONVERGED`, `BLOCKED` ou `INVALIDATED`. Apenas `CONVERGED` válido encerra a unidade como convergida. Lacuna conhecida implica `NOT_CONVERGED`; impedimento de avaliação implica `BLOCKED`.
+CONVERGE usa `NOT_STARTED`, `IN_PROGRESS`, `CONVERGED`, `NOT_CONVERGED`, `BLOCKED` ou `INVALIDATED`. `NOT_STARTED` indica avaliação ainda não iniciada; `IN_PROGRESS` indica avaliação em execução, ainda sem resultado final; `CONVERGED` indica convergência comprovada pelas evidências exigidas; `NOT_CONVERGED` indica avaliação concluída com lacunas remanescentes; `BLOCKED` indica que não foi possível concluir a avaliação; `INVALIDATED` indica que uma conclusão anterior perdeu validade. Apenas `CONVERGED` válido encerra a unidade como convergida. Lacuna conhecida implica `NOT_CONVERGED`; impedimento de avaliação implica `BLOCKED`.
 
-O registro deve identificar para cada artefato relevante sua versão de entrada (por identificador de revisão, hash ou referência equivalente verificável), estado, momento da avaliação e referências à evidência. Deve indicar explicitamente a etapa atual, o último gate válido, mudanças pendentes e etapas invalidadas, incluindo motivo e origem da invalidação. Um executor não pode inferir validade somente por histórico de conversa.
+Se uma execução for interrompida com ANALYZE ou CONVERGE em `IN_PROGRESS`, não se infere resultado final nem se reinicia silenciosamente. A execução seguinte deve verificar o estado persistente e determinar, à luz das evidências existentes, se a avaliação pode ser retomada ou precisa ser reiniciada.
+
+O registro deve identificar para cada artefato relevante sua versão de entrada (por identificador de revisão, hash ou referência equivalente verificável), estado, momento da avaliação e referências à evidência. Artefato em `NOT_STARTED` não possui versão. Em `IN_PROGRESS`, pode haver referência ao artefato de trabalho, mas ela não é versão aprovada para alimentar gate posterior. `COMPLETE` exige referência verificável à versão/revisão usada pela etapa seguinte. `ANALYZE` em `PASS` deve referenciar exatamente as versões `COMPLETE` de SPEC, PLAN e TASKS que analisou; `CONVERGE` em `CONVERGED` deve referenciar exatamente as versões dos artefatos e as evidências que sustentam a convergência. Deve indicar explicitamente a etapa atual, o último gate válido, mudanças pendentes e etapas invalidadas, incluindo motivo e origem da invalidação. Um executor não pode inferir validade somente por histórico de conversa.
 
 ### Invalidação por dependência
 
@@ -64,7 +72,7 @@ Decompõe o PLAN em trabalho ordenado, executável, verificável e rastreável. 
 
 É um gate de consistência entre SPEC, PLAN e TASKS. Verifica requisitos sem cobertura, tarefas sem origem ou fora de escopo, decisões sem cobertura, dependências ausentes, contradições, ambiguidades, critérios de aceitação sem cobertura, testes ausentes e violações de autoridade. É análise; não altera artefatos silenciosamente. Cada achado retorna ao artefato proprietário.
 
-O resultado deve ser persistido em `status.md`, incluindo: versões exatas de SPEC, PLAN e TASKS analisadas; resultado `PASS`, `FAIL` ou `BLOCKED`; achados e indicação explícita de quais são bloqueantes; data/identificador da execução; e referências verificáveis às evidências da análise. `PASS` exige ausência de achados bloqueantes e evidência suficiente para revisar as verificações; uma declaração do agente sem essas referências não é PASS válido. Um PASS autoriza IMPLEMENT somente para as versões registradas e enquanto nenhuma dependência for invalidada.
+O estado e o resultado da execução devem ser persistidos em `status.md`, incluindo: versões exatas de SPEC, PLAN e TASKS analisadas; estado `IN_PROGRESS`, `PASS`, `FAIL`, `BLOCKED` ou `INVALIDATED`; achados e indicação explícita de quais são bloqueantes; data/identificador da execução; e referências verificáveis às evidências da análise. Antes da primeira execução, o estado é `NOT_STARTED` e ainda não há resultado ou evidência de gate. `PASS` exige ausência de achados bloqueantes e evidência suficiente para revisar as verificações; uma declaração do agente sem essas referências não é PASS válido. Um PASS autoriza IMPLEMENT somente para as versões registradas e enquanto nenhuma dependência for invalidada.
 
 ### IMPLEMENT
 
@@ -74,7 +82,7 @@ Executa somente tarefas autorizadas por um `PASS` válido de ANALYZE. Registra e
 
 Compara o produto real e as evidências disponíveis com SPEC, PLAN e TASKS. Verifica implementação, testes, resultados e evidências suficientes. Lacunas retornam ao estágio proprietário, com revalidação das etapas afetadas.
 
-O resultado deve ser persistido em `status.md` com estado `CONVERGED`, `NOT_CONVERGED`, `BLOCKED` ou `INVALIDATED`; versões dos artefatos avaliados; estado de conclusão das tarefas; referências à implementação existente e às evidências dos testes e seus resultados; critérios de aceitação verificados e suas evidências; e lacunas bloqueantes conhecidas ou declaração explícita de que nenhuma foi encontrada. `CONVERGED` exige cobertura rastreável dos requisitos, tarefas, implementação, testes aplicáveis e critérios de aceitação, além de ausência de lacunas bloqueantes conhecidas. Uma declaração textual sem evidências referenciadas não constitui `CONVERGED` válido.
+O estado e o resultado da execução devem ser persistidos em `status.md` com estado `NOT_STARTED`, `IN_PROGRESS`, `CONVERGED`, `NOT_CONVERGED`, `BLOCKED` ou `INVALIDATED`; versões dos artefatos avaliados; estado de conclusão das tarefas; referências à implementação existente e às evidências dos testes e seus resultados; critérios de aceitação verificados e suas evidências; e lacunas bloqueantes conhecidas ou declaração explícita de que nenhuma foi encontrada. `NOT_STARTED` não possui resultado ou evidência de gate. `CONVERGED` exige cobertura rastreável dos requisitos, tarefas, implementação, testes aplicáveis e critérios de aceitação, além de ausência de lacunas bloqueantes conhecidas. Uma declaração textual sem evidências referenciadas não constitui `CONVERGED` válido.
 
 ## 5. Propriedade de decisões
 

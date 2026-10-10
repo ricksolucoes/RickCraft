@@ -31,6 +31,10 @@ O formato adotado para Specifications é `SPEC-GGGSSSSSSS`: `GGG` identifica um 
 
 Grupos, seus significados, autoridades e alocações somente podem ser utilizados após aprovação e registro conforme a governança vigente. Enquanto um grupo não estiver aprovado e registrado, não se deve atribuir a ele IDs nem criar Specification funcional. IDs não são versões, não são reutilizados e revisões não criam novo ID. Grupo aposentado não é reaproveitado para domínio diferente.
 
+`registries/specifications.md` é a fonte persistente de alocação e consumo dos IDs de Specification. Antes de materializar uma unidade SDD, deve-se confirmar que o grupo está `VIGENTE`, consultar esse Registry e registrar nele a alocação. A primeira sequência de cada grupo é `0000001`; as seguintes correspondem à maior sequência já alocada para o grupo, acrescida de um. Lacunas não são preenchidas retroativamente. O ID registrado fica consumido permanentemente, inclusive se a materialização falhar ou a unidade for cancelada. Diretórios servem para validação de consistência, não para determinar a próxima sequência.
+
+O Registry deve identificar, no mínimo, ID completo, grupo, sequência, slug, título da Specification, caminho da unidade e data da alocação. O ID deve ser registrado antes da criação da pasta e dos artefatos da unidade.
+
 ### 3.3 Slugs e diretórios
 
 Slugs devem ser curtos, descritivos, estáveis e escritos em minúsculas, com palavras separadas por hífen. O diretório de uma Specification deve começar com seu ID, seguido de slug estável. Renomear o slug não muda a identidade da Policy ou Specification.

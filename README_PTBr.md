@@ -12,6 +12,7 @@
 
 🌐 **Idioma:** 🇧🇷 Português | [🇺🇸 English](README.md)
 
+
 ## 📖 Sobre o RickCraft
 
 **RickCraft** é uma skill especializada em **governança técnica, arquitetura de software, qualidade de código e engenharia Delphi/Object Pascal**.
@@ -34,7 +35,7 @@ O código produzido ou revisado deve buscar **clareza, baixo acoplamento, alta c
 
 Este repositório funciona como uma **fonte técnica de referência** para as regras e princípios utilizados pela skill.
 
----
+
 
 ## 🎯 Objetivos
 
@@ -63,7 +64,7 @@ Seus principais objetivos são:
 - **Favorecer código sustentável**  
   Produzir código compreensível, previsível e preparado para evolução.
 
----
+
 
 # 🧠 Pilares Técnicos
 
@@ -80,7 +81,7 @@ Um padrão, abstração ou camada adicional deve existir quando resolver um prob
 
 > **Regra fundamental:** arquitetura deve reduzir complexidade, não criá-la.
 
----
+
 
 # 1. Design Patterns
 
@@ -120,9 +121,64 @@ Permite criar novos objetos a partir da cópia de uma instância existente.
 
 Garante uma única instância de determinada classe e fornece um ponto controlado de acesso a ela.
 
-> O uso de Singleton deve ser avaliado criteriosamente devido ao risco de introdução de estado global e aumento de acoplamento.
+No RickCraft, quando o Singleton for realmente necessário, a criação e a liberação da instância devem permanecer centralizadas na própria classe.
 
----
+Exemplo conceitual:
+
+```pascal
+interface
+
+type
+  TSessionPadrao = class
+  private
+    constructor Create;
+  public
+    destructor Destroy; override;
+
+    class function GetInstance: TSessionPadrao;
+    class procedure ReleaseInstance;
+  end;
+
+implementation
+
+var
+  FInstance: TSessionPadrao;
+
+constructor TSessionPadrao.Create;
+begin
+  inherited Create;
+end;
+
+destructor TSessionPadrao.Destroy;
+begin
+  inherited;
+end;
+
+class function TSessionPadrao.GetInstance: TSessionPadrao;
+begin
+  if not Assigned(FInstance) then
+    FInstance := TSessionPadrao.Create;
+
+  Result := FInstance;
+end;
+
+class procedure TSessionPadrao.ReleaseInstance;
+begin
+  if Assigned(FInstance) then
+  begin
+    FInstance.Free;
+    FInstance := nil;
+  end;
+end;
+
+end.
+```
+
+O construtor permanece privado para impedir que o consumidor crie instâncias fora do ponto de acesso controlado.
+
+> O uso de Singleton deve ser avaliado criteriosamente devido ao risco de introdução de estado global e aumento de acoplamento. O exemplo acima também não implementa sincronização para acesso concorrente; em cenários multithread, a criação e a liberação da instância exigem proteção apropriada.
+
+
 
 ## 🧱 Padrões Estruturais
 
@@ -156,7 +212,7 @@ Reduz consumo de memória através do compartilhamento de estados comuns entre m
 
 Cria um objeto intermediário responsável por controlar o acesso a outro objeto.
 
----
+
 
 ## 🔄 Padrões Comportamentais
 
@@ -206,7 +262,7 @@ Define a estrutura geral de um algoritmo enquanto permite que determinadas etapa
 
 Permite adicionar operações sobre uma estrutura de objetos sem modificar diretamente as classes que compõem essa estrutura.
 
----
+
 
 # 2. Princípios SOLID
 
@@ -229,7 +285,7 @@ Uma `TForm` não deve concentrar simultaneamente:
 
 Cada responsabilidade deve permanecer na camada adequada.
 
----
+
 
 ## O — Open/Closed Principle — OCP
 
@@ -241,7 +297,7 @@ Novos comportamentos devem, sempre que possível, ser adicionados sem exigir alt
 
 Polimorfismo, Strategy, Factory e outras abstrações podem ser utilizados quando apropriados.
 
----
+
 
 ## L — Liskov Substitution Principle — LSP
 
@@ -249,7 +305,7 @@ Implementações derivadas devem poder substituir suas abstrações sem alterar 
 
 Uma implementação não deve quebrar contratos definidos por sua classe base ou interface.
 
----
+
 
 ## I — Interface Segregation Principle — ISP
 
@@ -259,7 +315,7 @@ Evite interfaces excessivamente grandes que obriguem implementações a depender
 
 Prefira contratos pequenos e direcionados a responsabilidades específicas.
 
----
+
 
 ## D — Dependency Inversion Principle — DIP
 
@@ -287,31 +343,42 @@ Classe concreta
 
 Isso reduz acoplamento e facilita substituição, testes e evolução.
 
----
+
 
 # 3. Programação Orientada a Interfaces
 
 Interfaces são utilizadas como contratos entre componentes sempre que o desacoplamento arquitetural justificar sua existência.
 
-Exemplo:
+No padrão adotado pelo RickCraft:
+
+- interfaces expõem operações através de `function`, evitando `procedure` nos contratos;
+- métodos que implementam uma interface ficam em `protected`;
+- o bloco `private` deve existir mesmo quando não houver campos privados;
+- o `constructor Create` da implementação fica em `protected`;
+- o `destructor Destroy; override;` fica em `public`;
+- a criação pública da implementação ocorre através de `class function New`;
+- `New` retorna a interface correspondente, e não a classe concreta;
+- campos internos da classe utilizam prefixo `F`;
+- argumentos utilizam prefixo `A`;
+- variáveis locais utilizam prefixo `L`;
+- interfaces devem possuir GUID válido e único.
+
+## Contrato e implementação básicos
 
 ```pascal
+interface
+
 type
   IClienteRepository = interface
-    ['{A34DB395-BE16-444E-934D-BB09A626BA20}']
-    function BuscarPorId(const AId: Integer): TCliente;
+    ['{7B0C03EC-A12F-4C36-9478-0EF0CD56C7F4}']
+    function BuscarPorID(const AID: Integer): IClienteRepository;
   end;
-```
 
-Implementação:
-
-```pascal
-type
   TClienteRepository = class(TInterfacedObject, IClienteRepository)
   private
   protected
     {Metodos da Interfaces}
-    function BuscarPorId(const AId: Integer): TCliente;
+    function BuscarPorID(const AID: Integer): IClienteRepository;
 
     constructor Create;
   public
@@ -319,29 +386,268 @@ type
 
     class function New: IClienteRepository;
   end;
+
+implementation
+
+constructor TClienteRepository.Create;
+begin
+  inherited Create;
+end;
+
+destructor TClienteRepository.Destroy;
+begin
+  inherited;
+end;
+
+class function TClienteRepository.New: IClienteRepository;
+begin
+  Result := Self.Create;
+end;
+
+function TClienteRepository.BuscarPorID(const AID: Integer): IClienteRepository;
+begin
+  { Executa a busca }
+  Result := Self;
+end;
+
+end.
 ```
 
-O consumidor depende da abstração:
+Nesse modelo, o consumidor trabalha com `IClienteRepository` e não precisa conhecer `TClienteRepository`.
 
-```pascal
+
+
+## Dependência entre interfaces e retorno ao contexto anterior
+
+Quando uma operação precisa disponibilizar um resultado especializado sem quebrar o encadeamento por interfaces, o contrato pode separar a operação principal do resultado.
+
+O exemplo abaixo representa conceitualmente:
+
+```text
+IClienteRepository
+        │
+        │ Result
+        ▼
+ IClienteResult
+        │
+        │ ToBack
+        ▼
 IClienteRepository
 ```
 
-e não diretamente da implementação:
+Os contratos permanecem baseados em interfaces:
 
 ```pascal
-TClienteRepository
+interface
+
+type
+  IClienteRepository = interface;
+  IClienteResult = interface;
+
+  IClienteRepository = interface
+    ['{3CC9581B-48FC-41B0-B2D6-D476E5FE3137}']
+    function BuscarPorID(const AID: Integer): IClienteRepository;
+    function Result: IClienteResult;
+  end;
+
+  IClienteResult = interface
+    ['{8CC4E9C2-D5CC-49D1-ADE5-6EF855F04F2E}']
+    function Cliente(out AClient: TClient): IClienteResult;
+    function ToBack: IClienteRepository;
+  end;
 ```
+
+A implementação do repositório mantém o resultado internamente e o disponibiliza somente através do contrato `IClienteResult`:
+
+```pascal
+type
+  TClienteRepository = class(TInterfacedObject, IClienteRepository)
+  private
+    FResult: IClienteResult;
+  protected
+    {Metodos da Interfaces}
+    function BuscarPorID(const AID: Integer): IClienteRepository;
+    function Result: IClienteResult;
+
+    constructor Create;
+  public
+    destructor Destroy; override;
+
+    class function New: IClienteRepository;
+  end;
+
+implementation
+
+constructor TClienteRepository.Create;
+begin
+  inherited Create;
+end;
+
+destructor TClienteRepository.Destroy;
+begin
+  FResult := nil;
+  inherited;
+end;
+
+class function TClienteRepository.New: IClienteRepository;
+begin
+  Result := Self.Create;
+end;
+
+function TClienteRepository.BuscarPorID(const AID: Integer): IClienteRepository;
+begin
+  { Executa a busca }
+  Result := Self;
+end;
+
+function TClienteRepository.Result: IClienteResult;
+begin
+  if not Assigned(FResult) then
+    FResult := TClienteResult.New(Self);
+
+  Result := FResult;
+end;
+```
+
+O objeto de resultado recebe a abstração do objeto pai e mantém uma referência fraca para evitar que o relacionamento bidirecional forme um ciclo de contagem de referências:
+
+```pascal
+interface
+
+uses
+  System.SysUtils;
+
+type
+  IClienteRepository = interface;
+  IClienteResult = interface;
+
+  IClienteResult = interface
+    ['{D35BA7CF-08A6-4A47-9656-70E30E9869DA}']
+    function Cliente(out AClient: TClient): IClienteResult;
+    function ToBack: IClienteRepository;
+  end;
+
+  TClienteResult = class(TInterfacedObject, IClienteResult)
+  private
+    [weak]
+    FParent: IClienteRepository;
+
+    procedure SetupStart;
+  protected
+    {Metodos da Interfaces}
+    function Cliente(out AClient: TClient): IClienteResult;
+    function ToBack: IClienteRepository;
+
+    constructor Create; overload;
+    constructor Create(const AValue: IClienteRepository); overload;
+  public
+    destructor Destroy; override;
+
+    class function New: IClienteResult; overload;
+    class function New(const AValue: IClienteRepository): IClienteResult; overload;
+  end;
+
+implementation
+
+constructor TClienteResult.Create;
+begin
+  inherited Create;
+  SetupStart;
+end;
+
+constructor TClienteResult.Create(
+  const AValue: IClienteRepository
+);
+begin
+  inherited Create;
+  FParent := AValue;
+  SetupStart;
+end;
+
+destructor TClienteResult.Destroy;
+begin
+  FParent := nil;
+  inherited;
+end;
+
+class function TClienteResult.New: IClienteResult;
+begin
+  Result := Self.Create;
+end;
+
+class function TClienteResult.New(const AValue: IClienteRepository): IClienteResult;
+begin
+  Result := Self.Create(AValue);
+end;
+
+procedure TClienteResult.SetupStart;
+begin
+end;
+
+function TClienteResult.Cliente(out AClient: TClient): IClienteResult;
+begin
+  { Preenche AClient }
+  Result := Self;
+end;
+
+function TClienteResult.ToBack: IClienteRepository;
+begin
+  if not Assigned(FParent) then
+    raise Exception.Create(
+      'O Parent da interface não foi informado para retornar.'
+    );
+
+  Result := FParent;
+end;
+
+end.
+```
+
+Esse desenho permite navegar entre contratos sem expor as classes concretas ao consumidor:
+
+```text
+IClienteRepository
+  .BuscarPorID(...)
+  .Result
+    .Cliente(...)
+  .ToBack
+```
+
+### Relação com Inversão de Dependência
+
+Na fronteira pública, a dependência está orientada às abstrações:
+
+```text
+Consumidor
+    ↓
+IClienteRepository
+    ↓
+IClienteResult
+```
+
+O consumidor não depende de `TClienteRepository` nem de `TClienteResult`.
+
+Entretanto, no exemplo acima, `TClienteRepository.Result` ainda conhece `TClienteResult` no momento da criação:
+
+```pascal
+FResult := TClienteResult.New(Self);
+```
+
+Portanto, esse ponto específico é uma dependência concreta de construção. Quando houver necessidade real de inversão também nesse nível, a criação deve ser delegada a uma fábrica ou recebida por injeção de dependência.
+
+O RickCraft não deve adicionar essa abstração automaticamente. Ela deve ser introduzida somente quando houver justificativa arquitetural, preservando o princípio de evitar *overengineering*.
 
 Essa abordagem favorece:
 
-- baixo acoplamento;
+- contratos explícitos;
+- baixo acoplamento para o consumidor;
+- encadeamento fluente entre interfaces;
 - substituição de implementações;
 - testes unitários;
-- isolamento de infraestrutura;
+- isolamento de responsabilidades;
 - evolução independente entre componentes.
 
----
+
 
 # 4. Clean Code
 
@@ -351,57 +657,17 @@ O código deve priorizar legibilidade, previsibilidade e manutenção.
 
 O RickCraft adota as seguintes convenções:
 
-| Elemento | Convenção |
-|---|---|
-| Classe | Prefixo `T` |
-| Interface | Prefixo `I` |
-| Campo privado | Prefixo `F` |
-| Argumento/parâmetro | Prefixo `A` |
-| Variável local | Prefixo `L` |
-| Constante | `_NOME_` |
-| Constante composta | `_NOME_COMPLETO_` |
+| Elemento | Convenção | Exemplo |
+|---|---|---|
+| Classe | Prefixo `T` | `TClienteService` |
+| Interface | Prefixo `I` | `IClienteService` |
+| Campo privado | Prefixo `F` | `FClienteRepository` |
+| Argumento/parâmetro | Prefixo `A` | `AClienteID` |
+| Variável local | Prefixo `L` | `LValorTotal` |
+| Constante | CAIXA ALTA, iniciando e terminando com `_` | `_NOME_` |
+| Constante composta | Palavras separadas por `_` | `_NOME_COMPLETO_` |
 
-### Classes
 
-```pascal
-TClienteService
-```
-
-### Interfaces
-
-```pascal
-IClienteService
-```
-
-### Campos privados
-
-```pascal
-FClienteRepository
-```
-
-### Argumentos e parâmetros
-
-```pascal
-procedure BuscarCliente(const AClienteId: Integer);
-```
-
-### Variável local
-
-```pascal
-LValorTotal
-```
-
-### Constante
-
-```pascal
-_NOME_
-```
-
-### Constante composta
-
-```pascal
-_NOME_COMPLETO_
-```
 
 ## 📍 Declaração de Variáveis
 
@@ -411,7 +677,8 @@ Variáveis devem:
 - ser declaradas próximas ao seu uso;
 - possuir nomes descritivos;
 - evitar abreviações sem significado claro;
-- representar claramente sua responsabilidade.
+- representar claramente sua responsabilidade;
+- utilizar o prefixo `L` quando forem locais.
 
 Evite:
 
@@ -422,7 +689,7 @@ var
   aux: string;
 ```
 
-Prefira nomes que expressem intenção:
+Prefira:
 
 ```pascal
 var
@@ -430,6 +697,7 @@ var
   LValorTotal: Double;
   LDescricaoCliente: string;
 ```
+
 
 
 ## 🔒 Regra para Constantes
@@ -459,7 +727,62 @@ const
   TempoLimiteConexao = 30;
 ```
 
----
+
+
+## 🔢 Enumerados com Escopo
+
+Quando um enumerado precisar de escopo explícito, utilizar `{$SCOPEDENUMS ON}` na região da declaração.
+
+Exemplo:
+
+```pascal
+{$SCOPEDENUMS ON}
+type
+  TMyEnum = (
+    One,
+    Two
+  );
+{$SCOPEDENUMS OFF}
+```
+
+Com `SCOPEDENUMS` ativo, os valores devem ser acessados através do tipo:
+
+```pascal
+LValue := TMyEnum.One;
+```
+
+O `{$SCOPEDENUMS OFF}` pode ser utilizado após a declaração quando a diretiva não deve afetar o restante da unit.
+
+
+
+## 🏗️ Criação de Classes por `New`
+
+Quando uma classe concreta adotar o método de criação `New`, o método deve concentrar a criação e retornar o tipo declarado pela própria API.
+
+Exemplo:
+
+```pascal
+interface
+
+type
+  TMyClass = class
+  public
+    class function New: TMyClass;
+  end;
+
+implementation
+
+class function TMyClass.New: TMyClass;
+begin
+  Result := Self.Create;
+end;
+
+end.
+```
+
+Para classes que implementam interfaces, prevalece a regra da seção **Programação Orientada a Interfaces**: `New` deve retornar a interface correspondente e o `constructor Create` deve permanecer em `protected`.
+
+
 
 ## ✂️ Métodos Curtos e Coesos
 
@@ -477,7 +800,7 @@ Quando um método realiza muitas operações diferentes, deve ser analisado para
 
 O objetivo não é reduzir métodos arbitrariamente, mas manter cada método compreensível e responsável por uma operação coerente.
 
----
+
 
 # 🔍 Postura de Revisão do RickCraft
 
@@ -506,7 +829,7 @@ Durante uma revisão, devem ser considerados aspectos como:
 - abstrações desnecessárias;
 - *Code Smells*.
 
----
+
 
 # 🚀 Protocolo de Resposta
 
@@ -524,7 +847,7 @@ Identificar objetivamente:
 - acoplamentos desnecessários;
 - impacto potencial das decisões existentes.
 
----
+
 
 ## 2. 🛠️ Refatoração RickCraft
 
@@ -539,7 +862,7 @@ A solução deve buscar:
 - testabilidade;
 - manutenção sustentável.
 
----
+
 
 ## 3. 💡 Justificativa Arquitetural
 
@@ -551,7 +874,7 @@ Exemplo:
 
 A justificativa deve explicar **qual problema está sendo resolvido**, e não apenas citar o nome de um padrão.
 
----
+
 
 # ⚠️ Evitar Overengineering
 
@@ -572,7 +895,7 @@ Antes de adicionar uma abstração, deve existir uma justificativa baseada em pe
 
 > **Simplicidade também é uma decisão arquitetural.**
 
----
+
 
 # 🤖 Uso com Inteligência Artificial
 
@@ -593,7 +916,7 @@ Clean Code, Design Patterns e convenções Delphi.
 
 A skill deve compreender que sua função é realizar uma avaliação técnica do código antes de propor alterações.
 
----
+
 
 # ✅ Resultado Esperado
 
@@ -611,7 +934,7 @@ O objetivo final do RickCraft não é produzir código sofisticado.
 - consistente com o restante do projeto;
 - sustentável ao longo do tempo.
 
----
+
 
 # 📄 Licença
 
@@ -621,7 +944,7 @@ Antes de utilizar, modificar, redistribuir ou incorporar o RickCraft em outro pr
 
 > O arquivo `LICENSE` é a referência oficial para os termos de licenciamento deste projeto.
 
----
+
 
 ## 🌐 Idiomas
 
@@ -630,7 +953,7 @@ Este projeto possui documentação em dois idiomas:
 - 🇺🇸 [English — README.md](README.md)
 - 🇧🇷 **Português — README_PTBr.md**
 
----
+
 
 ## 📌 RickCraft
 

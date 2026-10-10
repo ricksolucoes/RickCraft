@@ -26,7 +26,7 @@
 | Artefato | Estado | Referência verificável | Observação |
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
-| `plan.md` | COMPLETE | SHA-256 `249AFA0C46730E05649698E4CEFA0D5DD335D135A2AFA4005BFC4B8B38169C28` | Revisado em 2026-10-10; Codex Local no VS Code é o host inicial desta unidade, RickCraftRoot é fornecido explicitamente e Python 3.12/stdlib foi selecionado sob delegação ao RickCraft Core Specialist. A sonda D-02 deve comprovar as capacidades da raiz antes de qualquer uso. A prova auxiliar em TEMP foi inconclusiva por acesso negado. Aguardando aprovação explícita; ainda não autoriza TASKS. |
+| `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. Aguardando aprovação explícita; ainda não autoriza TASKS. |
 | `tasks.md` | NOT_STARTED | Sem versão | Ausência válida enquanto TASKS não iniciar. |
 
 ## Histórico de estado
@@ -42,6 +42,8 @@
 | 2026-10-10 | PLAN | BLOCKED | Registrada a decisão explícita do responsável para materializar `<LOCAL_DEFINIDO_USUARIO>` como `<RAIZ_REPOSITORIO>/impl/src` no Debug. As fórmulas normativas e a precedência de workspace permanecem inalteradas; nenhum diretório foi criado. A decisão não aprova o PLAN nem resolve os bloqueios de host/runtime, binding e linguagem. |
 | 2026-10-10 | PLAN | IN_PROGRESS | Revisão autorizada para registrar o host Debug aprovado e decidir linguagem/runtime sob delegação explícita do responsável ao RickCraft Core Specialist. |
 | 2026-10-10 | PLAN | COMPLETE | Codex Local no VS Code registrado como host inicial desta unidade; binding fornece RickCraftRoot explicitamente; Python 3.12/stdlib selecionado; mecanismos de JSON, UUIDv4, SHA-256 e publicação no filesystem definidos. A prova auxiliar em TEMP foi negada por permissões antes da escrita e é inconclusiva; D-02 exige sonda de cada raiz antes de uso. PLAN apto para revisão, não aprovado. |
+| 2026-10-10 | PLAN | IN_PROGRESS | Início da correção final de consistência autorizada; SPEC e arquitetura selecionada preservadas. Revisão limitada à redação de D-02/D-06/D-13, referências ao mecanismo de publicação e coerência da colisão documental. |
+| 2026-10-10 | PLAN | COMPLETE | Corrigidas as referências que condicionavam a conclusão do PLAN à prova operacional, as menções a `rename` como mecanismo atual e o tratamento de colisão para regenerar ID, metadados, bytes e temporário coerentemente. D-02 continua obrigatória antes de usar cada raiz e não foi registrada como executada/aprovada. PLAN apto para revisão e aprovação explícita; TASKS não autorizado. |
 
 ## Pendências e invalidações
 

@@ -19,7 +19,7 @@
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** Nenhum
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
-- **Aprovação do PLAN:** Aguardando revisão e aprovação explícita do responsável; COMPLETE não significa aprovado.
+- **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
 
 ## Artefatos e versões
 
@@ -44,6 +44,7 @@
 | 2026-10-10 | PLAN | COMPLETE | Codex Local no VS Code registrado como host inicial desta unidade; binding fornece RickCraftRoot explicitamente; Python 3.12/stdlib selecionado; mecanismos de JSON, UUIDv4, SHA-256 e publicação no filesystem definidos. A prova auxiliar em TEMP foi negada por permissões antes da escrita e é inconclusiva; D-02 exige sonda de cada raiz antes de uso. PLAN apto para revisão, não aprovado. |
 | 2026-10-10 | PLAN | IN_PROGRESS | Início da correção final de consistência autorizada; SPEC e arquitetura selecionada preservadas. Revisão limitada à redação de D-02/D-06/D-13, referências ao mecanismo de publicação e coerência da colisão documental. |
 | 2026-10-10 | PLAN | COMPLETE | Corrigidas as referências que condicionavam a conclusão do PLAN à prova operacional, as menções a `rename` como mecanismo atual e o tratamento de colisão para regenerar ID, metadados, bytes e temporário coerentemente. D-02 continua obrigatória antes de usar cada raiz e não foi registrada como executada/aprovada. PLAN apto para revisão e aprovação explícita; TASKS não autorizado. |
+| 2026-10-10 | Aprovação do PLAN | Registrada | O responsável pelo projeto aprovou explicitamente a versão COMPLETE de `plan.md`, SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. Esta aprovação não constitui ANALYZE PASS, não autoriza IMPLEMENT e TASKS não foi iniciada nesta execução. |
 
 ## Pendências e invalidações
 
@@ -51,4 +52,4 @@
 - **Etapas invalidadas:** Nenhuma etapa posterior foi iniciada; a versão COMPLETE anterior de PLAN foi invalidada pela revisão material. A versão atual de PLAN está COMPLETE e aguarda aprovação explícita.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. A sonda D-02 continua sendo critério operacional obrigatório antes de usar cada raiz; a prova auxiliar em TEMP foi inconclusiva por restrição de acesso do ambiente desta sessão.
 - **Bloqueios:** Nenhum bloqueio do PLAN. O resultado da sonda D-02 determinará se cada raiz pode ser usada e se o fallback normativo se aplica; falha desconhecida bloqueia a operação afetada.
-- **Próxima autorização necessária:** Aprovação explícita do PLAN atualizado antes de iniciar TASKS.
+- **Próxima autorização necessária:** Autorização explícita posterior para iniciar TASKS; a aprovação do PLAN não inicia essa etapa automaticamente.

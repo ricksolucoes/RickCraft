@@ -1,6 +1,6 @@
 # POL-0000000002 — Processo de desenvolvimento orientado por Specification
 
-- **Estado:** Proposta para aprovação
+- **Estado:** Vigente
 - **Escopo:** unidades funcionais do RickCraft desenvolvidas por SDD
 - **Autoridade:** responsável pelo projeto aprova esta Policy e alterações; proprietários de domínio mantêm autoridade sobre decisões formalmente delegadas
 - **Dependências:** POL-0000000001 — Governança documental

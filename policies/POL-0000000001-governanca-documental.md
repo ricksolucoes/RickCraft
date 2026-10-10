@@ -1,6 +1,6 @@
 # POL-0000000001 — Governança documental
 
-- **Estado:** Proposta para aprovação
+- **Estado:** Vigente
 - **Escopo:** documentos normativos e registros controlados do RickCraft
 - **Autoridade:** responsável pelo projeto aprova esta Policy e suas alterações
 - **Dependências:** nenhuma

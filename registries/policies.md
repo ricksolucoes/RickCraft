@@ -4,8 +4,8 @@
 
 | ID | Título | Estado | Escopo | Autoridade | Dependências | Sucessora |
 |---|---|---|---|---|---|---|
-| `POL-0000000001` | Governança documental | PROPOSTA | Documentos normativos e registros controlados | Responsável pelo projeto | Nenhuma | — |
-| `POL-0000000002` | Processo de desenvolvimento orientado por Specification | PROPOSTA | Unidades funcionais SDD | Responsável pelo projeto; Decision Owners somente quando delegados | `POL-0000000001` | — |
+| `POL-0000000001` | Governança documental | VIGENTE | Documentos normativos e registros controlados | Responsável pelo projeto | Nenhuma | — |
+| `POL-0000000002` | Processo de desenvolvimento orientado por Specification | VIGENTE | Unidades funcionais SDD | Responsável pelo projeto; Decision Owners somente quando delegados | `POL-0000000001` | — |
 
 ## Regras de manutenção
 

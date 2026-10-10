@@ -20,3 +20,4 @@ Lacunas nunca são preenchidas retroativamente. Uma alocação consome o ID perm
 
 | ID completo | Grupo | Sequência | Slug | Título | Caminho da unidade | Data da alocação |
 |---|---|---|---|---|---|---|
+| `SPEC-0000000001` | `000` | `0000001` | `workspace-operacional-rastreavel` | Workspace Operacional Persistente e Rastreabilidade entre Agents | `specs/SPEC-0000000001-workspace-operacional-rastreavel/` | 2026-10-10 |

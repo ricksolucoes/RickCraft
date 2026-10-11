@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-009 executadas; TASK-010 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-010 executadas; TASK-011 a TASK-013 pendentes. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
@@ -42,6 +42,8 @@
 | `test_document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `FCC8F4194078E7427168A9A51F1E1E28BB6E58B84DAA99453808DF7DDB60E974` | 47 testes de publicação, concorrência, colisões, reavaliação, verificação e propagação de resíduos. |
 | `document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `22FC472830DC934392D08D22D23DA1654ADD1E61835D95BADC0B221CC3203FC4` | Recuperação somente leitura por IDs, união permitida de raízes, validação física de caminhos, divergências, relações e revalidação de inputs. |
 | `test_document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `7B1A226E2479EAD1D303366DF98DAE5E11E7072CF6DCEE88C8D4E86510BD883C` | 28 testes específicos; 27 aprovados e 1 skip por privilégio de symlink real no Windows. |
+| `document_search.py` | IMPLEMENT TASK-010 | SHA-256 `0D2D2A2729DFDD5FC840DDF182AC7BE65CFB778D69429172475B886FA58EA63D` | Pesquisa sob demanda por recuperação atual, filtros combinados por AND, validação estrita de valores JSON e ordenação por instante UTC e document_id; sem índice/cache persistente. |
+| `test_document_search.py` | IMPLEMENT TASK-010 | SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70` | 73 testes unitários controlados de filtros, exclusões, ordenação, proveniência recuperada e ausência de mutação persistente. |
 
 ## Histórico de estado
 
@@ -87,11 +89,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-009 executadas com evidências registradas; TASK-010 a TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e requer sua própria sonda antes de uso ativo.
+- **Mudanças pendentes:** TASK-001 a TASK-010 executadas com evidências registradas; TASK-011 a TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e requer sua própria sonda antes de uso ativo.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-009. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-009 antes de autorizar TASK-010.
+- **Bloqueios:** Nenhum bloqueio material para TASK-010. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-010 antes de autorizar TASK-011.
 
 ## Validade do ANALYZE anterior
 
@@ -890,3 +892,35 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - Regressões: `python -B -m unittest discover -s impl/tests -p test_document_recovery.py -v` — 28 executados, 27 aprovados, 1 skip; TASK-008 `test_document_publisher.py` — 47/47 aprovados; TASK-007 `test_provenance.py` — 45/45 aprovados; TASK-006 `test_document_format.py` — 49/49 aprovados; suíte completa `python -B -m unittest discover -s impl/tests -v` — 263 executados, 262 aprovados, 1 skip. O skip permaneceu porque o usuário Windows não pode criar symlink real; a proteção correspondente segue coberta deterministicamente. A tentativa inicial sob sandbox falhou com WinError 5 ao criar/limpar fixtures; as execuções elevadas passaram.
 - A integração real Debug anterior foi preservada e não repetida. Esta correção não criou ANL/DOC, não publicou documentos, não executou D-02, não usou rede/Git e não alterou SPEC/PLAN/TASKS. TASK-010 não foi iniciada.
 - Estado corrente: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS em `ANALYZE-2026-10-10-SPEC-0000000001-03`; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED; TASK-001 a TASK-009 executadas; TASK-010 a TASK-013 pendentes. Próximo passo: revisão da correção de TASK-009 antes de autorizar TASK-010.
+
+## IMPLEMENT TASK-010 — evidência
+
+### Escopo, gate e estado
+
+- Data: 2026-10-11. Executada somente TASK-010; SPEC, PLAN e TASKS permaneceram inalterados.
+- Gate preservado: ANALYZE-2026-10-10-SPEC-0000000001-03, PASS para SPEC SHA-256 A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C, PLAN SHA-256 32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB e TASKS SHA-256 D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6.
+- Estado: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. TASK-001 a TASK-010 executadas; TASK-011 a TASK-013 pendentes.
+- Ambiente: Python 3.12.9; Windows 11 10.0.26200-SP0; sys.platform=win32. Nenhuma dependência externa foi adicionada.
+
+### Implementação e artefatos
+
+- Criado `impl/src/RickCraft/document_search.py`, SHA-256 `0D2D2A2729DFDD5FC840DDF182AC7BE65CFB778D69429172475B886FA58EA63D`, e `impl/tests/test_document_search.py`, SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70`.
+- A API recebe RickCraftRoot explícito e chama a recuperação novamente em cada consulta; não mantém cache, índice, banco ou estado persistente. Valida filtros e valores antes de recuperar documentos.
+- Filtros opcionais de analysis_id, document_type, document_id, pares JSON de metadata, inputs e relations e termos do corpo combinam por AND. Igualdade JSON preserva tipos estritos; pares de input/relation precisam ocorrer no mesmo objeto. Busca textual usa substring literal com casefold somente no corpo Markdown, sem normalizar acentos.
+- Cada documento recuperável que não satisfaz a consulta aparece em exclusions com todos os motivos aplicáveis. Resultados preservam findings, divergences, estados/evidências das raízes e tipo de raiz selecionada fornecidos pela recuperação; documentos correspondentes são ordenados pelo instante UTC real de created_at_utc e depois por document_id.
+
+### Testes e regressões
+
+- TASK-010: `python -B -m unittest discover -s impl/tests -p test_document_search.py -v` — 73/73 PASS.
+- TASK-009: `python -B -m unittest discover -s impl/tests -p test_document_recovery.py -v` — 28 executados, 27 aprovados e 1 skip por privilégio de symlink real no Windows; proteção determinística permanece coberta.
+- TASK-008: `python -B -m unittest discover -s impl/tests -p test_document_publisher.py -v` — 47/47 PASS.
+- TASK-007: `python -B -m unittest -q impl.tests.test_provenance` — 45/45 PASS.
+- TASK-006: `python -B -m unittest discover -s impl/tests -p test_document_format.py -v` — 49/49 PASS.
+- Suíte completa: `python -B -m unittest discover -s impl/tests -v` — 336 testes executados, 335 aprovados, 1 skip; resultado OK.
+- A execução inicial sandboxada encontrou WinError 5 ao criar fixtures temporárias em `impl/tests`; as execuções finais foram repetidas com o mecanismo elevado autorizado. As 72 pastas temporárias `rickcraft-search-*` dessa tentativa foram verificadas como filhas diretas de `impl/tests` e removidas; nenhuma fixture permaneceu. A elevação foi limitação ambiental, não requisito do produto.
+
+### Integração Debug somente leitura
+
+- RickCraftRoot explícito: `C:\Projects\Language\Skills\RickCraft\impl\src\RickCraft`. A consulta real encontrou o documento `DOC-e94fe576-a13a-422a-bd12-406629018cec` da análise `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5`, tipo `evidence`, na raiz preferencial `impl/.workspace`. SHA-256 lido: `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`.
+- A resolução efetiva selecionou preferred; evidência observada da raiz preferencial: UTILIZAVEL, com capacidades de sonda aprovadas e sem resíduos/avisos. Fallback ficou MISSING e não foi sondado. A chamada de resolução executou a sonda D-02 temporária de avaliação e limpou seus artefatos; inventário e bytes persistentes das duas raízes antes/depois permaneceram idênticos.
+- Nenhuma análise/documento foi criado, publicado ou alterado; nenhum arquivo operacional novo foi persistido. Sem rede ou Git. TASK-011 não foi iniciada; IMPLEMENT permanece IN_PROGRESS e CONVERGE NOT_STARTED.

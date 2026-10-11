@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS - TASK-008 concluida, aguardando revisao
+- **IMPLEMENT:** IN_PROGRESS - TASK-008 concluida, aguardando nova revisao
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -915,3 +915,79 @@ Nao iniciar TASK-009, nao executar CONVERGE, nao gerar Release e nao fazer push 
 **Pendencia:** revisao externa read-only da TASK-008 publicada.
 **Proximo passo proposto:** revisar exclusivamente os tres arquivos alterados.
 **Autorizacao necessaria:** autorizacao explicita separada antes da TASK-009.
+
+## Correcao pontual IMPLEMENT - TASK-008 - heading Setext - 2026-10-11
+
+A publicacao `d5a69daf3ff876d0502a5c32fa00b2d94523a32e` foi revisada externamente e TASK-008 nao foi aprovada devido a heading Setext criado por `=` nao escapado. TASK-009 permaneceu nao autorizada. A baseline local conferiu exatamente com o commit e os blobs declarados: runtime `25d63ea14c69a86a659b9a1ae88daf988daedcf0`, teste `8bde77be47edbcb35d6bf0cf976290dd81b5ac32` e status `5f5f370eb6f701f3baf3cb7cd02847310dce5f70`. A correcao atual trata somente essa lacuna; nenhum contrato anterior foi relaxado.
+
+Foi incluido teste explicito para corpo `texto\n===`: o texto permanece, os sinais de igual sao escapados, nao ha linha delimiter Setext funcional, permanecem tres headings estruturais, e repeticao do render e round-trip UTF-8 sao identicos. O escaping adicional e restrito ao caractere `=` usando o helper ja existente. Os testes existentes para `#`, `---`, HTML, backticks, idioma, Unicode, ordem, imutabilidade e pureza permanecem ativos.
+
+Comando executado: `python -B -m unittest -v impl.tests.test_review_protocol` - `Ran 186 tests`; `OK`; 186 PASS, 0 FAIL, 0 ERROR, 0 SKIP. Nenhuma primeira tentativa de teste falhou nesta correcao. Nenhuma regressao SPEC1 adicional foi executada, pois a mudanca nao toca SPEC1 nem a integracao TASK-006.
+
+Hashes finais UTF-8 estrito, calculados duas vezes apos as alteracoes: `review_protocol.py` = `C8603A83CBF08789B42FBAA6F26AF9B622E5F0825F7FE1986E2BD0D352081AA1`; `test_review_protocol.py` = `8A21EAEA5920358530A1521FC1D0DD26CB1B843C27B64A898C5034BD11D3D7EC`. SPEC/PLAN/TASKS e `gap_handling.py`/`test_gap_handling.py` foram reconfirmados nos hashes congelados. `git diff --check` passou. `git status --short` lista somente runtime, teste e este status. IMPLEMENT permanece IN_PROGRESS; ANALYZE = PASS; TASK-008 = COMPLETE - aguardando nova revisao; TASK-009 a TASK-013 nao iniciadas; CONVERGE = NOT_STARTED; Release nao autorizado.
+
+### CHECKPOINT RICKCRAFT - correcao pontual TASK-008
+
+## Fase executada
+IMPLEMENT - correcao pontual TASK-008 - SPEC-0000000002
+
+## Objetivo da execucao
+Neutralizar heading Setext criado por `=` nao escapado, preservando os contratos anteriores da TASK-008.
+
+## Estado
+CONCLUIDO / AGUARDANDO_APROVACAO.
+
+## O que foi realizado
+O helper de escaping existente agora neutraliza `=`; foi adicionado teste focal da regressao Setext e mantida a regressao da suite inteira de TASK-001 a TASK-008.
+
+## Arquivos criados
+Nenhum.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Decisoes formalizadas
+Somente o escaping de `=` necessario para esta lacuna localizada.
+
+## Decisoes pendentes
+Nova revisao externa read-only da publicacao corrigida.
+
+## Questoes em aberto
+Nenhuma identificada.
+
+## Bloqueios
+Nenhum.
+
+## Riscos identificados
+A revisao externa da correcao permanece pendente.
+
+## Testes e verificacoes executados
+- Suite focal: 186 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- `git diff --check`: passou.
+- Entradas congeladas e UTF-8 estrito: conferidos.
+- Somente os tres arquivos autorizados aparecem em `git status --short`.
+
+## Hashes finais
+- `review_protocol.py`: `C8603A83CBF08789B42FBAA6F26AF9B622E5F0825F7FE1986E2BD0D352081AA1`
+- `test_review_protocol.py`: `8A21EAEA5920358530A1521FC1D0DD26CB1B843C27B64A898C5034BD11D3D7EC`
+
+## Proximo passo recomendado
+O usuario publicar manualmente no GitHub somente os tres arquivos autorizados e informar exatamente: `Atualizei o GitHub do RickCraft.`
+
+## Motivo do proximo passo
+A correcao da TASK-008 precisa de nova revisao read-only do estado publicado.
+
+## O que NAO deve ser feito ainda
+Nao iniciar TASK-009. Nao executar CONVERGE. Nao gerar Release. Nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT
+
+**Fase:** IMPLEMENT - correcao pontual TASK-008 - SPEC-0000000002
+**Estado:** AGUARDANDO_APROVACAO
+**Resultado:** escaping Setext corrigido; TASK-008 aguardando nova revisao e nao aprovada ainda.
+**Evidencias:** hashes SHA-256 registrados acima; suite focal 186/186 PASS; `git diff --check` passou.
+**Pendencia:** revisao read-only da nova publicacao.
+**Proximo passo proposto:** apos publicacao manual pelo usuario, revisar exclusivamente esta correcao.
+**Autorizacao necessaria:** revisao externa antes de qualquer TASK-009.

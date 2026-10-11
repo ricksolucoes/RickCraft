@@ -1157,7 +1157,7 @@ _RESPONSE_BLOCK_ORDER = (
     ResponseBlockKey.REFACTORING,
     ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
 )
-_MARKDOWN_ESCAPABLE = frozenset("\\`*_{}[]()#+-!|>~<")
+_MARKDOWN_ESCAPABLE = frozenset("\\`*_{}[]()#+-=!|>~<")
 
 
 def _texto_markdown_literal(value: str) -> str:

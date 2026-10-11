@@ -1899,6 +1899,19 @@ class ReviewResponseTests(unittest.TestCase):
         self.assertIn(r"\#\#\# heading", rendered)
         self.assertIn(r"\<h2\>texto\</h2\>", rendered)
 
+    def test_corpo_nao_cria_heading_setext_com_sinais_de_igual(self) -> None:
+        blocks = self.blocks(bodies=(
+            "texto\n===", "Não aplicável.", "Não aplicável."
+        ))
+        response = self.response(blocks=blocks)
+        rendered = renderizar_resposta(response)
+        self.assertIn("texto", rendered)
+        self.assertIn(r"\=\=\=", rendered)
+        self.assertNotRegex(rendered, r"(?m)^={3,}\s*$")
+        self.assertEqual(rendered.count("## "), 3)
+        self.assertEqual(renderizar_resposta(response), rendered)
+        self.assertEqual(rendered.encode("utf-8").decode("utf-8"), rendered)
+
     def test_escaping_e_unicode_sao_deterministicos_e_utf8_round_trip(self) -> None:
         response = self.response(blocks=self.blocks(
             titles=("Análise Crítica", "Refatoração", "Justificativa Arquitetural"),

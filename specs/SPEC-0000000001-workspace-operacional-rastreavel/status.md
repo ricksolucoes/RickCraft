@@ -10,13 +10,13 @@
 
 ## Estado atual
 
-- **Etapa atual:** CONVERGE
+- **Etapa atual:** IMPLEMENT
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
 - **ANALYZE:** PASS
 - **IMPLEMENT:** COMPLETE
-- **CONVERGE:** IN_PROGRESS
+- **CONVERGE:** INVALIDATED
 - **Último gate válido:** `ANALYZE PASS` da execução `ANALYZE-2026-10-10-SPEC-0000000001-03`, exclusivamente para os hashes de SPEC, PLAN e TASKS registrados na evidência dessa execução. Os resultados -01 e -02 permanecem históricos; -02 foi invalidado pela alteração material de TASKS.
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
 - **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
@@ -99,14 +99,16 @@
 | 2026-10-11 | IMPLEMENT | COMPLETE | Correção final da evidência CA-009 concluída: subprocesso independente recupera input persistido, reavalia, publica evidência relacionada e recupera histórico. Integração 4/4 e suíte completa 434 executados, 433 PASS e 1 SKIP ambiental; ANALYZE-03 válido e CONVERGE NOT_STARTED. |
 | 2026-10-11 | CONVERGE | IN_PROGRESS | Iniciado o gate `CONVERGE-2026-10-11-SPEC-0000000001-01` após confirmar ausência de duplicidade do ID, hashes exatos de SPEC/PLAN/TASKS, IMPLEMENT COMPLETE e hashes dos artefatos correntes registrados. Nenhum código ou teste foi alterado; avaliação documental e técnica em andamento. |
 | 2026-10-11 | CONVERGE | NOT_CONVERGED | Avaliação concluída para os hashes normativos registrados. Achado CONV-001: há diretórios temporários `rickcraft-*` em `impl/tests` inacessíveis para inspeção, em conflito com a afirmação corrente de que nenhum fixture permaneceu; requer reconciliação no estágio IMPLEMENT. |
+| 2026-10-11 | IMPLEMENT | IN_PROGRESS | Retorno limitado autorizado para reconciliar CONV-001. O cabeçalho anterior ainda indicava CONVERGE IN_PROGRESS, embora CONVERGE-2026-10-11-SPEC-0000000001-01 tivesse concluído NOT_CONVERGED; a inconsistência foi identificada. CONVERGE-01 passa a INVALIDATED enquanto a base material (resíduos) é inspecionada/modificada. Nenhum gate normativo foi alterado. |
+| 2026-10-11 | IMPLEMENT | COMPLETE | CONV-001 reconciliado: 30 diretórios temporários reconhecidos foram individualmente enumerados, confirmados vazios/contidos/sem redirecionamento e removidos com `rmdir` sem recursão. Inventário final sem filhos `rickcraft-*`; `git status --short` sem avisos de acesso. Nenhum runtime/teste ou gate normativo foi alterado. CONVERGE-01 permanece histórico NOT_CONVERGED e corrente INVALIDATED. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-013 permanecem concluídas em IMPLEMENT. CONV-001 requer reconciliação de resíduos/afirmação histórica pela etapa IMPLEMENT. O fallback Debug não foi sondado e permanece sem declaração de utilizabilidade; exige D-02 própria antes de qualquer uso.
-- **Etapas invalidadas:** ANALYZE FAIL de -01 e PASS de -02 permanecem históricos para suas versões; `ANALYZE-2026-10-10-SPEC-0000000001-03` permanece o gate ANALYZE válido para os hashes indicados. IMPLEMENT permanece COMPLETE até retorno autorizado ao estágio proprietário. CONVERGE está NOT_CONVERGED pelo execution ID desta avaliação.
+- **Mudanças pendentes:** TASK-001 a TASK-013 permanecem concluídas; CONV-001 foi reconciliado em IMPLEMENT. O fallback Debug não foi sondado e permanece sem declaração de utilizabilidade; exige D-02 própria antes de qualquer uso.
+- **Etapas invalidadas:** ANALYZE FAIL de -01 e PASS de -02 permanecem históricos para suas versões; `ANALYZE-2026-10-10-SPEC-0000000001-03` permanece o gate ANALYZE válido para os hashes indicados. IMPLEMENT está COMPLETE após a reconciliação. CONVERGE-01 permanece histórico NOT_CONVERGED e está INVALIDATED como resultado corrente; novo CONVERGE exige autorização explícita.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. Nenhuma invalidação normativa foi necessária.
-- **Bloqueios:** CONV-001 é uma lacuna de evidência ambiental; não foi possível ler os diretórios temporários existentes. Nenhum Release foi produzido ou autorizado.
-- **Próxima autorização necessária:** Autorizar retorno limitado a IMPLEMENT para identificar/reconciliar CONV-001; somente depois reexecutar CONVERGE. Release continua exigindo autorização separada.
+- **Bloqueios:** Nenhum bloqueio remanescente de CONV-001. Nenhum Release foi produzido ou autorizado.
+- **Próxima autorização necessária:** Revisar exclusivamente a reconciliação publicada de CONV-001 antes de autorizar novo CONVERGE.
 
 ## Validade do ANALYZE anterior
 
@@ -1403,3 +1405,130 @@ Para os hashes exatos acima, RF-001–RF-014 estão **SATISFIED**, CA-001–CA-0
 **CONVERGE = NOT_CONVERGED** para `CONVERGE-2026-10-11-SPEC-0000000001-01`. Etapa atual CONVERGE; SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE NOT_CONVERGED. O gate foi concluído para as versões acima, mas não autoriza Release. O último gate ANALYZE válido continua sendo `ANALYZE-2026-10-10-SPEC-0000000001-03`; CONVERGE não foi aprovado.
 
 CONVERGED não significa certeza absoluta, ausência matemática de defeitos, Release produzido ou autorizado, instalação ou distribuição. Nenhum Release foi produzido ou autorizado por este resultado.
+
+## RECONCILIAÇÃO CONV-001 — IMPLEMENT
+
+### Escopo e transição SDD
+
+- O histórico preservado registra `CONVERGE-2026-10-11-SPEC-0000000001-01 = NOT_CONVERGED`. Foi detectado que o cabeçalho corrente ainda dizia CONVERGE IN_PROGRESS; o histórico de estado acima registra essa dessincronização e o retorno limitado autorizado a IMPLEMENT.
+- Durante a correção: etapa IMPLEMENT, IMPLEMENT IN_PROGRESS, CONVERGE INVALIDATED. SPEC/PLAN/TASKS permaneceram COMPLETE; ANALYZE permaneceu PASS para `ANALYZE-2026-10-10-SPEC-0000000001-03` e hashes originais.
+- A alegação histórica de que nenhum fixture permanecera não foi apagada. CONV-001 a refutou ao observar diretórios inacessíveis; a inspeção elevada e reconciliação abaixo resolveu esse achado. CONVERGE-01 continua como resultado histórico NOT_CONVERGED e corrente INVALIDATED; nenhum novo CONVERGE foi executado.
+
+### Inventário inicial e inspeção elevada
+
+- Base absoluta normalizada: `C:\Projects\Language\Skills\RickCraft\impl\tests`.
+- Inventário dos filhos diretos `rickcraft-*`: 30 diretórios — 26 `rickcraft-recovery-*` e 4 `rickcraft-integration-*`; nenhum `rickcraft-search-*` ou prefixo desconhecido.
+- Inspeção elevada foi somente leitura até concluir a classificação. Para cada um dos 30 itens, `lstat` indicou diretório comum (modo `0o40777`); symlink=false, junction=false e reparse=false. Todas as árvores foram enumeradas sem seguir redirecionamentos; cada raiz estava vazia (0 entradas), legível e fisicamente filha da base. ACL/owner não foram alterados.
+- Os prefixes são os usados em `test_document_recovery.py` e `test_workspace_integration.py`, confirmados em `TemporaryDirectory(..., dir=Path(__file__).resolve().parent)`. A estrutura vazia é compatível com interrupção após a criação do próprio TemporaryDirectory e antes da criação de `repository/...` ou `repo/...`; não havia conteúdo cuja origem pudesse ser diferente. Prefixo foi combinado com localização, código de origem, tipo, lstat, contenção e enumeração completa.
+
+| Nome | Caminho absoluto normalizado | Origem/prefixo | lstat / redirect | Leitura / estrutura observada | Classificação |
+|---|---|---|---|---|---|
+| `rickcraft-integration-35drq9r3` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-integration-35drq9r3` | `test_workspace_integration.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-integration-bi84dais` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-integration-bi84dais` | `test_workspace_integration.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-integration-mikeh5qk` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-integration-mikeh5qk` | `test_workspace_integration.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-integration-obhpgtte` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-integration-obhpgtte` | `test_workspace_integration.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-1ol00rdg` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-1ol00rdg` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-1q5a15ww` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-1q5a15ww` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-5c7e7t8m` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-5c7e7t8m` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-5qkxeqtz` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-5qkxeqtz` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-7gr458ff` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-7gr458ff` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-9426fc69` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-9426fc69` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-a3vykhq9` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-a3vykhq9` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-b0c5ch_i` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-b0c5ch_i` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-bduotix8` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-bduotix8` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-ce5d66wp` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-ce5d66wp` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-evxmlfxw` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-evxmlfxw` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-gi9syng3` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-gi9syng3` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-imdbw3i_` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-imdbw3i_` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-j8tk6tfo` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-j8tk6tfo` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-kvlnf0sx` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-kvlnf0sx` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-n5zo806s` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-n5zo806s` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-nb0hfgs7` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-nb0hfgs7` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-p5lmt8iw` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-p5lmt8iw` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-qbhbt3le` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-qbhbt3le` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-v_zkd_oi` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-v_zkd_oi` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-waqcu_km` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-waqcu_km` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-wy44rkda` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-wy44rkda` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-xn_8bkk6` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-xn_8bkk6` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-yhud_7kt` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-yhud_7kt` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-z0n9a1p3` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-z0n9a1p3` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+| `rickcraft-recovery-zc057k0k` | `C:\Projects\Language\Skills\RickCraft\impl\tests\rickcraft-recovery-zc057k0k` | `test_document_recovery.py`; conhecido | diretório `0o40777`; symlink/junction/reparse: não | legível; vazio; contido | fixture parcial confirmada |
+
+### Remoção e inventário final
+
+- Foram removidos exclusivamente os 30 caminhos absolutos acima, cada qual em chamada individual de `os.rmdir` (remoção de diretório vazio). Antes de cada chamada foram novamente verificados: filho direto exato, prefixo reconhecido, `lstat` de diretório comum, ausência de symlink/junction/reparse, contenção física e enumeração vazia. Nenhum wildcard, remoção recursiva, alteração de ACL ou de owner foi usado.
+- Inventário final elevado dos filhos diretos `rickcraft-*` de `impl/tests`: lista vazia; zero prefixes confirmados e zero prefixos desconhecidos.
+- `git status --short`: somente `M specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`; sem avisos de acesso negado. `git diff --check`: sem erro, com aviso informativo de conversão LF→CRLF do Git.
+- Nenhum runtime/teste foi alterado; nenhuma suíte foi rerodada; `impl/.workspace` e `impl/src/RickCraft/.workspace` não foram acessados; nenhum ANL/DOC, Release, novo CONVERGE, commit ou push foi produzido.
+- Hashes SPEC/PLAN/TASKS permanecem os registrados na abertura; ANALYZE-03 permanece PASS. Status relido em UTF-8 estrito.
+
+### Estado SDD final
+
+Etapa atual IMPLEMENT; SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE INVALIDATED. CONVERGE-01 permanece histórico NOT_CONVERGED; CONV-001 está **RESOLVIDO EM IMPLEMENT — aguardando novo CONVERGE**. A resolução não aprova nem reverte o resultado histórico e não produz novo resultado de gate.
+
+# CHECKPOINT RICKCRAFT
+
+## Fase executada
+RECONCILIAÇÃO CONV-001 — IMPLEMENT — SPEC-0000000001
+
+## Objetivo da execução
+Identificar com segurança e reconciliar somente os resíduos temporários que originaram CONV-001.
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Inventário inicial
+30 diretórios filhos diretos: 26 `rickcraft-recovery-*` e 4 `rickcraft-integration-*`; todos listados individualmente acima, legíveis, vazios, contidos e sem redirecionamento.
+
+## Itens confirmados e removidos
+Os 30 caminhos da tabela, confirmados como fixtures parciais `TemporaryDirectory` pelos prefixes e origem de teste; removidos individualmente com `os.rmdir`.
+
+## Itens não confirmados
+Nenhum.
+
+## Inventário final
+Nenhum filho direto `rickcraft-*` em `impl/tests`; `git status --short` sem advertências e somente status.md modificado.
+
+## Estado SDD final
+IMPLEMENT COMPLETE; CONVERGE INVALIDATED; CONVERGE-01 histórico = NOT_CONVERGED.
+
+## Próximo passo recomendado
+Revisar exclusivamente a reconciliação de CONV-001 antes de autorizar uma nova execução de CONVERGE.
+
+## O que NÃO deve ser feito ainda
+Não executar novo CONVERGE, não gerar Release e não fazer push.
+
+# HANDOFF PARA REVISÃO — RICKCRAFT
+
+## Fase
+RECONCILIAÇÃO CONV-001 — IMPLEMENT — SPEC-0000000001
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Objetivo executado
+Reconciliar somente os resíduos que impediram CONVERGE-01.
+
+## Evidências
+Inventário elevado antes/depois, `lstat` e verificação de ausência de redirects, enumeração vazia/contida, 30 remoções não recursivas e `git status --short` final estão registrados nesta seção.
+
+## Estado de IMPLEMENT
+COMPLETE
+
+## Estado de CONVERGE
+INVALIDATED
+
+## Resultado histórico
+`CONVERGE-2026-10-11-SPEC-0000000001-01 = NOT_CONVERGED`.
+
+## Próximo passo proposto
+Revisar exclusivamente a reconciliação de CONV-001.
+
+## Autorização necessária
+Nova autorização explícita antes de reexecutar CONVERGE.
+
+## Arquivos que o revisor deve analisar
+- `specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`
+
+## Ponto de parada
+Não executar novo CONVERGE, não gerar Release e não fazer push.

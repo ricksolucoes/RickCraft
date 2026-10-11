@@ -10,14 +10,14 @@
 
 ## Estado atual
 
-- **Etapa atual:** IMPLEMENT
+- **Etapa atual:** TASKS
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
-- **ANALYZE:** PASS
+- **ANALYZE:** INVALIDATED
 - **IMPLEMENT:** IN_PROGRESS
 - **CONVERGE:** NOT_STARTED
-- **Último gate válido:** ANALYZE PASS, válido somente para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`.
+- **Último gate válido:** Nenhum. O ANALYZE PASS `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico para as versões que avaliou e foi invalidado pela alteração material de TASKS.
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
 - **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
 
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8` | 13 tarefas preservadas. TASK-002 e TASK-008 explicitam a reavaliação D-04 no início das operações e antes de cada tentativa de publicação, incluindo mudanças de raiz, `workspace_root_kind` e colisões. ANALYZE anterior foi invalidado por esta alteração material. TASK-001 foi executada e seus testes passaram; TASK-002–TASK-013 permanecem pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. O ANALYZE PASS anterior foi invalidado por esta mudança material. |
 
 ## Histórico de estado
 
@@ -58,14 +58,17 @@
 | 2026-10-10 | ANALYZE | PASS | Gate documental integral concluído nas três versões exatas acima. `ANALYZE-001` foi confirmado resolvido em TASK-002/TASK-008; não foram identificados novos achados bloqueantes. Evidência detalhada registrada abaixo. IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido passa a ANALYZE PASS para essas versões somente. |
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | Início autorizado de IMPLEMENT limitado exclusivamente à TASK-001. O ANALYZE PASS `ANALYZE-2026-10-10-SPEC-0000000001-02` e seus hashes exatos foram confirmados. Escopo: materializar o componente runtime Debug mínimo e testar o contrato explícito de RickCraftRoot. TASK-002 a TASK-013 não iniciadas; D-02 não autorizada nem executada; CONVERGE permanece NOT_STARTED. |
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-001 executada; os 10 testes da suíte `unittest` passaram na execução final e a invocação CLI com `--rickcraft-root` aceitou a raiz Debug explícita. Evidências, hashes e limitações ambientais estão registradas abaixo. IMPLEMENT permanece IN_PROGRESS; TASK-002–TASK-013 não foram iniciadas; ANALYZE PASS continua válido para as entradas registradas; CONVERGE permanece NOT_STARTED. |
+| 2026-10-10 | TASKS | IN_PROGRESS | Início da correção material da fronteira semântica TASK-002/TASK-003. Hash de entrada de `tasks.md`: `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. SPEC, PLAN e arquivos/testes de TASK-001 foram preservados. Nenhuma tarefa de implementação, análise, teste ou sonda foi executada nesta correção. |
+| 2026-10-10 | TASKS | COMPLETE | Separadas as responsabilidades: TASK-002 deriva, reavalia e escolhe usando resultados D-02/D-03; TASK-003 executa a sonda concreta, classifica falhas e integra os resultados ao resolvedor. As 13 tarefas e dependências foram preservadas. Novo SHA-256 de `tasks.md`: `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`. |
+| 2026-10-10 | ANALYZE | INVALIDATED | A alteração material de TASKS invalida o PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02`, que permanece no histórico vinculado ao SHA-256 anterior `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. Último gate válido: Nenhum. Novo ANALYZE será necessário antes de qualquer novo trabalho de IMPLEMENT. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** Nenhuma para a cobertura analisada. TASK-001 foi executada com evidência satisfatória; TASK-002–TASK-013 continuam pendentes. A sonda D-02 segue obrigatória antes do uso de cada raiz e não foi executada.
-- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece histórico e INVALIDATED porque avaliou o hash anterior de TASKS. A execução `ANALYZE-2026-10-10-SPEC-0000000001-02` concluiu PASS somente para os hashes atuais registrados acima. IMPLEMENT está IN_PROGRESS, limitado à TASK-001; CONVERGE permanece NOT_STARTED.
+- **Mudanças pendentes:** TASK-001 foi executada com evidência satisfatória e preservada; TASK-002–TASK-013 não foram executadas. A sonda D-02 segue obrigatória antes do uso de cada raiz e não foi executada.
+- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece histórico e INVALIDATED para seu hash original. O PASS da execução `ANALYZE-2026-10-10-SPEC-0000000001-02` também permanece histórico, mas foi invalidado pela nova versão de TASKS. Último gate válido: Nenhum. IMPLEMENT segue IN_PROGRESS como estágio já iniciado, mas nenhum novo trabalho pode continuar até novo ANALYZE PASS válido; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. A sonda D-02 continua sendo critério operacional obrigatório antes de usar cada raiz; a prova auxiliar em TEMP foi inconclusiva por restrição de acesso do ambiente desta sessão.
-- **Bloqueios:** Nenhum achado bloqueante no gate ANALYZE-02. `ANALYZE-001` foi confirmado resolvido nesta execução documental. D-02 não foi executada e permanece pré-condição operacional antes do uso de cada raiz.
-- **Próxima autorização necessária:** Revisar a implementação e as evidências de TASK-001; depois, conceder autorização explícita para iniciar TASK-002. TASK-001 não autoriza tarefas posteriores automaticamente.
+- **Bloqueios:** Nenhum novo bloqueio material foi identificado na correção documental. A ausência de gate válido impede novo trabalho de IMPLEMENT até novo ANALYZE PASS. D-02 não foi executada e permanece pré-condição operacional antes do uso de cada raiz.
+- **Próxima autorização necessária:** Revisar a correção de TASKS e então autorizar explicitamente novo ANALYZE sobre as versões atuais. Nenhum trabalho de IMPLEMENT pode continuar enquanto o gate estiver invalidado.
 
 ## Validade do ANALYZE anterior
 
@@ -308,4 +311,17 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 - **Testes:** comando `python -B -m unittest discover -s impl/tests -v`; Python 3.12.9 em Windows 11 10.0.26200, 64-bit AMD64. Resultado final: uma suíte, 13 testes executados, 13 aprovados, zero falhas (`Ran 13 tests ... OK`). Os dez testes existentes foram preservados; foram acrescentados testes de ajuda, erro de validação e argumento desconhecido, e o teste de parâmetro ausente passou a verificar a ausência de mensagens padrão em inglês.
 - **Tentativa no sandbox:** a suíte executou, mas a limpeza dos diretórios temporários recebeu `WinError 5`; essa tentativa não foi tratada como aprovação. A execução final fora do sandbox passou, e os 13 diretórios temporários órfãos dessa tentativa, todos contidos em `impl/tests/`, foram removidos após validação dos caminhos. A elevação foi somente uma necessidade ambiental dos testes, não requisito do produto.
 - **Garantia de idioma:** saída de ajuda, uso, parâmetro obrigatório ausente, argumento não reconhecido e erro de validação são produzidos com textos explicitamente definidos em pt-BR. Os testes verificam a saída efetiva e a ausência de cabeçalhos/textos padrão do `argparse` em inglês.
-- **Limites e estado:** SPEC, PLAN e TASKS não foram alterados e mantêm os hashes do ANALYZE PASS registrados no início deste status. ANALYZE permanece PASS; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. TASK-001 continua sendo a única tarefa executada; TASK-002–TASK-013 permanecem pendentes. Nenhuma dependência foi adicionada. D-02 não foi executada; TASK-002 não foi iniciada; nenhum `.workspace/` ou Release foi criado.
+- **Limites e estado naquele registro histórico, antes desta revisão de TASKS:** SPEC, PLAN e TASKS mantinham os hashes do ANALYZE PASS então válido. TASK-001 continua sendo a única tarefa executada; nenhuma dependência foi adicionada. D-02 não foi executada; TASK-002 não foi iniciada; nenhum `.workspace/` ou Release foi criado. A mudança material posterior em TASKS, registrada abaixo, invalidou aquele ANALYZE PASS sem afetar a evidência técnica de TASK-001.
+
+## Evidência da correção da fronteira TASK-002/TASK-003
+
+- **Data:** 2026-10-10.
+- **Motivo:** a redação anterior sobrepunha a aplicação/classificação de D-02/D-03 entre TASK-002 e TASK-003, e não deixava clara a execução isolada da resolução antes da implementação concreta da sonda.
+- **Arquivos alterados:** `specs/SPEC-0000000001-workspace-operacional-rastreavel/tasks.md` e este `status.md`. Nenhum arquivo foi criado.
+- **Versão anterior de TASKS:** SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`.
+- **Nova versão de TASKS:** SHA-256 `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`; continuam existindo exatamente 13 tarefas, TASK-001 a TASK-013.
+- **Fronteira registrada:** TASK-002 deriva as duas raízes, reavalia a prioridade e seleciona conforme resultados semânticos fornecidos, sem classificar exceções brutas nem implementar operações da sonda. TASK-003 realiza D-02, classifica causas concretas conforme D-03 e fornece resultados à resolução de TASK-002. TASK-002 permanece executável/testável com resultados controlados antes da existência de TASK-003; a dependência continua unidirecional TASK-003 → TASK-002 para integração.
+- **Rastreabilidade:** D-02 está atribuída concretamente a TASK-003; D-03 cobre classificação em TASK-003 e consumo/seleção em TASK-002; D-04 permanece coberta por TASK-002, TASK-008 e TASK-009.
+- **ANALYZE:** o PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece no histórico, vinculado ao hash anterior de TASKS, e foi invalidado pela alteração material. ANALYZE atual = INVALIDATED; último gate válido = Nenhum. Um novo ANALYZE é necessário antes de retomar qualquer trabalho de IMPLEMENT.
+- **TASK-001 preservada:** sua implementação e evidência técnica não foram alteradas nem invalidadas. Hashes atuais continuam `rickcraft_root.py` = `990BF4A64535F55C879FB9958F743BF2923C778AC474843FF227266CAFD56EDF` e `test_rickcraft_root.py` = `8620D432184A77551E99F0C5BFD4C499164B006A926F4D72BA97B2D2356FF1E8`.
+- **Estado e limites:** SPEC e PLAN permanecem COMPLETE; TASKS = COMPLETE; IMPLEMENT = IN_PROGRESS apenas como etapa já iniciada, sem autorização para novo trabalho enquanto ANALYZE estiver invalidado; CONVERGE = NOT_STARTED. TASK-002 e TASK-003 não foram executadas; não houve implementação nova, alteração de código, execução de testes, execução de D-02, criação de `.workspace/`, instalação de dependências ou geração de Release.

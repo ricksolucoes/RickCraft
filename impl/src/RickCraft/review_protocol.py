@@ -1142,3 +1142,77 @@ def evaluate_scope_continuity(
         return gap_handling.avaliar_continuidade_localizada(affected, tuple(requests))
     except gap_handling.GapHandlingError as exc:
         raise ReviewInputError("Os dados explícitos de continuidade são inválidos para SPEC1.") from exc
+
+
+class ResponseBlockKey(Enum):
+    """Chaves semânticas fixas dos blocos de resposta."""
+
+    CRITICAL_ANALYSIS = "CRITICAL_ANALYSIS"
+    REFACTORING = "REFACTORING"
+    ARCHITECTURAL_JUSTIFICATION = "ARCHITECTURAL_JUSTIFICATION"
+
+
+_RESPONSE_BLOCK_ORDER = (
+    ResponseBlockKey.CRITICAL_ANALYSIS,
+    ResponseBlockKey.REFACTORING,
+    ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
+)
+_MARKDOWN_ESCAPABLE = frozenset("\\`*_{}[]()#+-!|>~<")
+
+
+def _texto_markdown_literal(value: str) -> str:
+    """Escapa pontuação Markdown sem alterar o texto visível fornecido."""
+    return "".join("\\" + character if character in _MARKDOWN_ESCAPABLE else character
+                   for character in value)
+
+
+@dataclass(frozen=True)
+class ReviewResponseBlock:
+    """Bloco semântico com título e corpo já localizados pelo host."""
+
+    key: ResponseBlockKey
+    title: str
+    body: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.key, ResponseBlockKey):
+            raise ReviewInputError("ResponseBlock.key deve ser ResponseBlockKey explícito.")
+        title = _texto_obrigatorio(self.title, "ResponseBlock.title")
+        if "\n" in title or "\r" in title:
+            raise ReviewInputError("ResponseBlock.title deve ocupar uma única linha.")
+        _texto_obrigatorio(self.body, "ResponseBlock.body")
+
+
+@dataclass(frozen=True)
+class ReviewResponse:
+    """Resposta única com os três blocos semânticos na ordem normativa."""
+
+    language: str | None
+    blocks: tuple[ReviewResponseBlock, ...]
+
+    def __post_init__(self) -> None:
+        if self.language is not None:
+            _texto_obrigatorio(self.language, "ReviewResponse.language")
+        blocks = _sequencia(self.blocks, "ReviewResponse.blocks")
+        if len(blocks) != len(_RESPONSE_BLOCK_ORDER):
+            raise ReviewInputError("ReviewResponse requer exatamente três blocos semânticos.")
+        if any(not isinstance(block, ReviewResponseBlock) for block in blocks):
+            raise ReviewInputError("ReviewResponse.blocks deve conter somente ReviewResponseBlock.")
+        keys = tuple(block.key for block in blocks)
+        if keys != _RESPONSE_BLOCK_ORDER:
+            raise ReviewInputError(
+                "ReviewResponse.blocks deve conter as três chaves únicas na ordem canônica."
+            )
+        object.__setattr__(self, "blocks", blocks)
+
+
+def renderizar_resposta(response: ReviewResponse) -> str:
+    """Renderiza uma única resposta Markdown, preservando texto e ordem semântica."""
+    if not isinstance(response, ReviewResponse):
+        raise ReviewInputError("renderizar_resposta requer ReviewResponse.")
+    rendered_blocks = tuple(
+        f"## {_texto_markdown_literal(block.title)}\n\n"
+        f"{_texto_markdown_literal(block.body)}"
+        for block in response.blocks
+    )
+    return "\n\n".join(rendered_blocks)

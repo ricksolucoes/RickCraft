@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — correção TASK-007 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS - TASK-008 concluida, aguardando revisao
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -833,3 +833,85 @@ A revisão publicada da TASK-007 não aprovou a tarefa devido à ausência do ca
 - **Regressão SPEC1:** `python -B -m unittest -v impl.tests.test_gap_handling` sandboxado — 89 testes iniciados e 178 ERROR em setup/cleanup por `WinError 5` ao criar/remover fixtures sob `%TEMP%`. Repetição do mesmo comando via mecanismo elevado previamente autorizado, sem alteração de arquivos do repositório: 89 testes, 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP. O resultado sandboxado permanece registrado e não foi atribuído ao produto sem evidência.
 - **Hashes finais:** após as últimas alterações, leitura UTF-8 estrita e hashes SHA-256 confirmados duas vezes: `review_protocol.py` `CA81205EDAC55B116E7D0C81FBE36C5FA2FCD51CF00F494975B6C8A1785BBFC4`; `test_review_protocol.py` `E8D4D742834D12BE33C450000262DD88DC57CC884A41E468FD715CFEFA56E966`.
 - **Fronteiras e resultado SDD:** apenas os dois arquivos autorizados de código/teste e este status foram alterados; nenhum arquivo foi criado. SPEC/PLAN/TASKS e SPEC1 permanecem inalterados. Nenhum filesystem, rede, Git, subprocesso, workspace, persistência ou externalidade é acessado pela API; `gap_handling.py` não foi alterado. `git diff --check` passou; `git status --short` lista somente os três arquivos autorizados. TASK-007 = COMPLETE, aguardando revisão externa; IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; TASK-008–TASK-013 não iniciadas; Release não autorizado.
+
+## Inicio de IMPLEMENT - TASK-008 - 2026-10-11
+
+A TASK-007, incluindo o caminho de comparacao explicita, foi confirmada como aprovada apos revisao externa. A baseline local correspondia ao commit `6d9154c550c0d0d6d62064dad5bf3ec1f9cbddb8`; hashes dos artefatos runtime/teste, SPEC/PLAN/TASKS e dependencias SPEC1 foram recalculados e conferiram com os valores autorizados. `git status --short` estava vazio antes desta execucao. A autorizacao atual cobre somente TASK-008. Etapa atual = IMPLEMENT; TASK-008 = IN_PROGRESS; TASK-009 a TASK-013 nao iniciadas; ANALYZE = PASS; CONVERGE = NOT_STARTED; Release nao autorizado.
+
+## IMPLEMENT - TASK-008 - Renderer e protocolo de resposta
+
+- **Estado:** TASK-001 a TASK-007 = COMPLETE e aprovadas; TASK-008 = COMPLETE - aguardando revisao; TASK-009 a TASK-013 nao executadas. IMPLEMENT permanece IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; Release nao autorizado.
+- **Entrada e gate:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`. TASK-007, incluindo a correcao do caminho de comparacao explicita, foi informada como aprovada externamente.
+- **Contratos adicionados:** `ResponseBlockKey` fixa as tres chaves semanticas; `ReviewResponseBlock` recebe chave, titulo localizado e corpo do host; `ReviewResponse` preserva `language=None` como default semantico e copia a sequencia de blocos para tupla, exigindo exatamente as tres chaves na ordem canonica; `renderizar_resposta` retorna uma unica string Markdown.
+- **Comportamento:** titulos e corpos nao sao traduzidos nem normalizados. Pontuacao Markdown e escapada localmente para preservar a estrutura dos tres blocos e o texto visivel; titulos multilinha e corpos vazios sao rejeitados. Idioma explicito e preservado e nenhum locale/global, fallback, segunda variante, template ou pipeline e consultado/criado. Secoes nao aplicaveis permanecem como conteudo explicito do host nos tres blocos.
+- **Testes focais:** primeira execucao de `python -B -m unittest -v impl.tests.test_review_protocol`: 185 testes, 4 falhas; as falhas eram expectativas incompat?veis com escaping de Markdown (pontuacao comum e representacao escapada de heading), identificadas nos casos `test_idioma_explicito_e_textos_localizados_sao_preservados_sem_traducao`, `test_language_none_permanece_default_sem_reescrita`, `test_na_permanece_nos_tres_blocos_sem_codigo_ou_recomendacao_inventada` e `test_titulos_e_corpos_nao_criam_estrutura_markdown_adicional`. Implementacao/testes foram ajustados dentro da TASK-008; nenhuma falha foi omitida.
+- **Reexecucao focal:** `python -B -m unittest -v impl.tests.test_review_protocol` - `Ran 185 tests`; `OK`; 185 PASS, 0 FAIL, 0 ERROR, 0 SKIP. Inclui a regressao integral das TASK-001 a TASK-007.
+- **Hashes SHA-256 finais:** `review_protocol.py` = `FDF1C3CBCA0B85D0F025C2B81D7DCEE5F2FE9EB84A47A55C06F706A765BD86D1`; `test_review_protocol.py` = `D505AF5126CB94451EF70856E09E9C0F3BF433DB6D5A22C5192BA91AF877A223`. Valores calculados duas vezes sobre arquivos lidos como UTF-8 estrito e conferiram.
+- **Conferencia da baseline:** hashes SPEC/PLAN/TASKS continuam exatos. `gap_handling.py` permanece `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `test_gap_handling.py` permanece `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`. Nenhum arquivo SPEC1 foi alterado.
+- **Fronteiras e inspecao:** renderer e puro e nao faz IO, rede, subprocesso, Git, workspace, persistencia ou Release. Nenhum arquivo foi criado. `git diff --check` passou; `git status --short` mostrou somente os tres arquivos autorizados. Nenhum push/publicacao ocorreu.
+
+### CHECKPOINT RICKCRAFT - TASK-008
+
+## Fase executada
+IMPLEMENT - TASK-008 - SPEC-0000000002
+
+## Objetivo da execucao
+Renderizar uma resposta deterministica com os tres blocos semanticos no idioma e nos textos fornecidos pelo host.
+
+## Estado
+CONCLUIDO / AGUARDANDO_APROVACAO.
+
+## O que foi realizado
+Adicionados value objects imutaveis para chave/bloco/resposta e `renderizar_resposta`, com ordem fixa, idioma preservado, escaping Markdown deterministico e uma unica string de saida.
+
+## Arquivos criados
+Nenhum.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Decisoes formalizadas
+Somente os contratos de resposta e renderizacao previstos para TASK-008.
+
+## Decisoes pendentes
+Revisao externa da TASK-008 antes de qualquer autorizacao posterior.
+
+## Questoes em aberto
+Nenhuma identificada.
+
+## Bloqueios
+Nenhum.
+
+## Riscos identificados
+Nenhum alem da validacao externa pendente.
+
+## Testes e verificacoes executados
+- A primeira suite focal teve 185 testes e 4 falhas de expectativa de escaping; os casos estao identificados acima.
+- Reexecucao focal: 185 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- `git diff --check`: passou.
+- Hashes e UTF-8 estrito: conferidos; SPEC/PLAN/TASKS e dependencias SPEC1 permanecem nas versoes autorizadas.
+
+## Hashes finais
+- `review_protocol.py`: `FDF1C3CBCA0B85D0F025C2B81D7DCEE5F2FE9EB84A47A55C06F706A765BD86D1`
+- `test_review_protocol.py`: `D505AF5126CB94451EF70856E09E9C0F3BF433DB6D5A22C5192BA91AF877A223`
+
+## Proximo passo recomendado
+Submeter exclusivamente a TASK-008 a revisao externa apos o usuario publicar manualmente os tres arquivos autorizados.
+
+## Motivo do proximo passo
+A validacao desta execucao e local; a TASK-008 ainda aguarda revisao do estado publicado.
+
+## O que NAO deve ser feito ainda
+Nao iniciar TASK-009, nao executar CONVERGE, nao gerar Release e nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT - TASK-008
+
+**Fase:** IMPLEMENT - TASK-008 - SPEC-0000000002
+**Estado:** AGUARDANDO_APROVACAO
+**Resultado:** TASK-008 = COMPLETE - aguardando revisao; TASK-009 a TASK-013 nao iniciadas.
+**Evidencias:** hashes finais listados acima; suite focal final 185/185 PASS; `git diff --check` passou; somente os tres arquivos autorizados foram alterados.
+**Pendencia:** revisao externa read-only da TASK-008 publicada.
+**Proximo passo proposto:** revisar exclusivamente os tres arquivos alterados.
+**Autorizacao necessaria:** autorizacao explicita separada antes da TASK-009.

@@ -32,7 +32,10 @@ from review_protocol import (  # noqa: E402
     ReviewFinding,
     ReviewInputError,
     ReviewRequest,
+    ReviewResponse,
+    ReviewResponseBlock,
     ReviewScope,
+    ResponseBlockKey,
     SpecialistAssessment,
     TechnicalDimension,
     VerificationClaim,
@@ -40,6 +43,7 @@ from review_protocol import (  # noqa: E402
     assess_change_proposal,
     evaluate_scope_continuity,
     evaluate_source_conflict,
+    renderizar_resposta,
     sort_review_findings,
 )
 
@@ -1783,6 +1787,178 @@ class GapHandlingIntegrationTests(unittest.TestCase):
             )
         for spy in (divergence, blocker, decision, result, publish):
             spy.assert_not_called()
+
+
+class ReviewResponseTests(unittest.TestCase):
+    @staticmethod
+    def blocks(*, titles: tuple[str, str, str] | None = None,
+               bodies: tuple[str, str, str] | None = None) -> tuple[ReviewResponseBlock, ...]:
+        actual_titles = titles or (
+            "Análise Crítica", "Refatoração", "Justificativa Arquitetural"
+        )
+        actual_bodies = bodies or (
+            "A evidência confirma a condição observada.",
+            "Não aplicável: nenhuma refatoração indicada.",
+            "Não aplicável: sem impacto arquitetural material.",
+        )
+        return tuple(
+            ReviewResponseBlock(key, title, body)
+            for key, title, body in zip(
+                (ResponseBlockKey.CRITICAL_ANALYSIS, ResponseBlockKey.REFACTORING,
+                 ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION),
+                actual_titles, actual_bodies,
+            )
+        )
+
+    @classmethod
+    def response(cls, language: str | None = None, *,
+                 blocks: tuple[ReviewResponseBlock, ...] | list[ReviewResponseBlock] | None = None
+                 ) -> ReviewResponse:
+        return ReviewResponse(language, cls.blocks() if blocks is None else blocks)  # type: ignore[arg-type]
+
+    def test_response_possui_exatamente_tres_chaves_canonicas(self) -> None:
+        response = self.response()
+        self.assertEqual(tuple(block.key for block in response.blocks), (
+            ResponseBlockKey.CRITICAL_ANALYSIS,
+            ResponseBlockKey.REFACTORING,
+            ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
+        ))
+        self.assertEqual(len(response.blocks), 3)
+
+    def test_blocos_sao_renderizados_na_ordem_semantica_fixa(self) -> None:
+        rendered = renderizar_resposta(self.response())
+        positions = tuple(rendered.index(title) for title in (
+            "Análise Crítica", "Refatoração", "Justificativa Arquitetural"
+        ))
+        self.assertEqual(positions, tuple(sorted(positions)))
+
+    def test_bloco_ausente_adicional_duplicado_ou_fora_de_ordem_e_rejeitado(self) -> None:
+        blocks = self.blocks()
+        for candidate in (blocks[:2], blocks + (blocks[0],),
+                          (blocks[0], blocks[0], blocks[2]),
+                          (blocks[1], blocks[0], blocks[2])):
+            with self.subTest(candidate=candidate), self.assertRaises(ReviewInputError):
+                self.response(blocks=candidate)
+
+    def test_chave_desconhecida_nao_e_coagida_para_enum(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            ReviewResponseBlock("CRITICAL_ANALYSIS", "Título", "Corpo")  # type: ignore[arg-type]
+
+    def test_titulo_vazio_branco_ou_multilinha_e_rejeitado(self) -> None:
+        for title in ("", "   ", "linha 1\nlinha 2"):
+            with self.subTest(title=title), self.assertRaises(ReviewInputError):
+                ReviewResponseBlock(ResponseBlockKey.CRITICAL_ANALYSIS, title, "Corpo")
+
+    def test_corpo_vazio_ou_branco_e_rejeitado_sem_placeholder(self) -> None:
+        for body in ("", " \t\n"):
+            with self.subTest(body=body), self.assertRaises(ReviewInputError):
+                ReviewResponseBlock(ResponseBlockKey.CRITICAL_ANALYSIS, "Título", body)
+
+    def test_language_none_permanece_default_semantico_sem_reescrita(self) -> None:
+        response = self.response(None)
+        self.assertIsNone(response.language)
+        rendered = renderizar_resposta(response)
+        self.assertIn("Análise Crítica", rendered)
+        self.assertIn("Não aplicável: nenhuma refatoração indicada.", rendered)
+
+    def test_idioma_explicito_e_textos_localizados_sao_preservados_sem_traducao(self) -> None:
+        blocks = self.blocks(
+            titles=("Critical analysis", "Refactoring", "Architectural justification"),
+            bodies=("Evidence supports the finding.", "Not applicable.", "No material impact."),
+        )
+        response = self.response("en", blocks=blocks)
+        rendered = renderizar_resposta(response)
+        self.assertEqual(response.language, "en")
+        for value in ("Critical analysis", "Evidence supports the finding.", "Not applicable."):
+            self.assertIn(value, rendered)
+        self.assertNotIn("Análise Crítica", rendered)
+        self.assertNotIsInstance(rendered, (tuple, list, dict))
+
+    def test_language_vazio_ou_whitespace_e_rejeitado(self) -> None:
+        for language in ("", "   "):
+            with self.subTest(language=language), self.assertRaises(ReviewInputError):
+                self.response(language)
+
+    def test_uma_chamada_retorna_uma_unica_string_deterministica(self) -> None:
+        response = self.response()
+        first = renderizar_resposta(response)
+        second = renderizar_resposta(response)
+        equivalent = renderizar_resposta(self.response(blocks=self.blocks()))
+        self.assertIsInstance(first, str)
+        self.assertEqual(first, second)
+        self.assertEqual(first, equivalent)
+
+    def test_titulos_e_corpos_nao_criam_estrutura_markdown_adicional(self) -> None:
+        blocks = self.blocks(
+            titles=("# título", "**refatoração**", "[justificativa](x)"),
+            bodies=("### heading\n---\n<h2>texto</h2>", "`código`", "*ênfase*"),
+        )
+        rendered = renderizar_resposta(self.response(blocks=blocks))
+        self.assertEqual(rendered.count("## "), 3)
+        self.assertIn(r"\# título", rendered)
+        self.assertIn(r"\#\#\# heading", rendered)
+        self.assertIn(r"\<h2\>texto\</h2\>", rendered)
+
+    def test_escaping_e_unicode_sao_deterministicos_e_utf8_round_trip(self) -> None:
+        response = self.response(blocks=self.blocks(
+            titles=("Análise Crítica", "Refatoração", "Justificativa Arquitetural"),
+            bodies=("ação, coração, ç, € e 🧭", "N/A — sem mudança.", "N/A — sem impacto."),
+        ))
+        rendered = renderizar_resposta(response)
+        self.assertEqual(renderizar_resposta(response), rendered)
+        self.assertEqual(rendered.encode("utf-8").decode("utf-8"), rendered)
+        self.assertIn("ação, coração, ç, € e 🧭", rendered)
+
+    def test_na_permanece_nos_tres_blocos_sem_codigo_ou_recomendacao_inventada(self) -> None:
+        blocks = self.blocks(bodies=(
+            "Inspeção concluída.",
+            "Não aplicável: nenhuma refatoração é indicada.",
+            "Não aplicável: não há impacto arquitetural material.",
+        ))
+        rendered = renderizar_resposta(self.response(blocks=blocks))
+        self.assertEqual(rendered.count("## "), 3)
+        self.assertIn("Não aplicável: nenhuma refatoração é indicada.", rendered)
+        self.assertIn("Não aplicável: não há impacto arquitetural material.", rendered)
+        self.assertNotIn("def ", rendered)
+
+    def test_response_e_blocos_sao_frozen_e_copiam_colecao_de_entrada(self) -> None:
+        blocks = list(self.blocks())
+        response = self.response(blocks=blocks)
+        blocks.clear()
+        self.assertEqual(len(response.blocks), 3)
+        with self.assertRaises(FrozenInstanceError):
+            response.language = "en"  # type: ignore[misc]
+        with self.assertRaises(FrozenInstanceError):
+            response.blocks[0].title = "alterado"  # type: ignore[misc]
+
+    def test_renderizador_rejeita_tipo_incorreto(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            renderizar_resposta("texto")  # type: ignore[arg-type]
+
+    def test_renderizador_nao_acessa_io_rede_processos_ou_persistencia(self) -> None:
+        import builtins
+        import socket
+        import subprocess
+
+        response = self.response()
+        with patch.object(builtins, "open", side_effect=AssertionError("I/O")) as opened, \
+             patch.object(socket, "create_connection", side_effect=AssertionError("rede")) as network, \
+             patch.object(subprocess, "Popen", side_effect=AssertionError("processo")) as process:
+            renderizar_resposta(response)
+        opened.assert_not_called()
+        network.assert_not_called()
+        process.assert_not_called()
+
+    def test_idioma_do_request_pode_ser_representado_sem_pipeline_automatico(self) -> None:
+        request = ReviewRequest(
+            objective="Revisar", scopes=(ReviewScope("s", "escopo", (), ("a.py",)),),
+            authorized_artifacts=("a.py",), excluded_artifacts=(), expected_outcome="análise",
+            authorization_grants=(AuthorizationGrant.REVIEW,), requested_effects=(),
+            language="en", source_versions=(),
+        )
+        response = ReviewResponse(request.language, self.blocks())
+        self.assertEqual(response.language, request.language)
+        self.assertEqual(renderizar_resposta(response).count("## "), 3)
 
 
 if __name__ == "__main__":

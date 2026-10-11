@@ -94,11 +94,11 @@ Quando evidência, contexto, autorização ou critério necessário estiver ause
 
 ### RF-011 — Autoridade normativa
 
-O RickCraft deve respeitar a hierarquia e os owners definidos pelas Policies, Registries e artefatos normativos vigentes. Código, configuração, conteúdo de workspace, pedido técnico ou resposta de Agent não substituem Policy, Registry, SPEC, PLAN, TASKS, status ou gate aplicável.
+O RickCraft deve aplicar a autoridade vigente e os owners definidos pelas fontes normativas aplicáveis. Só deve aplicar uma relação de precedência quando essa relação estiver explicitamente autorizada pelas fontes competentes. Não deve presumir precedência por especificidade, data, nome ou interpretação do executor. Código, configuração, conteúdo de workspace, pedido técnico ou resposta de Agent não substituem Policy, Registry, SPEC, PLAN, TASKS, status ou gate aplicável.
 
 ### RF-012 — Limites de domínio especializado
 
-O RickCraft Core Specialist pode tratar comportamento transversal do Core. Uma avaliação que requeira decisão substantiva de Patterns, SOLID, arquitetura de interfaces, Clean Code ou Delphi/Object Pascal deve respeitar o grupo e owner especializado correspondente. Consulta ou contribuição de outro domínio não transfere sua autoridade.
+O RickCraft Core Specialist pode tratar comportamento transversal do Core. Uma avaliação que requeira decisão substantiva de Patterns, SOLID, arquitetura de interfaces, Clean Code, Delphi/Object Pascal ou Qualidade e Auditoria deve respeitar o grupo e owner especializado correspondente. Consulta ou contribuição de outro domínio não transfere sua autoridade.
 
 ### RF-013 — Conflito sem precedência
 
@@ -119,6 +119,22 @@ Uma revisão local não implica uso de rede, Git remoto, upload, sincronização
 ### RF-017 — Idioma e conteúdo interno
 
 A resposta e os artefatos internos devem preservar o idioma solicitado e, na ausência de instrução contrária, usar pt-BR legível. Tradução, variante inglesa distribuível ou alteração de idioma não deve ocorrer automaticamente.
+
+### RF-018 — Dimensões técnicas aplicáveis
+
+Durante uma revisão, o RickCraft deve considerar, quando aplicáveis ao escopo e à evidência disponível, Design Patterns, SOLID, Arquitetura de Interfaces, Clean Code, Engenharia Delphi/Object Pascal e regras normativas objetivas vigentes. Deve identificar como não avaliada qualquer dimensão para a qual não haja informação ou evidência suficiente. Considerar uma dimensão não significa aplicá-la mecanicamente, concluir que houve violação ou substituir o Decision Owner especializado. Uma conclusão substantiva reservada a domínio especializado permanece com o owner correspondente.
+
+### RF-019 — Preservação comportamental em refatoração
+
+Quando uma refatoração for autorizada sem autorização de mudança funcional, o RickCraft deve preservar o comportamento requerido ou observado que integra o contrato vigente. Uma mudança funcional exige requisito e autorização próprios. Esta SPEC não determina framework de testes, compilador, técnica de equivalência ou mecanismo de verificação.
+
+### RF-020 — Limite de conclusões positivas
+
+Toda conclusão positiva deve permanecer limitada ao escopo efetivamente examinado, às fontes realmente utilizadas, às versões identificadas, à evidência disponível e às verificações realmente executadas. Uma análise parcial não autoriza declarar aprovação ou conformidade universal do projeto.
+
+### RF-021 — Continuidade operacional
+
+Quando uma revisão precisar ser persistida para continuidade, rastreabilidade ou reutilização posterior, o RickCraft deve utilizar o contrato operacional aprovado pela SPEC-0000000001. Esse uso não torna `.workspace` fonte normativa, não redefine IDs, catálogo ou taxonomia, formato documental, proveniência, publicação, recuperação ou pesquisa, e não transfere autoridade normativa para documento operacional. Esta SPEC não duplica tais contratos.
 
 ## 6. Critérios de aceitação
 
@@ -190,6 +206,22 @@ Uma execução local não aciona rede, Git remoto, upload, sincronização, dist
 
 O material interno permanece no idioma solicitado ou, na ausência de escolha, em pt-BR; não há tradução automática não autorizada.
 
+### CA-018 — Dimensões pertinentes sem apropriação de autoridade
+
+Dada uma revisão cujo escopo e evidência tornam pertinente uma ou mais dimensões técnicas, a resposta identifica as dimensões consideradas e distingue as não avaliadas por falta de informação/evidência. A resposta não aplica todas mecanicamente, não declara violação sem fundamento e não apresenta conclusão especializada como decisão do Core quando ela pertence ao owner especializado.
+
+### CA-019 — Comportamento preservado sem autorização funcional
+
+Dada uma refatoração autorizada sem autorização de mudança funcional, a alteração preserva o comportamento requerido pelo contrato vigente; qualquer mudança funcional fica fora da execução até possuir requisito e autorização próprios. O critério não prescreve ferramenta ou método de verificação.
+
+### CA-020 — Conclusão positiva limitada
+
+Dada uma revisão de uma classe ou arquivo, a conclusão positiva identifica esse escopo, fontes, versões, evidências e verificações; não afirma que o sistema inteiro está em conformidade sem avaliação correspondente.
+
+### CA-021 — Continuidade conforme contrato operacional
+
+Dada uma revisão que precise de persistência para continuidade, rastreabilidade ou reutilização, os registros seguem a SPEC-0000000001. Eles não alteram autoridade, IDs, catálogo, formato, proveniência, publicação, recuperação ou pesquisa definidos por aquela SPEC.
+
 ## 7. Cenários de revisão
 
 ### Cenário A — Pedido somente de revisão
@@ -236,6 +268,22 @@ Quando uma execução autorizada precisar de continuidade persistente, usa o con
 
 Uma revisão menciona publicação ou Release como passo futuro. Isso não autoriza a operação; a resposta a identifica como etapa separada sujeita ao gate e autorização próprios.
 
+### Cenário L — Pattern ou abstração sem necessidade concreta
+
+Uma proposta sugere introduzir um Pattern ou abstração sem problema, requisito ou benefício demonstrável no escopo. O RickCraft considera a dimensão pertinente, explica a falta de necessidade concreta e não recomenda complexidade apenas para aplicar o padrão; decisão especializada continua com seu owner.
+
+### Cenário M — Risco comportamental da refatoração
+
+Uma refatoração autorizada pode alterar comportamento, mas não há autorização funcional. O RickCraft mantém o contrato comportamental vigente como limite, não inclui a mudança funcional e explicita qualquer incerteza de preservação sem inventar técnica de validação.
+
+### Cenário N — Revisão parcial de arquivo ou classe
+
+O pedido autoriza examinar uma classe ou arquivo. O RickCraft limita achados e conclusões a esse material e às dependências efetivamente examinadas; não declara conformidade do restante do sistema.
+
+### Cenário O — Teste ou validação não executado
+
+Uma verificação seria útil, mas não foi executada ou seu resultado não está disponível. O RickCraft informa que ela não foi executada e limita a conclusão; não declara validação positiva por inferência.
+
 ## 8. Restrições
 
 Esta SPEC não determina algoritmo de revisão, arquitetura interna, API, modelo de Agent, schema documental, mecanismo de autorização, ferramenta, interface, pipeline, formato de finding ou protocolo de comunicação entre processos. A implementação deve atender aos comportamentos verificáveis sem converter esta SPEC em decisão antecipada de PLAN.
@@ -262,17 +310,21 @@ Estão fora desta SPEC:
 
 ## 10. Dependências e autoridade
 
-1. As Policies vigentes prevalecem conforme sua própria hierarquia.
-2. `registries/spec-groups.md` define grupos e owners; esta SPEC pertence ao grupo 000 e não altera sua governança.
-3. A SPEC-0000000001 é a referência para persistência e continuidade operacional RickCraft. Seu uso não concede autoridade normativa a conteúdo de workspace.
-4. `README_PTBr.md` e `README.md` descrevem propósito, práticas e forma de resposta do RickCraft. Seus exemplos informam interpretação, mas não são universalizados por esta SPEC.
-5. Conflitos sem regra de precedência permanecem sujeitos a decisão competente; esta SPEC não cria autoridade substituta.
+1. Aplicam-se a autoridade vigente, os owners e as relações de precedência expressamente autorizadas pelas fontes competentes. Esta lista não cria uma hierarquia automática entre fontes.
+2. Não se presume que uma fonte prevaleça por ser mais específica, recente, nominalmente superior segundo interpretação do executor ou mais conveniente. Quando não houver relação de precedência autorizada e o conflito for material, ele permanece não resolvido e exige decisão da autoridade competente.
+3. `registries/spec-groups.md` define grupos e owners; esta SPEC pertence ao grupo 000 e não altera sua governança nem transfere ao Core decisão substantiva de domínio especializado.
+4. A SPEC-0000000001 é a referência para persistência e continuidade operacional RickCraft. Seu uso não concede autoridade normativa a conteúdo de workspace nem altera seus contratos.
+5. `README_PTBr.md` e `README.md` descrevem propósito, práticas e forma de resposta do RickCraft. Seus exemplos informam interpretação, mas não são universalizados por esta SPEC.
 
 ## 11. Rastreabilidade das fontes
 
-- Os princípios de revisão crítica antes de mudança, proporcionalidade, simplicidade e resposta em três seções são alinhados aos READMEs vigentes.
-- Os limites de autorização, evidência, persistência, autoridade e externalidade seguem as Policies e a governança SDD vigente.
-- Exemplos específicos dos READMEs — incluindo Singleton, `IClienteRepository`, exemplos SOLID, Delphi e métricas — não são requisitos universais; a applicability depende de solicitação, evidência e owner.
+- `README_PTBr.md` e `README.md` fundamentam análise crítica antes de mudança, resposta em três seções, simplicidade, manutenção e consideração contextual das dimensões técnicas.
+- `POL-0000000001` fundamenta autoridade, owners e aplicação apenas de precedência autorizada; não se infere preferência por especificidade ou data.
+- `POL-0000000002` fundamenta escopo SDD, autorização explícita, estado, evidência e distinção entre Specification e decisões posteriores de PLAN.
+- `POL-0000000003` fundamenta fronteiras de ambiente, idioma interno, externalidade e ausência de autorização implícita para Release.
+- `registries/spec-groups.md` fundamenta a propriedade Core e os limites dos owners especializados de Patterns, SOLID, Arquitetura de Interfaces, Clean Code, Delphi/Object Pascal e Qualidade/Auditoria.
+- `SPEC-0000000001` fundamenta o contrato existente de continuidade e persistência operacional, que esta SPEC referencia sem duplicar.
+- Exemplos específicos dos READMEs — incluindo Singleton, `IClienteRepository`, exemplos SOLID, Delphi e métricas — não são requisitos universais; a aplicabilidade depende de solicitação, escopo, evidência e owner.
 - RF e CA desta SPEC expressam comportamento futuro a avaliar. Esta elaboração não declara que runtime existente já os implementa.
 
 ## 12. Prontidão e próximo gate

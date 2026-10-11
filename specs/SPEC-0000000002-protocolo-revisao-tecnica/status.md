@@ -24,6 +24,12 @@
 
 Em 2026-10-11, SPEC passou de IN_PROGRESS para COMPLETE após leitura das fontes internas obrigatórias e elaboração de `spec.md`. Nenhuma aprovação ou autorização de PLAN foi inferida. Não foram criados `plan.md`, `tasks.md`, código, testes ou Release.
 
+## Correção final antes da aprovação
+
+Uma revisão externa identificou quatro lacunas comportamentais — dimensões técnicas aplicáveis, preservação comportamental, limite de conclusões positivas e continuidade operacional — e uma imprecisão na redação de precedência normativa. SPEC foi reaberta para correção. Nenhuma arquitetura foi definida; o Registry não foi alterado; PLAN permaneceu NOT_STARTED.
+
+A correção preservou RF-001–RF-017 e CA-001–CA-017, adicionou RF-018–RF-021 e CA-018–CA-021, esclareceu a aplicação de precedência somente quando expressamente autorizada e acrescentou cenários de revisão pertinentes. Após a correção, SPEC retornou a COMPLETE, pronta para revisão e ainda não aprovada.
+
 ## Fontes internas consultadas
 
 - `README_PTBr.md` e `README.md`, integralmente;
@@ -42,7 +48,7 @@ Nenhuma documentação externa foi necessária.
 
 | Artefato | Estado |
 |---|---|
-| `spec.md` | Elaborado; SHA-256 registrado após validação local |
+| `spec.md` | COMPLETE; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; pronta para revisão/aprovação, ainda não aprovada |
 | `status.md` | Estado corrente desta unidade; UTF-8 |
 
 O registro autoritativo da alocação permanece em `registries/specifications.md`.
@@ -70,20 +76,21 @@ AGUARDANDO_APROVAÇÃO.
 
 - Confirmados grupo 000 vigente, owner conceitual e próxima sequência disponível.
 - Alocado SPEC-0000000002 no Registry antes da materialização.
-- Elaborada somente a SPEC e este status; nenhum mecanismo de PLAN foi escolhido.
+- Corrigidos somente `spec.md` e este `status.md`; nenhum mecanismo de PLAN foi escolhido.
+- Registrado o SHA-256 completo da versão final de `spec.md` e validado após releitura UTF-8 estrita.
 
 ### Arquivos criados
+
+Nenhum nesta correção; os dois arquivos já existiam.
+
+### Arquivos alterados
 
 - `specs/SPEC-0000000002-protocolo-revisao-tecnica/spec.md`
 - `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
 
-### Arquivos alterados
-
-- `registries/specifications.md`
-
 ### Decisões formalizadas
 
-Nenhuma decisão arquitetural. As regras deste documento são requisitos comportamentais propostos para revisão.
+Somente requisitos comportamentais da SPEC. Nenhuma decisão arquitetural.
 
 ### Bloqueios
 
@@ -91,7 +98,7 @@ Nenhum para elaboração da SPEC.
 
 ### Próximo passo recomendado
 
-Revisar e decidir sobre a SPEC-0000000002 antes de autorizar PLAN.
+Revisar exclusivamente a SPEC-0000000002 corrigida antes de aprová-la e autorizar PLAN.
 
 ### O que não deve ser feito ainda
 
@@ -99,11 +106,12 @@ Não iniciar PLAN/TASKS/ANALYZE/IMPLEMENT/CONVERGE, não implementar runtime/tes
 
 ## HANDOFF PARA REVISÃO — RICKCRAFT
 
-- **Fase:** SPEC-0000000002 — pronta para revisão.
+- **Fase:** correção final da SPEC-0000000002 antes da aprovação.
 - **Estado:** AGUARDANDO_APROVAÇÃO.
 - **Fontes internas:** fontes listadas acima.
-- **Artefatos:** `spec.md`, `status.md` e linha de alocação em `registries/specifications.md`.
-- **Pendência:** revisão/aprovação do conteúdo da SPEC.
-- **Próximo passo proposto:** revisar exclusivamente SPEC-0000000002.
-- **Autorização necessária:** autorização explícita separada antes de PLAN.
+- **Artefatos alterados:** `spec.md` e `status.md`; Registry preservado.
+- **SHA-256 final de spec.md:** `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`.
+- **Pendência:** revisão e aprovação explícita da versão COMPLETE corrigida.
+- **Próximo passo proposto:** revisar exclusivamente SPEC-0000000002 corrigida.
+- **Autorização necessária:** aprovação explícita antes de PLAN.
 - **Não executar:** PLAN ou qualquer gate/tarefa posterior antes dessa autorização.

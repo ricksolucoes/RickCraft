@@ -2,15 +2,155 @@
 
 ## Estado corrente
 
-- **Etapa atual:** TASKS
+- **Etapa atual:** ANALYZE
 - **SPEC:** COMPLETE — aprovada pelo responsável pelo projeto
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
-- **TASKS:** COMPLETE — pronta para revisão, não aprovada
-- **ANALYZE:** NOT_STARTED
+- **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
+- **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
 - **IMPLEMENT:** NOT_STARTED
 - **CONVERGE:** NOT_STARTED
-- **Último gate válido:** nenhum
-- **Execution ID:** nenhum
+- **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
+- **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
+
+## Aprovação de TASKS e início de ANALYZE — 2026-10-11
+
+O responsável pelo projeto aprovou TASKS no SHA-256 `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`, blob Git `065c76d6b6c3b0d5236acdd4def6890a1cce0a5a`. A autorização concedida limita-se ao gate ANALYZE; não autoriza IMPLEMENT, CONVERGE ou Release. Os hashes de entrada confirmados são SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` e PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`.
+
+O execution ID `ANALYZE-2026-10-11-SPEC-0000000002-01` não existia anteriormente neste status. A etapa corrente passou a ANALYZE e o gate a IN_PROGRESS nesta execução. SPEC, PLAN e TASKS permanecem COMPLETE e aprovadas; IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece nenhum.
+
+## ANALYZE — ANALYZE-2026-10-11-SPEC-0000000002-01
+
+- **Data:** 2026-10-11.
+- **Resultado:** PASS para as três versões exatas abaixo; nenhum achado bloqueante ou não bloqueante foi identificado.
+- **SPEC:** SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; blob Git aprovado `97f1a98c4f3b25bf52c0fa71c29502a39e9ca556`.
+- **PLAN:** SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; blob Git aprovado `0c28cf63a68e09365e1fb3ead7a02e609b60fcfa`.
+- **TASKS:** SHA-256 `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; blob Git publicado `065c76d6b6c3b0d5236acdd4def6890a1cce0a5a`.
+- **Pré-flight:** hashes locais recalculados após leitura UTF-8 estrita coincidem integralmente com os valores aprovados. O status não continha execução anterior com este ID. SPEC, PLAN e TASKS não foram alterados nesta execução.
+- **Aprovação:** TASKS aprovada pelo responsável em 2026-10-11; autorização limitada exclusivamente a ANALYZE. Este PASS não inicia IMPLEMENT.
+
+### Fontes e método
+
+Foram lidos integralmente README_PTBr.md, README.md, POL-0000000001, POL-0000000002, POL-0000000003, registries/policies.md, registries/spec-groups.md, registries/specifications.md, SPEC-0000000002/spec.md, plan.md, tasks.md e status.md. Foram lidos também SPEC-0000000001/spec.md, plan.md, tasks.md e status.md para os contratos dependentes. Foram inspecionados read-only os módulos citados: `gap_handling.py`, `provenance.py`, `analysis_lifecycle.py`, `document_publisher.py`, `document_recovery.py`, `document_search.py`, `document_catalog.py`, `document_format.py`, `workspace_resolver.py`, `workspace_probe.py` e `rickcraft_root.py`, além da presença e dos testes correspondentes da implementação SPEC1. Nenhum teste foi executado; resultados de testes IMPLEMENT não foram inferidos como existentes para SPEC2.
+
+O gate comparou o conteúdo substantivo dos requisitos, critérios e cenários às decisões e tarefas, e não confiou somente nas matrizes declaradas. Também examinou as fronteiras autorizadas, as dependências, a autoridade, precedência, efeitos, idioma, persistência e estratégias de evidência futura.
+
+### Matriz RF-001–RF-021 → PLAN
+
+Todos SATISFIED nesta análise de consistência:
+
+| RF | Decisão/seção pertinente do PLAN | Avaliação |
+|---|---|---|
+| RF-001 | D-02, §§2 e 4 | Pedido, escopo, allowlist/exclusions e validação explícitos. |
+| RF-002 | D-06, D-10 | Observação, relato, persistência e inferência são distintos e referenciados. |
+| RF-003 | D-05, D-07, §§5 e 9 | Aplicabilidade e análise precedem recomendação; N/A não fabrica achado. |
+| RF-004 | D-03, D-09, §5 | Grants separados; host/executor e Core têm fronteiras distintas. |
+| RF-005 | D-03, D-11 | Review sem grant não altera nem cria mudança para preencher resposta. |
+| RF-006 | D-11 | Três blocos semânticos obrigatórios, ordenados, com N/A explícito. |
+| RF-007 | D-07 | Finding separa condição, evidência, regra, conclusão, impacto e recomendação. |
+| RF-008 | D-07, D-09 | Mudança/proposta vinculada ao objetivo e comportamento/risco. |
+| RF-009 | D-06, D-10 | Claims têm estado, alvo/versão e evidência; ausência de erro não é validação. |
+| RF-010 | D-04, D-06, D-13 | Dados/autoridade ausentes limitam ou bloqueiam; não são inventados. |
+| RF-011 | D-04, §2 | Precedência requer relação explicitamente autorizada; sem ranking implícito. |
+| RF-012 | D-05 | Dimensões especializadas são encaminhadas sem decisão substantiva do Core. |
+| RF-013 | D-04, D-08 | Conflito sem precedência autorizada não seleciona vencedor nem owner. |
+| RF-014 | D-08, D-13 | Bloqueio localizado/transitivo e continuidade apenas de independente apto. |
+| RF-015 | D-07, D-11 | Recomendação proporcional e sem código/seção artificial. |
+| RF-016 | D-03, D-12, D-15 | Sem externalidade implícita; persistência local apenas opt-in via SPEC1. |
+| RF-017 | D-02, D-11, D-15 | Idioma solicitado preservado, None=pt-BR, sem tradução/duplicação; Release futuro separado. |
+| RF-018 | D-05 | Dimensões pertinentes consideradas; insuficiência e autoridade especializada preservadas. |
+| RF-019 | D-09 | Refatoração sem grant funcional exige claims vinculados a contrato, base/candidata e verificação observada. |
+| RF-020 | D-10 | Conclusão limitada a escopo, versões, fontes, evidências e verificações. |
+| RF-021 | D-12 | Persistência de continuidade usa contrato SPEC1 sem redefini-lo. |
+
+### Matriz D-01–D-15 → TASKS
+
+Todos SATISFIED quanto a cobertura executável, arquivos, dependências e evidência planejada:
+
+| Decisão | TASK(s) executora(s) | Verificação da análise |
+|---|---|---|
+| D-01 | 009, 013 | Pipeline coeso no único módulo autorizado; sem orquestrador/Agent. |
+| D-02 | 001, 009 | Request/escopo/idioma e pipeline têm testes focais. |
+| D-03 | 001, 011 | Grants conservadores e fronteiras negativas cobertas. |
+| D-04 | 002, 006 | Contexto/precedência explícitos e conflito exercitados. |
+| D-05 | 004, 009 | Assessment especializado e integração sem promoção consultiva. |
+| D-06 | 003, 009 | Evidências/claims e estados ligados a alvo/versão. |
+| D-07 | 005, 009 | Findings/conclusões e ordenação determinística. |
+| D-08 | 006, 009 | Reuso das duas APIs puras existentes, sem duplicar engine. |
+| D-09 | 007, 009 | Proposta não edita; prova de base/candidata/contrato/claim. |
+| D-10 | 005, 009 | Conclusão limitada e escopo parcial cobertos. |
+| D-11 | 008, 009 | Renderer, três blocos, idioma/default, UTF-8 e ausência de duplicata. |
+| D-12 | 010 | Integração opt-in em fixture e round-trip com APIs SPEC1. |
+| D-13 | 006, 009 | Outcomes conservadores, bloqueio local e dependência. |
+| D-14 | 012, 013 | Coleções, desempates, idioma, dependências e clock têm testes previstos. |
+| D-15 | 008, 011 | Idioma/Release separados e testes negativos de efeitos. |
+
+TASK-013 é integração/evidência final e não substitui as tarefas de implementação. Não foi encontrada decisão sem tarefa executora anterior. A sequência declarada é coerente com as dependências do modelo e da integração, sem paralelismo oculto.
+
+### Matriz CA-001–CA-021 → TASK/evidência futura
+
+Todos PASS quanto à existência de estratégia futura executável e rastreável; isso não declara que os testes de IMPLEMENT já foram executados:
+
+| CA | TASK(s) | Evidência planejada considerada suficiente |
+|---|---|---|
+| CA-001 | 001, 009, 012, 013 | Escopo/exclusões e resultado limitado em request/pipeline. |
+| CA-002 | 003, 009, 012, 013 | Tipos de evidência, estados de claim e insuficiência. |
+| CA-003 | 008, 009, 013 | Ordem da resposta e análise antes de recomendação. |
+| CA-004 | 001, 007, 011, 013 | Grants, mudança proibida e snapshots/spies. |
+| CA-005 | 001, 008, 011, 013 | Não aplicabilidade sem alteração artificial. |
+| CA-006 | 008, 013 | Presença/ordem dos três blocos semânticos. |
+| CA-007 | 005, 009, 013 | Liga finding a evidência, regra, impacto e owner. |
+| CA-008 | 005, 007, 013 | Justificativa ligada a proposta, objetivo e consequência. |
+| CA-009 | 003, 009, 013 | Claim com status, versão/alvo e referência compatível. |
+| CA-010 | 002, 003, 006, 013 | Lacuna, owner/precedência ausente e bloqueio sem inferência. |
+| CA-011 | 002, 013 | Autoridade normativa e precedência autorizada. |
+| CA-012 | 004, 013 | Assessment consultivo versus authoritative e owner. |
+| CA-013 | 002, 006, 013 | Sem AuthorizedPrecedence: nenhuma vencedora/autoridade inventada. |
+| CA-014 | 006, 009, 013 | Dependência direta/transitiva/desconhecida e escopo independente. |
+| CA-015 | 008, 013 | N/A/recomendação sem mecanismo ou complexidade desnecessária. |
+| CA-016 | 001, 010, 011, 013 | Opt-in e spies para persistência/rede/Git/subprocess/Release. |
+| CA-017 | 001, 008, 012, 013 | None=pt-BR, idioma host fornecido preservado, uma saída, UTF-8; internos pt-BR. |
+| CA-018 | 004, 013 | Dimensões pertinentes e insuficientes sem decisão Core especializada. |
+| CA-019 | 007, 013 | Boolean isolado rejeitado; claims ligados a contrato e versões. |
+| CA-020 | 005, 013 | Classe/arquivo não generaliza para sistema inteiro. |
+| CA-021 | 010, 013 | Persistência/recuperação SPEC1 em fixture e sem schema paralelo. |
+
+### Cenários A–O
+
+Todos têm ligação a TASK, requisito/critério e evidência futura sem trabalho fora do PLAN: A → 001/009/011 (CA-004/005); B → 003/009 (CA-002/010); C → 007/009 (CA-004/008/019); D → 004/009 (CA-012/018); E → 002/006 (RF-013/CA-013); F → 006/009 (RF-014/CA-014); G → 003/009 (RF-009/CA-009); H → 001/007 (RF-001/CA-001); I → 008/011 (RF-006/015, N/A); J → 010 (RF-021/CA-021); K → 001/011 (RF-016/CA-016); L → 004/005/013 (RF-015/018); M → 007 (RF-019/CA-019); N → 001/005 (RF-020/CA-020); O → 003/009 (RF-009/CA-009, NOT_EXECUTED). TASK-013 exige verificação da matriz e testes, não mera declaração.
+
+### Revisões especiais e APIs SPEC1
+
+- **TASK-006 / authority:** a tarefa corrigida exige duas fontes normativas incompatíveis sem `AuthorizedPrecedence` → nenhum vencedor; `required_authority` segue ausente quando não fornecida; autoridade válida recebida pode ser registrada como necessidade sem resolver precedência; workspace não compete normativamente; continuidade usa `avaliar_continuidade_localizada`. A API real de `gap_handling.py` aceita `required_authority` opcional, retorna `authoritative_reference=None` e bloqueador para duas normativas, registra `required_information` quando a autoridade não foi fornecida, e tem razões para dependência não avaliada e bloqueios transitivos. A API de conflito não recebe precedência: consistente com D-04/D-08, o protocolo precisa tratar precedência autorizada antes de chamar a classificação de conflito não resolvido; nenhuma TASK pretende alterar a engine SPEC1.
+- **TASK-010 / SPEC1:** foram confirmados `criar_ou_retomar_analise` e identidade ANL, `publicar_documento`, `recuperar_analise`/`recuperar_documento(s)`, `pesquisar_documentos` sob demanda, as três verificações de proveniência, catálogo fechado e serialização/validação de formato. Catálogo e formato atuais aceitam `analysis`, `evidence`, `divergence`, `blocker`, `result` e relações `complements`/`supports`/`related_to`/`corrects`/`supersedes`/`invalidates`; publisher/recovery trabalham sobre roots resolvidos e o publisher retorna identidade/hash, sem substituir destino. Resolvedor e root explícitos estão disponíveis. As chamadas fornecidas em PLAN/TASKS são compatíveis com APIs atuais; módulos SPEC1 podem permanecer read-only. Nenhuma mudança SPEC1 é necessária para a integração planejada.
+- **Fronteira de arquivos:** todas as TASKS usam apenas `review_protocol.py`, `test_review_protocol.py` e `status.md`; TASK-010 trata módulos SPEC1 somente como dependências. Não há dependência identificada de runtime/teste novo ou alterado fora dessa fronteira.
+- **Autoridade/especialistas:** TASK-004 modela pertinência e estado especializado sem decidir Patterns, SOLID, interface, Clean Code, Delphi ou Quality/Audit. Autoridade/contexto vem do host sem autenticação inventada pelo Core. Não se encontrou owner inferido nem precedência por data, especificidade, nome ou ordem.
+- **Grants/externalidade:** REVIEW, STRUCTURAL_CHANGE, FUNCTIONAL_CHANGE e LOCAL_PERSISTENCE são separados; ausência de grant nega. EXTERNAL_ACTION permanece não suportada. TASK-011 planeja spies/guards e nenhuma rota de rede, Git remoto, subprocesso, upload, sync ou Release.
+- **Idioma:** SPEC RF-017/CA-017, PLAN D-02/D-11/D-15 e TASKS-001/008/012/013 concordam: `None` usa pt-BR, idioma explícito é fornecido pelo host e preservado pelo Core, sem tradução ou segunda resposta; artefatos internos seguem pt-BR e Release permanece futuro/autorização própria.
+- **Comportamento e determinismo:** D-09/TASK-007 requerem contrato, versões-base/candidata e claim/verificação observada; booleano isolado não basta. D-14/TASK-012 enumeram ordenação das coleções e desempates, dependências, idioma como input e clock que não controla ordem lógica.
+
+### Limitações, achados e conclusão
+
+- **Achados:** nenhum `ANL-*`; nenhuma lacuna bloqueante ou editorial material identificada.
+- **Limitações:** ANALYZE avaliou consistência e suficiência futura dos planos; não executou implementação ou testes de SPEC2, não atestou comportamento futuro e não produziu estado operacional Debug. A prova de execução pertence a IMPLEMENT/CONVERGE conforme seus gates.
+- **Validação humana adicional:** não requerida para este gate de consistência; a aprovação humana de TASKS já foi explicitamente registrada e esta conclusão é análise verificável dos artefatos.
+- **Conclusão:** PASS. Coberturas RF-001–RF-021, CA-001–CA-021, D-01–D-15 e cenários A–O são coerentes, rastreáveis e executáveis dentro do PLAN/TASKS e da fronteira aprovada; sem contradição material, tarefa órfã, capacidade SPEC1 ausente ou apropriação de autoridade detectada.
+- **Autorização resultante:** este PASS habilita solicitar/autorização posterior de IMPLEMENT somente para SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`. Nenhuma TASK foi iniciada nesta execução.
+
+### CHECKPOINT RICKCRAFT — ANALYZE
+
+- **Fase / execution ID:** ANALYZE — `ANALYZE-2026-10-11-SPEC-0000000002-01`.
+- **Estado / resultado:** AGUARDANDO_APROVAÇÃO — PASS.
+- **Versões:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+- **Cobertura:** RF-001–021 SATISFIED; CA-001–021 com estratégia PASS; D-01–15 cobertas; cenários A–O rastreados; TASK-006 e TASK-010 auditadas especialmente.
+- **Achados bloqueantes:** nenhum.
+- **Arquivos criados:** nenhum.
+- **Arquivos alterados:** somente este `status.md`.
+- **Próximo passo:** revisão externa deste ANALYZE; após isso, solicitar autorização separada antes de iniciar TASK-001/IMPLEMENT.
+- **Não fazer ainda:** não iniciar IMPLEMENT, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — ANALYZE
+
+Resultado PASS sustentado pelas versões, matrizes e APIs listadas nesta seção. Revisar exclusivamente este registro e os artefatos aprovados referenciados. Próximo passo proposto: revisão externa do ANALYZE. Autorização necessária: autorização explícita separada antes de IMPLEMENT. IMPLEMENT permanece NOT_STARTED; CONVERGE permanece NOT_STARTED.
 
 ## Alocação
 

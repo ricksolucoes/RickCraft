@@ -409,6 +409,230 @@ class VerificationClaim:
         object.__setattr__(self, "evidence", ordered)
 
 
+class ChangeKind(Enum):
+    """Tipo declarado de mudança recebida do host."""
+
+    STRUCTURAL = "STRUCTURAL"
+    FUNCTIONAL = "FUNCTIONAL"
+
+
+class BehaviorIntent(Enum):
+    """Comportamento que a proposta declara preservar ou alterar."""
+
+    PRESERVE = "PRESERVE"
+    CHANGE = "CHANGE"
+
+
+class BehaviorAssessmentState(Enum):
+    """Resultados limitados de avaliação de uma proposta declarada."""
+
+    PRESERVATION_EVIDENCED = "PRESERVATION_EVIDENCED"
+    PRESERVATION_ASSERTED = "PRESERVATION_ASSERTED"
+    NOT_VERIFIED = "NOT_VERIFIED"
+    FUNCTIONAL_CHANGE_AUTHORIZED = "FUNCTIONAL_CHANGE_AUTHORIZED"
+    FUNCTIONAL_CHANGE_UNAUTHORIZED = "FUNCTIONAL_CHANGE_UNAUTHORIZED"
+
+
+@dataclass(frozen=True)
+class ChangeProposal:
+    """Envelope declarativo de mudança; não contém nem aplica patch."""
+
+    kind: ChangeKind
+    scope: str
+    targets: tuple[str, ...]
+    proposal_reference: str
+    technical_reason: str
+    behavior_intent: BehaviorIntent
+    consequences: str
+    base_versions: tuple[tuple[str, str], ...] = ()
+    candidate_versions: tuple[tuple[str, str], ...] = ()
+    behavior_contract: str | None = None
+    verified_cases: tuple[str, ...] = ()
+    claims: tuple[VerificationClaim, ...] = ()
+    preservation_assertion: str | None = None
+    finding: ReviewFinding | None = None
+    objective_reference: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kind, ChangeKind):
+            raise ReviewInputError("kind deve ser ChangeKind explícito.")
+        _texto_obrigatorio(self.scope, "proposal scope")
+        targets = _textos_unicos(self.targets, "proposal targets", ordenar=True)
+        if not targets:
+            raise ReviewInputError("ChangeProposal requer ao menos um target explícito.")
+        object.__setattr__(self, "targets", targets)
+        _texto_obrigatorio(self.proposal_reference, "proposal_reference")
+        _texto_obrigatorio(self.technical_reason, "technical_reason")
+        _texto_obrigatorio(self.consequences, "consequences")
+        if not isinstance(self.behavior_intent, BehaviorIntent):
+            raise ReviewInputError("behavior_intent deve ser BehaviorIntent explícito.")
+        if (self.kind is ChangeKind.STRUCTURAL) != (
+            self.behavior_intent is BehaviorIntent.PRESERVE
+        ):
+            raise ReviewInputError(
+                "Mudança STRUCTURAL exige intenção PRESERVE; FUNCTIONAL exige CHANGE."
+            )
+        object.__setattr__(
+            self, "behavior_contract", _texto_opcional(self.behavior_contract, "behavior_contract")
+        )
+        object.__setattr__(
+            self,
+            "preservation_assertion",
+            _texto_opcional(self.preservation_assertion, "preservation_assertion"),
+        )
+        cases = _textos_unicos(self.verified_cases, "verified_cases", ordenar=True)
+        object.__setattr__(self, "verified_cases", cases)
+        object.__setattr__(self, "base_versions", _proposal_versions(
+            self.base_versions, targets, "base_versions"
+        ))
+        object.__setattr__(self, "candidate_versions", _proposal_versions(
+            self.candidate_versions, targets, "candidate_versions"
+        ))
+        claims = _sequencia(self.claims, "proposal claims")
+        if any(not isinstance(item, VerificationClaim) for item in claims):
+            raise ReviewInputError("claims deve conter somente VerificationClaim.")
+        if len(set(claims)) != len(claims):
+            raise ReviewInputError("claims não pode conter duplicatas.")
+        if any(claim.target not in targets for claim in claims):
+            raise ReviewInputError("Cada claim deve apontar para um target da proposta.")
+        object.__setattr__(self, "claims", tuple(sorted(claims, key=lambda item: (
+            item.target, item.status.value, item.assertion, item.version or ""
+        ))))
+        if self.finding is not None and not isinstance(self.finding, ReviewFinding):
+            raise ReviewInputError("finding deve ser ReviewFinding explícito.")
+        object.__setattr__(
+            self, "objective_reference", _texto_opcional(self.objective_reference, "objective_reference")
+        )
+        if (self.finding is None) == (self.objective_reference is None):
+            raise ReviewInputError(
+                "ChangeProposal deve referenciar exatamente um ReviewFinding ou objective do pedido."
+            )
+
+
+def _proposal_versions(
+    value: object, targets: tuple[str, ...], field: str
+) -> tuple[tuple[str, str], ...]:
+    entries = _sequencia(value, field)
+    versions: list[tuple[str, str]] = []
+    for entry in entries:
+        pair = _sequencia(entry, f"{field} entry")
+        if len(pair) != 2:
+            raise ReviewInputError(f"Cada {field} entry deve conter target e versão.")
+        target = _texto_obrigatorio(pair[0], f"{field} target")
+        version = _texto_obrigatorio(pair[1], f"{field} version")
+        if target not in targets:
+            raise ReviewInputError(f"{field} contém target fora da proposta.")
+        versions.append((target, version))
+    if len({target for target, _ in versions}) != len(versions):
+        raise ReviewInputError(f"{field} não pode repetir targets.")
+    return tuple(sorted(versions))
+
+
+def _preservation_is_evidenced(proposal: ChangeProposal) -> bool:
+    """Requires an observed claim for each declared case and target version."""
+    if (
+        proposal.kind is not ChangeKind.STRUCTURAL
+        or proposal.behavior_contract is None
+        or not proposal.verified_cases
+        or set(dict(proposal.base_versions)) != set(proposal.targets)
+        or set(dict(proposal.candidate_versions)) != set(proposal.targets)
+    ):
+        return False
+    version_sets = (dict(proposal.base_versions), dict(proposal.candidate_versions))
+    for target in proposal.targets:
+        for case in proposal.verified_cases:
+            for version_map in version_sets:
+                version = version_map[target]
+                matching = [
+                    claim for claim in proposal.claims
+                    if claim.assertion == case
+                    and claim.target == target
+                    and claim.version == version
+                    and claim.status is VerificationStatus.EXECUTED_OBSERVED
+                ]
+                if not matching:
+                    return False
+                if not any(
+                    evidence.kind is EvidenceKind.DIRECT_OBSERVATION
+                    and evidence.target == target
+                    and evidence.version == version
+                    and evidence.limitation is None
+                    and evidence.verifiability not in ("UNAVAILABLE", "UNVERIFIABLE")
+                    for claim in matching
+                    for evidence in claim.evidence
+                ):
+                    return False
+    return True
+
+
+@dataclass(frozen=True)
+class BehaviorAssessment:
+    """Assessment calculado a partir do pedido e da proposta imutáveis."""
+
+    state: BehaviorAssessmentState
+    proposal: ChangeProposal
+    request: ReviewRequest
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.state, BehaviorAssessmentState):
+            raise ReviewInputError("state deve ser BehaviorAssessmentState explícito.")
+        if not isinstance(self.proposal, ChangeProposal):
+            raise ReviewInputError("proposal deve ser ChangeProposal explícita.")
+        if not isinstance(self.request, ReviewRequest):
+            raise ReviewInputError("request deve ser ReviewRequest explícito.")
+        expected = _behavior_assessment_state(self.proposal, self.request)
+        if self.state is not expected:
+            raise ReviewInputError("BehaviorAssessment.state não corresponde às entradas explícitas.")
+
+
+def _behavior_assessment_state(
+    proposal: ChangeProposal, request: ReviewRequest
+) -> BehaviorAssessmentState:
+    grants = set(request.authorization_grants)
+    if AuthorizationGrant.REVIEW not in grants:
+        raise ReviewInputError("REVIEW é obrigatório para avaliar ChangeProposal.")
+    scope_map = {item.scope_id: item for item in request.scopes}
+    if proposal.scope not in scope_map:
+        raise ReviewInputError("proposal scope deve existir explicitamente no ReviewRequest.")
+    scope_artifacts = set(scope_map[proposal.scope].artifacts)
+    for target in proposal.targets:
+        if target in request.excluded_artifacts:
+            raise ReviewInputError("Target excluído não pode ser avaliado na proposta.")
+        if target not in request.authorized_artifacts or target not in scope_artifacts:
+            raise ReviewInputError("Todos os targets devem estar explicitamente autorizados no escopo.")
+    if proposal.finding is not None:
+        if proposal.finding.scope != proposal.scope:
+            raise ReviewInputError("ReviewFinding deve pertencer ao scope da proposta.")
+        if not any(item.target in proposal.targets for item in proposal.finding.evidence):
+            raise ReviewInputError("ReviewFinding deve referenciar ao menos um target da proposta.")
+    elif proposal.objective_reference != request.objective:
+        raise ReviewInputError("objective_reference deve corresponder ao objective do pedido.")
+
+    if proposal.kind is ChangeKind.FUNCTIONAL:
+        if AuthorizationGrant.STRUCTURAL_CHANGE in grants and AuthorizationGrant.FUNCTIONAL_CHANGE in grants:
+            return BehaviorAssessmentState.FUNCTIONAL_CHANGE_AUTHORIZED
+        return BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED
+    if AuthorizationGrant.STRUCTURAL_CHANGE not in grants:
+        raise ReviewInputError("STRUCTURAL_CHANGE é obrigatório para proposta estrutural.")
+    if _preservation_is_evidenced(proposal):
+        return BehaviorAssessmentState.PRESERVATION_EVIDENCED
+    if proposal.preservation_assertion is not None:
+        return BehaviorAssessmentState.PRESERVATION_ASSERTED
+    return BehaviorAssessmentState.NOT_VERIFIED
+
+
+def assess_change_proposal(
+    proposal: ChangeProposal, request: ReviewRequest
+) -> BehaviorAssessment:
+    """Avalia autorização/evidência declaradas sem editar ou examinar artefatos."""
+    if not isinstance(proposal, ChangeProposal):
+        raise ReviewInputError("proposal deve ser ChangeProposal explícita.")
+    if not isinstance(request, ReviewRequest):
+        raise ReviewInputError("request deve ser ReviewRequest explícito.")
+    state = _behavior_assessment_state(proposal, request)
+    return BehaviorAssessment(state=state, proposal=proposal, request=request)
+
+
 class TechnicalDimension(Enum):
     """Dimensões que podem ser consideradas sem implicar avaliação."""
 

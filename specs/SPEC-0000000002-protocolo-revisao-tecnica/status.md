@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-006 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS — TASK-007 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -696,3 +696,125 @@ Validação final: `git diff --check` passou. `git status --short` mostra soment
 ### HANDOFF PARA REVISÃO — TASK-006
 
 Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro, além das APIs SPEC1 referenciadas em modo read-only. TASK-006 está COMPLETE e aguarda revisão. É necessária autorização explícita separada antes de TASK-007.
+
+## Início de IMPLEMENT — TASK-007 — 2026-10-11
+
+O responsável autorizou exclusivamente TASK-007 após aprovação externa de TASK-006. Baseline local validada antes de editar: HEAD `616bb8e51eb088b1e023f1cdae01e753d6a21812`, árvore limpa; hashes SHA-256 e blobs de SPEC, PLAN, TASKS, runtime/teste TASK-006 e módulos/testes SPEC1 coincidem com a autorização. TASK-007 = IN_PROGRESS; TASK-008–TASK-013 não iniciadas. Etapa atual = IMPLEMENT; IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED. Nenhum artefato de implementação foi alterado ainda nesta execução.
+
+## IMPLEMENT — TASK-007 — ChangeProposal e preservação comportamental — 2026-10-11
+
+- **Autorização e estado anterior:** TASK-006 foi aprovada pela revisão externa conforme confirmação do responsável nesta execução. A única tarefa autorizada foi TASK-007. SPEC/PLAN/TASKS aprovadas; ANALYZE `ANALYZE-2026-10-11-SPEC-0000000002-01` permanece PASS. TASK-001–TASK-006 estão COMPLETE e aprovadas; TASK-007 está COMPLETE, aguardando revisão; TASK-008–TASK-013 não iniciadas. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED; Release não autorizado.
+- **Baseline validada antes de editar:** HEAD `616bb8e51eb088b1e023f1cdae01e753d6a21812`, `git status --short` limpo. SPEC SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, blob `97f1a98c4f3b25bf52c0fa71c29502a39e9ca556`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`, blob `0c28cf63a68e09365e1fb3ead7a02e609b60fcfa`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`, blob `065c76d6b6c3b0d5236acdd4def6890a1cce0a5a`.
+- **Baseline TASK-006 e SPEC1 read-only:** `review_protocol.py` `409A369F3FB999AC1458644E11A0FE877096FC691B221E07642DE45F08C2550B`, blob `c376af84cf934af5181e66c7fb6de291027d6ca9`; `test_review_protocol.py` `6DD95B3C510F25BB0268537879F11670C367496E37D951A654468F93559BB06C`, blob `d28bcdc773325a9200307cbb63226fc0daf80bca`; `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`, blob `b0783a88bf7760e97338da9699ed682c2ff49f23`; `test_gap_handling.py` `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`, blob `c1e2ed7ee8485476c3e8f3feb1d03d37ba0ca9a7`. Published baseline `status.md` blob `d066694bdb6a0e4d71c48039a4155d12b9fa8bf2`.
+- **Contratos implementados:** `ChangeKind`, `BehaviorIntent`, `BehaviorAssessmentState`, `ChangeProposal`, `BehaviorAssessment` e `assess_change_proposal`. A proposta é frozen e declarativa: exige referência, motivo técnico, consequências, scope, targets e intenção; referencia exatamente um `ReviewFinding` existente ou o objetivo, cuja identidade é comparada ao `ReviewRequest.objective`. Versões por target são entradas explícitas e opacas. Não existe campo booleano de preservação. Coleções são copiadas, validadas e canonicalizadas.
+- **Autorização e escopo:** REVIEW permanece obrigatório. Proposta STRUCTURAL exige STRUCTURAL_CHANGE; falta desse grant rejeita a avaliação. FUNCTIONAL exige STRUCTURAL_CHANGE e FUNCTIONAL_CHANGE; sem grant funcional retorna `FUNCTIONAL_CHANGE_UNAUTHORIZED`, e com grants retorna `FUNCTIONAL_CHANGE_AUTHORIZED`. Proposta funcional nunca recebe estado de preservação. Todos os targets devem constar literalmente tanto da allowlist quanto dos artefatos do scope; exclusões rejeitam a proposta. Não há wildcard, expansão por diretório ou descoberta de arquivos. Finding é reutilizado por identidade de objeto e validado contra scope e target; referência ao objetivo precisa ser exatamente igual ao objetivo do request. Recommendation não concede grant.
+- **Preservação:** `PRESERVATION_EVIDENCED` requer mudança estrutural, contrato não vazio, casos declarados, versões base e candidata para todos os targets, e claim `EXECUTED_OBSERVED` para cada combinação de target/caso/versão. A evidência direta também precisa corresponder exatamente ao target e à versão, sem limitation e sem verifiability `UNAVAILABLE`/`UNVERIFIABLE`. Evidência ausente, histórica, relatada, inferida, não executada, indisponível, inconclusiva, unilateral ou de cobertura limitada não gera estado positivo. A conclusão permanece restrita aos casos e targets fornecidos; nenhuma equivalência universal é alegada.
+- **Tentativas de teste preservadas:** primeira execução SPEC2: `python -B -m unittest -v impl.tests.test_review_protocol` — 152 testes, 2 ERROR, 0 FAIL; os dois erros vieram de fixtures de teste inválidas que tentavam criar ReviewRequest com o mesmo artefato autorizado e excluído, combinação que TASK-001 corretamente rejeita. A fixture foi corrigida para representar exclusão válida e a validação foi ordenada para relatar exclusão explicitamente. Execução final SPEC2 do mesmo comando: 157 testes, 157 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- **Regressão SPEC1 preservada:** primeira execução sandboxada `python -B -m unittest -v impl.tests.test_gap_handling` — 89 testes iniciados, 178 ERROR de setup/cleanup associados a `WinError 5` ao criar/remover fixtures temporárias em `%TEMP%`. O mesmo comando foi repetido com elevação autorizada, sem alterar arquivos do repositório: 89 testes, 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP. Essa tentativa sandboxada não foi apresentada como defeito do produto.
+- **Hashes finais:** após a última edição, os arquivos foram lidos como UTF-8 estrito e SHA-256 calculado duas vezes. `impl/src/RickCraft/review_protocol.py` = `F040F004B22BA36621C3B87E1941AF8545F4D6B26D3E3AD2AA1B5F0A473BB481`; `impl/tests/test_review_protocol.py` = `7317A0DFBD3797A8C1C5151550BAEA0302C5C38E3981AA2D8B7EF3175732295A`. SPEC/PLAN/TASKS e os dois arquivos SPEC1 read-only permaneceram nos hashes acima.
+- **Fronteiras e inspeção:** API sem edição de artefatos, patch/diff, compilador, filesystem, workspace, persistência, rede, Git ou subprocesso. A verificação focal usa spies para `open`, `subprocess.Popen` e conexão de rede e não observa chamadas. `gap_handling.py` e `test_gap_handling.py` não foram alterados. `git diff --check` passou. `git status --short` contém somente `review_protocol.py`, `test_review_protocol.py` e este `status.md`. Nenhum arquivo novo, Release, push, PR ou acesso remoto ocorreu.
+
+### CHECKPOINT RICKCRAFT — TASK-007
+
+## Fase executada
+IMPLEMENT — TASK-007 — SPEC-0000000002
+
+## Objetivo da execução
+Implementar ChangeProposal e avaliação de preservação comportamental, validando autorização e evidência sem editar artefatos.
+
+## Estado
+CONCLUÍDO / AGUARDANDO_APROVAÇÃO — TASK-007 COMPLETE, aguardando revisão externa.
+
+## O que foi realizado
+Adicionados os modelos imutáveis da proposta e avaliação, validação de autorização e allowlist, e verificação limitada de claims observados nas versões base/candidata.
+
+## Arquivos criados
+Nenhum.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Decisões formalizadas
+Somente contratos D-09/TASK-007: tipos estrutural/funcional separados; ausência de grants nega; preservação não é booleano e exige cobertura observada explícita por target/caso/versão; a avaliação não modifica artefatos.
+
+## Decisões pendentes
+Revisão externa da TASK-007.
+
+## Questões em aberto
+Nenhuma identificada nesta TASK.
+
+## Bloqueios
+Nenhum.
+
+## Riscos identificados
+A avaliação verifica identidade e presença de evidências declaradas, sem provar equivalência semântica universal, conforme PLAN D-09.
+
+## Testes e verificações executados
+- `python -B -m unittest -v impl.tests.test_review_protocol` — final: 157 PASS, 0 FAIL, 0 ERROR, 0 SKIP; primeira tentativa de 152 teve 2 ERROR por fixtures inválidas, corrigidas nesta TASK.
+- `python -B -m unittest -v impl.tests.test_gap_handling` — sandbox inicial: 178 ERROR de fixture WinError 5; repetição elevada autorizada: 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- `git diff --check` — PASS.
+- `git status --short` — somente os três arquivos autorizados modificados.
+- UTF-8 estrito e hashes SHA-256 confirmados duas vezes.
+
+## Hashes finais
+- `review_protocol.py`: `F040F004B22BA36621C3B87E1941AF8545F4D6B26D3E3AD2AA1B5F0A473BB481`
+- `test_review_protocol.py`: `7317A0DFBD3797A8C1C5151550BAEA0302C5C38E3981AA2D8B7EF3175732295A`
+
+## Próximo passo recomendado
+O usuário publicar manualmente no GitHub somente os três arquivos autorizados e, após a publicação, informar ao revisor exatamente: `Atualizei o GitHub do RickCraft.`
+
+## Motivo do próximo passo
+A revisão somente pode aprovar TASK-007 com base no estado publicado no GitHub.
+
+## O que NÃO deve ser feito ainda
+Não iniciar TASK-008. Não executar CONVERGE. Não gerar Release. Não fazer push pelo Codex. Não alterar arquivos fora da autorização.
+
+### HANDOFF PARA REVISÃO — RICKCRAFT — TASK-007
+
+## Fase
+IMPLEMENT — TASK-007 — SPEC-0000000002
+
+## Estado
+AGUARDANDO_APROVAÇÃO — TASK-007 COMPLETE, aguardando revisão externa.
+
+## Objetivo que foi executado
+Implementar ChangeProposal e avaliação de preservação comportamental, validando autorização e evidência sem editar artefatos.
+
+## Fonte interna utilizada
+- SPEC-0000000002 `spec.md` SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`.
+- PLAN `plan.md` SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`.
+- TASKS `tasks.md` SHA-256 `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+- Baseline local de TASK-006 e `gap_handling`/teste SPEC1 read-only conforme os hashes registrados acima.
+
+## Documentação externa relevante consultada
+Nenhuma.
+
+## Artefatos produzidos
+- `impl/src/RickCraft/review_protocol.py` — alterado.
+- `impl/tests/test_review_protocol.py` — alterado.
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md` — alterado.
+- Nenhum arquivo criado.
+
+## Principais decisões
+Proposta estrutural exige REVIEW + STRUCTURAL_CHANGE; proposta funcional requer também FUNCTIONAL_CHANGE e mantém classificação funcional. Preservação evidenciada exige claims EXECUTED_OBSERVED compatíveis para cada target, caso e versão base/candidata, com evidência direta sem limitação impeditiva. Finding existente ou objetivo exato do request fundamenta a proposta. Core não altera artefatos.
+
+## Pendências que exigem validação
+Revisar no estado publicado os três arquivos autorizados, os hashes registrados, o diff e os resultados das duas suítes. TASK-007 não está aprovada ainda.
+
+## Bloqueios
+Nenhum.
+
+## Próximo passo proposto
+Revisão publicada da TASK-007 após o usuário informar `Atualizei o GitHub do RickCraft.`
+
+## Autorização necessária
+Aprovação explícita da TASK-007 pelo revisor antes de qualquer autorização da TASK-008.
+
+## Arquivos que o revisor deve analisar
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+O revisor poderá confirmar read-only os hashes congelados de SPEC/PLAN/TASKS e da baseline SPEC1.

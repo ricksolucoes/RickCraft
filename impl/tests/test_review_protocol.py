@@ -16,6 +16,11 @@ from review_protocol import (  # noqa: E402
     AuthorityContext,
     AuthorityReference,
     AuthorizedPrecedence,
+    BehaviorAssessment,
+    BehaviorAssessmentState,
+    BehaviorIntent,
+    ChangeKind,
+    ChangeProposal,
     ConclusionState,
     DimensionAssessment,
     DimensionAssessmentState,
@@ -31,6 +36,7 @@ from review_protocol import (  # noqa: E402
     TechnicalDimension,
     VerificationClaim,
     VerificationStatus,
+    assess_change_proposal,
     evaluate_scope_continuity,
     evaluate_source_conflict,
     sort_review_findings,
@@ -899,6 +905,410 @@ class ReviewFindingTests(unittest.TestCase):
             item("a", TechnicalDimension.PATTERNS, "a", "x").sort_key[1],
             item("a", TechnicalDimension.SOLID, "a", "x").sort_key[1],
         )
+
+
+class ChangeProposalTests(unittest.TestCase):
+    @staticmethod
+    def request(
+        grants: tuple[AuthorizationGrant, ...] = (
+            AuthorizationGrant.REVIEW,
+            AuthorizationGrant.STRUCTURAL_CHANGE,
+        ),
+        *,
+        targets: tuple[str, ...] = ("src/a.py",),
+        authorized: tuple[str, ...] | None = None,
+        excluded: tuple[str, ...] = (),
+        objective: str = "Revisar o comportamento de A",
+    ) -> ReviewRequest:
+        scope = ReviewScope("scope-a", "Escopo A", (), targets)
+        return ReviewRequest(
+            objective=objective,
+            scopes=(scope,),
+            authorized_artifacts=targets if authorized is None else authorized,
+            excluded_artifacts=excluded,
+            expected_outcome="Avaliação limitada",
+            authorization_grants=grants,
+            requested_effects=(),
+        )
+
+    @staticmethod
+    def proposal(**overrides: object) -> ChangeProposal:
+        values: dict[str, object] = {
+            "kind": ChangeKind.STRUCTURAL,
+            "scope": "scope-a",
+            "targets": ("src/a.py",),
+            "proposal_reference": "diff-ref-1",
+            "technical_reason": "Remover duplicação constatada",
+            "behavior_intent": BehaviorIntent.PRESERVE,
+            "consequences": "Reduz duplicação no escopo informado",
+            "objective_reference": "Revisar o comportamento de A",
+        }
+        values.update(overrides)
+        return ChangeProposal(**values)  # type: ignore[arg-type]
+
+    @staticmethod
+    def observed_claim(target: str, version: str, case: str) -> VerificationClaim:
+        reference = EvidenceReference(
+            EvidenceKind.DIRECT_OBSERVATION,
+            "test-run",
+            f"run:{version}:{case}",
+            target,
+            version=version,
+        )
+        return VerificationClaim(
+            assertion=case,
+            target=target,
+            status=VerificationStatus.EXECUTED_OBSERVED,
+            evidence=(reference,),
+            version=version,
+        )
+
+    def complete_proposal(self, **overrides: object) -> ChangeProposal:
+        claims = tuple(
+            self.observed_claim("src/a.py", version, "case:public-api")
+            for version in ("base-1", "candidate-1")
+        )
+        values: dict[str, object] = {
+            "base_versions": (("src/a.py", "base-1"),),
+            "candidate_versions": (("src/a.py", "candidate-1"),),
+            "behavior_contract": "API pública conserva o contrato declarado",
+            "verified_cases": ("case:public-api",),
+            "claims": claims,
+        }
+        values.update(overrides)
+        return self.proposal(**values)
+
+    def test_proposta_estrutural_valida_com_grants_suficientes(self) -> None:
+        result = assess_change_proposal(
+            self.proposal(), self.request()
+        )
+        self.assertIs(result.state, BehaviorAssessmentState.NOT_VERIFIED)
+        self.assertEqual(result.proposal.targets, ("src/a.py",))
+
+    def test_estados_de_behavior_assessment_sao_exatamente_os_cinco_previstos(self) -> None:
+        self.assertEqual(
+            {item.value for item in BehaviorAssessmentState},
+            {"PRESERVATION_EVIDENCED", "PRESERVATION_ASSERTED", "NOT_VERIFIED",
+             "FUNCTIONAL_CHANGE_AUTHORIZED", "FUNCTIONAL_CHANGE_UNAUTHORIZED"},
+        )
+
+    def test_enums_arbitrarios_nao_sao_coagidos(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.proposal(kind="STRUCTURAL")
+        with self.assertRaises(ReviewInputError):
+            self.proposal(behavior_intent="PRESERVE")
+
+    def test_mudanca_estrutural_sem_grant_e_rejeitada(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "STRUCTURAL_CHANGE"):
+            assess_change_proposal(
+                self.proposal(), self.request((AuthorizationGrant.REVIEW,))
+            )
+
+    def test_mudanca_funcional_com_grants_e_classificada_como_funcional(self) -> None:
+        proposal = self.proposal(
+            kind=ChangeKind.FUNCTIONAL,
+            behavior_intent=BehaviorIntent.CHANGE,
+        )
+        request = self.request((
+            AuthorizationGrant.REVIEW,
+            AuthorizationGrant.STRUCTURAL_CHANGE,
+            AuthorizationGrant.FUNCTIONAL_CHANGE,
+        ))
+        self.assertIs(
+            assess_change_proposal(proposal, request).state,
+            BehaviorAssessmentState.FUNCTIONAL_CHANGE_AUTHORIZED,
+        )
+
+    def test_mudanca_funcional_sem_grant_fica_explicitamente_nao_autorizada(self) -> None:
+        proposal = self.proposal(
+            kind=ChangeKind.FUNCTIONAL,
+            behavior_intent=BehaviorIntent.CHANGE,
+        )
+        self.assertIs(
+            assess_change_proposal(proposal, self.request()).state,
+            BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED,
+        )
+
+    def test_target_fora_da_allowlist_e_rejeitado(self) -> None:
+        proposal = self.proposal(targets=("src/other.py",))
+        with self.assertRaisesRegex(ReviewInputError, "autorizados"):
+            assess_change_proposal(proposal, self.request())
+
+    def test_target_excluido_e_rejeitado(self) -> None:
+        proposal = self.proposal()
+        request = self.request(authorized=(), excluded=("src/a.py",))
+        with self.assertRaisesRegex(ReviewInputError, "excluído"):
+            assess_change_proposal(proposal, request)
+
+    def test_ausencia_de_versao_base_nao_prova_preservacao(self) -> None:
+        proposal = self.complete_proposal(base_versions=())
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_ausencia_de_versao_candidata_nao_prova_preservacao(self) -> None:
+        proposal = self.complete_proposal(candidate_versions=())
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_contrato_ausente_nao_prova_preservacao(self) -> None:
+        proposal = self.complete_proposal(behavior_contract=None)
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada(self) -> None:
+        result = assess_change_proposal(self.complete_proposal(), self.request())
+        self.assertIs(result.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_historico_identificado_nao_prova_preservacao_atual(self) -> None:
+        historical = VerificationClaim(
+            "case:public-api", "src/a.py", VerificationStatus.HISTORICAL_IDENTIFIED,
+            (EvidenceReference(EvidenceKind.PERSISTED_EVIDENCE, "archive", "doc:1",
+                               "src/a.py", version="base-1"),), version="base-1"
+        )
+        proposal = self.complete_proposal(claims=(historical,))
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_not_executed_unavailable_e_inconclusive_nao_provam_preservacao(self) -> None:
+        for status in (VerificationStatus.NOT_EXECUTED,
+                       VerificationStatus.UNAVAILABLE,
+                       VerificationStatus.INCONCLUSIVE):
+            claim = VerificationClaim("case:public-api", "src/a.py", status,
+                                      version="base-1")
+            proposal = self.complete_proposal(claims=(claim,))
+            with self.subTest(status=status):
+                self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                              BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_relato_textual_isolado_permanece_asserted(self) -> None:
+        proposal = self.proposal(preservation_assertion="O host relata preservação.")
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.PRESERVATION_ASSERTED)
+
+    def test_boolean_behavior_preserved_nao_faz_parte_do_contrato(self) -> None:
+        with self.assertRaises(TypeError):
+            self.proposal(behavior_preserved=True)
+
+    def test_ausencia_de_erro_nao_gera_preservacao(self) -> None:
+        self.assertIs(assess_change_proposal(self.proposal(), self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_todos_os_targets_devem_estar_explicitamente_allowlisted(self) -> None:
+        request = self.request(targets=("src/a.py",))
+        proposal = self.proposal(targets=("src/a.py", "src/b.py"))
+        with self.assertRaises(ReviewInputError):
+            assess_change_proposal(proposal, request)
+
+    def test_target_explicitamente_excluido_bloqueia_multiplos_targets(self) -> None:
+        request = self.request(targets=("src/a.py", "src/b.py"),
+                               authorized=("src/a.py",), excluded=("src/b.py",))
+        proposal = self.proposal(targets=("src/a.py", "src/b.py"))
+        with self.assertRaisesRegex(ReviewInputError, "excluído"):
+            assess_change_proposal(proposal, request)
+
+    def test_proposta_e_assessment_sao_imutaveis(self) -> None:
+        targets = ["src/a.py"]
+        proposal = self.proposal(targets=targets)
+        targets.append("src/b.py")
+        result = assess_change_proposal(proposal, self.request())
+        self.assertEqual(proposal.targets, ("src/a.py",))
+        with self.assertRaises(FrozenInstanceError):
+            result.state = BehaviorAssessmentState.NOT_VERIFIED  # type: ignore[misc]
+
+    def test_mutacao_das_colecoes_originais_nao_altera_proposta_ou_assessment(self) -> None:
+        targets = ["src/a.py"]
+        cases = ["case:public-api"]
+        proposal = self.complete_proposal(targets=targets, verified_cases=cases)
+        assessment = assess_change_proposal(proposal, self.request())
+        targets.append("src/b.py")
+        cases.clear()
+        self.assertEqual(proposal.targets, ("src/a.py",))
+        self.assertEqual(proposal.verified_cases, ("case:public-api",))
+        self.assertIs(assessment.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_objetivo_da_proposta_deve_corresponder_ao_pedido(self) -> None:
+        proposal = self.proposal(objective_reference="qualquer objetivo")
+        with self.assertRaisesRegex(ReviewInputError, "objective do pedido"):
+            assess_change_proposal(proposal, self.request())
+
+    def test_objetivo_textual_nao_concede_grant_ausente(self) -> None:
+        request = self.request((AuthorizationGrant.REVIEW,), objective="Refatorar e corrigir tudo")
+        proposal = self.proposal(objective_reference=request.objective)
+        with self.assertRaisesRegex(ReviewInputError, "STRUCTURAL_CHANGE"):
+            assess_change_proposal(proposal, request)
+
+    def test_finding_existente_e_reutilizado_sem_duplicacao(self) -> None:
+        evidence = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "test", "run:1",
+                                     "src/a.py", version="base-1")
+        finding = ReviewFinding(
+            scope="scope-a", dimension=TechnicalDimension.SOLID,
+            condition="Duplicação observada", evidence=(evidence,),
+            normative_reference="rule:1", technical_conclusion="Refatorar",
+            impact="Manutenção", recommendation="Revisar proposta",
+        )
+        proposal = self.proposal(finding=finding, objective_reference=None)
+        assessment = assess_change_proposal(proposal, self.request())
+        self.assertIs(assessment.proposal.finding, finding)
+
+    def test_finding_de_outro_scope_ou_sem_target_e_rejeitado(self) -> None:
+        evidence = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "test", "run:1",
+                                     "elsewhere.py")
+        finding = ReviewFinding(
+            scope="other", dimension=TechnicalDimension.SOLID, condition="Fato",
+            evidence=(evidence,), normative_reference="rule:1",
+            technical_conclusion="Conclusão", impact="Impacto",
+        )
+        proposal = self.proposal(finding=finding, objective_reference=None)
+        with self.assertRaises(ReviewInputError):
+            assess_change_proposal(proposal, self.request())
+
+    def test_versao_generica_e_preservada_sem_resolucao_externa(self) -> None:
+        proposal = self.complete_proposal(
+            base_versions=(("src/a.py", "latest"),),
+            candidate_versions=(("src/a.py", "current"),),
+            claims=(self.observed_claim("src/a.py", "latest", "case:public-api"),
+                    self.observed_claim("src/a.py", "current", "case:public-api")),
+        )
+        self.assertEqual(proposal.base_versions, (("src/a.py", "latest"),))
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_claim_somente_base_ou_somente_candidata_nao_prova_preservacao(self) -> None:
+        for version in ("base-1", "candidate-1"):
+            proposal = self.complete_proposal(
+                claims=(self.observed_claim("src/a.py", version, "case:public-api"),)
+            )
+            with self.subTest(version=version):
+                self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                              BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_preservacao_exige_cobertura_de_cada_target_e_versao(self) -> None:
+        targets = ("src/a.py", "src/b.py")
+        request = self.request(targets=targets)
+        claims = tuple(
+            self.observed_claim(target, version, "case:public-api")
+            for target in targets
+            for version in ("base-1", "candidate-1")
+        )
+        proposal = self.complete_proposal(
+            targets=targets,
+            base_versions=tuple((target, "base-1") for target in targets),
+            candidate_versions=tuple((target, "candidate-1") for target in targets),
+            claims=claims,
+        )
+        self.assertIs(assess_change_proposal(proposal, request).state,
+                      BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+        partial = self.complete_proposal(
+            targets=targets,
+            base_versions=tuple((target, "base-1") for target in targets),
+            candidate_versions=tuple((target, "candidate-1") for target in targets),
+            claims=claims[:-1],
+        )
+        self.assertIs(assess_change_proposal(partial, request).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_versoes_sem_contrato_ou_casos_nao_provam_preservacao(self) -> None:
+        proposal = self.complete_proposal(verified_cases=())
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_claim_com_target_ou_versao_divergente_nao_sustenta_preservacao(self) -> None:
+        wrong_target = self.observed_claim("src/a.py", "base-1", "case:public-api")
+        wrong_version = self.observed_claim("src/a.py", "other-version", "case:public-api")
+        proposal = self.complete_proposal(claims=(wrong_target, wrong_version))
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_evidencia_com_limitacao_material_nao_sustenta_preservacao(self) -> None:
+        limited = VerificationClaim(
+            "case:public-api", "src/a.py", VerificationStatus.EXECUTED_OBSERVED,
+            (EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "test", "run:base",
+                               "src/a.py", version="base-1", limitation="Execução parcial"),),
+            version="base-1",
+        )
+        proposal = self.complete_proposal(claims=(limited, self.observed_claim(
+            "src/a.py", "candidate-1", "case:public-api")))
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_evidencia_explicitamente_unavailable_nao_sustenta_preservacao(self) -> None:
+        unavailable = VerificationClaim(
+            "case:public-api", "src/a.py", VerificationStatus.EXECUTED_OBSERVED,
+            (EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "test", "run:base",
+                               "src/a.py", version="base-1", verifiability="UNAVAILABLE"),),
+            version="base-1",
+        )
+        proposal = self.complete_proposal(claims=(unavailable, self.observed_claim(
+            "src/a.py", "candidate-1", "case:public-api")))
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_mudanca_funcional_autorizada_nao_e_rotulada_como_preservacao(self) -> None:
+        proposal = self.complete_proposal(
+            kind=ChangeKind.FUNCTIONAL,
+            behavior_intent=BehaviorIntent.CHANGE,
+        )
+        request = self.request((AuthorizationGrant.REVIEW,
+                                 AuthorizationGrant.STRUCTURAL_CHANGE,
+                                 AuthorizationGrant.FUNCTIONAL_CHANGE))
+        self.assertIs(assess_change_proposal(proposal, request).state,
+                      BehaviorAssessmentState.FUNCTIONAL_CHANGE_AUTHORIZED)
+
+    def test_structural_grant_nao_implica_functional_grant(self) -> None:
+        proposal = self.proposal(kind=ChangeKind.FUNCTIONAL,
+                                 behavior_intent=BehaviorIntent.CHANGE)
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED)
+
+    def test_recommendation_nao_concede_grant(self) -> None:
+        evidence = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "test", "run:1",
+                                     "src/a.py")
+        finding = ReviewFinding(
+            scope="scope-a", dimension=TechnicalDimension.SOLID, condition="Fato",
+            evidence=(evidence,), normative_reference="rule:1",
+            technical_conclusion="Conclusão", impact="Impacto",
+            recommendation="Executar a refatoração",
+        )
+        proposal = self.proposal(finding=finding, objective_reference=None)
+        request = self.request((AuthorizationGrant.REVIEW,))
+        with self.assertRaises(ReviewInputError):
+            assess_change_proposal(proposal, request)
+
+    def test_diretorio_pai_nao_autoriza_filho_e_wildcard_nao_tem_semantica(self) -> None:
+        request = self.request(targets=("src/",))
+        for target in ("src/a.py", "*"):
+            proposal = self.proposal(targets=(target,))
+            with self.subTest(target=target), self.assertRaises(ReviewInputError):
+                assess_change_proposal(proposal, request)
+
+    def test_mesmas_entradas_produzem_mesmo_assessment(self) -> None:
+        proposal = self.complete_proposal()
+        request = self.request()
+        first = assess_change_proposal(proposal, request)
+        second = assess_change_proposal(proposal, request)
+        self.assertEqual(first, second)
+
+    def test_api_de_avaliacao_e_pura_e_nao_chama_efeitos_externos(self) -> None:
+        import builtins
+        import socket
+        import subprocess
+
+        proposal = self.complete_proposal()
+        request = self.request()
+        with patch.object(builtins, "open", side_effect=AssertionError("I/O")) as opened, \
+             patch.object(subprocess, "Popen", side_effect=AssertionError("processo")) as process, \
+             patch.object(socket, "create_connection", side_effect=AssertionError("rede")) as network:
+            result = assess_change_proposal(proposal, request)
+        self.assertIs(result.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+        opened.assert_not_called()
+        process.assert_not_called()
+        network.assert_not_called()
+
+    def test_assessment_nao_pode_ser_forjado_com_estado_positivo(self) -> None:
+        proposal = self.proposal()
+        with self.assertRaises(ReviewInputError):
+            BehaviorAssessment(BehaviorAssessmentState.PRESERVATION_EVIDENCED,
+                              proposal, self.request())
 
 
 class ReviewConclusionTests(unittest.TestCase):

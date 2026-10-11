@@ -2,7 +2,7 @@
 
 ## Estado corrente
 
-- **Etapa atual:** SPEC
+- **Etapa atual:** PLAN
 - **SPEC:** COMPLETE — aprovada pelo responsável pelo projeto
 - **PLAN:** COMPLETE — pronta para revisão, não aprovada
 - **TASKS:** NOT_STARTED
@@ -61,7 +61,7 @@ Nenhuma documentação externa foi necessária.
 | Artefato | Estado |
 |---|---|
 | `spec.md` | COMPLETE e aprovada; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` |
-| `plan.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `D0F50D366524246AFDAD9D0DF68490C6BAB882022A1444100BBBA392A07D5C93` |
+| `plan.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` |
 | `status.md` | Estado corrente desta unidade; UTF-8 |
 
 O registro autoritativo da alocação permanece em `registries/specifications.md`.
@@ -196,3 +196,25 @@ Não criar TASKS, não executar ANALYZE/IMPLEMENT/CONVERGE e não gerar Release.
 - **Próximo passo:** revisar exclusivamente PLAN.
 - **Autorização necessária:** aprovação antes de criar `tasks.md`.
 - **Não executar:** TASKS, ANALYZE, IMPLEMENT, CONVERGE ou Release antes da autorização.
+
+
+## Correção final do PLAN — idioma da resposta e estado SDD
+
+A revisão externa identificou incompatibilidade entre RF-017/CA-017 da SPEC aprovada e D-11/D-15, matriz RF-017, CA-017 e contrato de renderização do PLAN. O PLAN foi reaberto e passou temporariamente a IN_PROGRESS. Nenhuma SPEC mudou; nenhum TASKS foi iniciado e nenhuma implementação ocorreu.
+
+A correção define `ReviewRequest.language` como identificador solicitado não vazio ou `None` (default pt-BR), sem locale global. O host fornece os textos e títulos semanticamente correspondentes no idioma pedido; o renderer preserva esses valores, sem tradução ou resposta duplicada. CA-017 agora cobre idioma solicitado e default, resposta única, UTF-8/acentos e idioma pt-BR dos artefatos internos. D-11/D-15 e a matriz RF-017 distinguem artefatos internos, resposta operacional e Release futuro condicionado à Policy 3 e autorização explícita. O determinismo inclui o idioma como entrada e não consulta locale global.
+
+Após a correção, PLAN retornou a COMPLETE, pronto para revisão e não aprovado. SHA-256 anterior preservado como histórico: `D0F50D366524246AFDAD9D0DF68490C6BAB882022A1444100BBBA392A07D5C93`. SHA-256 corrente de `plan.md`, relido e confirmado em UTF-8: `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`. SPEC continua COMPLETE e aprovada; TASKS, ANALYZE, IMPLEMENT e CONVERGE continuam NOT_STARTED. Runtime/testes não foram alterados ou executados; nenhum Release foi produzido.
+
+### CHECKPOINT RICKCRAFT — correção PLAN
+
+- **Fase:** correção final do PLAN ? SPEC-0000000002.
+- **Estado:** AGUARDANDO_APROVAÇÃO.
+- **Arquivos alterados:** `plan.md` e `status.md`.
+- **Correções:** idioma solicitado/default, renderer, RF-017, CA-017, D-11, D-15, determinismo e etapa corrente PLAN.
+- **Próximo passo:** revisar exclusivamente o PLAN corrigido antes de autorizar TASKS.
+- **Não executar:** criar `tasks.md`, ANALYZE, IMPLEMENT, CONVERGE, Release ou push.
+
+### HANDOFF PARA REVISÃO — correção PLAN
+
+PLAN está COMPLETE e aguarda aprovação explícita. Arquivos a revisar: `plan.md` e esta seção de `status.md`. Próxima etapa proposta: aprovar/revisar o PLAN antes de criar TASKS. Nenhuma autorização posterior está implícita.

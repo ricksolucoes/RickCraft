@@ -1532,3 +1532,89 @@ Nova autorização explícita antes de reexecutar CONVERGE.
 
 ## Ponto de parada
 Não executar novo CONVERGE, não gerar Release e não fazer push.
+
+## RECONCILIAÇÃO DO DELTA CONV-001 — 34 → 30
+
+### Estado durante a reconciliação
+
+- CONVERGE-2026-10-11-SPEC-0000000001-01 permanece histórico `NOT_CONVERGED`; seu registro persistido declarou 34 diretórios (4 `rickcraft-integration-*` e 30 `rickcraft-recovery-*`).
+- A reconciliação limitada foi reaberta em IMPLEMENT: IMPLEMENT `IN_PROGRESS`; CONVERGE `INVALIDATED`. Nenhuma versão normativa mudou.
+
+### Evidências verificadas
+
+- Comparei o número declarado no resumo histórico com a saída original de enumeração já disponível no transcript da execução. A saída lista 4 diretórios `rickcraft-integration-*` e 26 `rickcraft-recovery-*`: 30 itens, não 34.
+- A saída original de `git status --short` também identifica esses mesmos 4 integration e 26 recovery. A enumeração elevada posterior e a tabela de inspeção desta reconciliação contêm os mesmos 30 nomes; cada um foi inspecionado individualmente e removido por `rmdir` sem recursão.
+- Portanto, os quatro nomes adicionais alegados pelo total 34 não são recuperáveis porque não constam na enumeração original. Não há evidência de que quatro diretórios físicos distintos tenham existido ou desaparecido. O delta de quatro resulta de uma contagem/resumo anterior inconsistente com a saída enumerada; não atribuo remoção a Python, Windows, usuário ou Git.
+- A busca por logs/transcripts persistidos no repositório não encontrou arquivos locais adicionais relacionados à execução. Nenhum log foi fabricado retroativamente.
+- O inventário corrente já registrado ficou vazio após a reconciliação dos 30 itens efetivamente enumerados. Esse estado atual, isoladamente, não é usado como prova retroativa; a resolução documental decorre da comparação da enumeração original com os 30 itens posteriormente inspecionados.
+
+### Conclusão e estado SDD
+
+- A afirmação histórica de 34 é preservada como registro, junto com sua correção: a evidência primária enumerada disponível sustenta 30 (4 integration + 26 recovery). Assim, não há quatro resíduos identificados sem causa; há uma divergência de contagem no relato, sem evidência de quatro desaparecimentos reais.
+- Os 30 itens efetivamente observados foram reconciliados individualmente na seção `RECONCILIAÇÃO CONV-001 — IMPLEMENT`. O inventário atual permanece vazio. CONV-001 fica **RESOLVIDO EM IMPLEMENT** quanto aos resíduos observados e à discrepância documental, aguardando revisão e autorização separada para novo CONVERGE.
+- Nenhum runtime/teste foi alterado; nenhuma suíte foi rerodada; D-02 não foi executada; nenhum Debug, Release, novo CONVERGE, commit ou push foi produzido.
+- Estado final: etapa IMPLEMENT; SPEC/PLAN/TASKS `COMPLETE`; ANALYZE `PASS`; IMPLEMENT `COMPLETE`; CONVERGE `INVALIDATED`; CONVERGE-01 histórico `NOT_CONVERGED`.
+
+# CHECKPOINT RICKCRAFT
+
+## Fase executada
+RECONCILIAÇÃO DO DELTA CONV-001 — IMPLEMENT — SPEC-0000000001
+
+## Objetivo da execução
+Reconciliar a diferença entre o total 34 declarado no resumo histórico e os 30 diretórios presentes na enumeração original e na inspeção posterior.
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Evidência do delta
+O resumo persistido declarou 34 (4 integration + 30 recovery). A enumeração original disponível lista 4 integration + 26 recovery = 30; a inspeção elevada posterior e a tabela de remoção confirmam os mesmos 30 nomes.
+
+## Evidência encontrada
+Saídas originais de `git status --short` e enumeração registradas no transcript; comparação com a enumeração elevada e os nomes da seção de reconciliação anterior. Busca por logs locais persistidos sem resultados.
+
+## Itens faltantes identificados
+Nenhum nome adicional recuperável: a enumeração original só apresenta 30 itens. Não há evidência de quatro diretórios adicionais que tenham desaparecido.
+
+## Causa verificada
+Inconsistência de contagem no resumo anterior (34 declarado contra 30 itens efetivamente enumerados). Não há causa de desaparecimento a atribuir, pois o desaparecimento de quatro diretórios não é sustentado pela saída original disponível.
+
+## Estado atual do filesystem
+Inventário final já registrado: nenhum filho direto `rickcraft-*` em `impl/tests`. A reconciliação atual não removeu nem modificou conteúdo do filesystem.
+
+## Estado SDD final
+IMPLEMENT `COMPLETE`; CONVERGE `INVALIDATED`; CONVERGE-01 histórico `NOT_CONVERGED`; CONV-001 resolvido quanto aos 30 itens enumerados e à discrepância do registro.
+
+## Próximo passo recomendado
+Revisar a correção documental da discrepância antes de autorizar novo CONVERGE.
+
+## O que NÃO deve ser feito ainda
+Não executar novo CONVERGE, Release ou push.
+
+# HANDOFF PARA REVISÃO — RICKCRAFT
+
+## Fase
+RECONCILIAÇÃO DO DELTA CONV-001 — IMPLEMENT
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Resultado
+A enumeração primária disponível registra 30 diretórios. O valor 34 no resumo foi inconsistente; não há evidência de quatro diretórios adicionais desaparecidos.
+
+## Evidências
+Transcript original de enumeração e `git status --short`; inventário elevado de 30 itens e tabela individual de inspeção/remoção já publicada nesta seção de histórico.
+
+## Estado de IMPLEMENT
+COMPLETE
+
+## Estado de CONVERGE
+INVALIDATED
+
+## Resultado histórico
+`CONVERGE-2026-10-11-SPEC-0000000001-01 = NOT_CONVERGED`.
+
+## Próximo passo proposto
+Revisar exclusivamente esta reconciliação documental.
+
+## Autorização necessária
+Nova autorização explícita antes de reexecutar CONVERGE.

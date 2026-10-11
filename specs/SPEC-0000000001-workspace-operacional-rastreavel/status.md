@@ -10,13 +10,13 @@
 
 ## Estado atual
 
-- **Etapa atual:** IMPLEMENT
+- **Etapa atual:** CONVERGE
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
 - **ANALYZE:** PASS
 - **IMPLEMENT:** COMPLETE
-- **CONVERGE:** NOT_STARTED
+- **CONVERGE:** IN_PROGRESS
 - **Último gate válido:** `ANALYZE PASS` da execução `ANALYZE-2026-10-10-SPEC-0000000001-03`, exclusivamente para os hashes de SPEC, PLAN e TASKS registrados na evidência dessa execução. Os resultados -01 e -02 permanecem históricos; -02 foi invalidado pela alteração material de TASKS.
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
 - **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
@@ -97,14 +97,16 @@
 | 2026-10-11 | IMPLEMENT | COMPLETE | TASK-013 concluiu a integração e regressão final; RF-001–RF-014 e CA-001–CA-015 possuem evidência reproduzível consolidada abaixo. Suíte completa: 434 executados, 433 aprovados e 1 SKIP ambiental histórico de symlink real. Nenhum Release ou CONVERGE foi executado; o último gate válido continua ANALYZE-03 para os hashes normativos registrados. |
 | 2026-10-11 | IMPLEMENT | IN_PROGRESS | Reaberta a declaração anterior IMPLEMENT COMPLETE após revisão externa identificar lacuna material em CA-009: o processo B anterior somente recuperava/pesquisava; comparação da proveniência e publicação relacionada ocorriam no processo pai. Correção limitada à evidência/teste TASK-013; SPEC/PLAN/TASKS não mudaram, ANALYZE-03 não foi invalidado e CONVERGE permanece NOT_STARTED. |
 | 2026-10-11 | IMPLEMENT | COMPLETE | Correção final da evidência CA-009 concluída: subprocesso independente recupera input persistido, reavalia, publica evidência relacionada e recupera histórico. Integração 4/4 e suíte completa 434 executados, 433 PASS e 1 SKIP ambiental; ANALYZE-03 válido e CONVERGE NOT_STARTED. |
+| 2026-10-11 | CONVERGE | IN_PROGRESS | Iniciado o gate `CONVERGE-2026-10-11-SPEC-0000000001-01` após confirmar ausência de duplicidade do ID, hashes exatos de SPEC/PLAN/TASKS, IMPLEMENT COMPLETE e hashes dos artefatos correntes registrados. Nenhum código ou teste foi alterado; avaliação documental e técnica em andamento. |
+| 2026-10-11 | CONVERGE | NOT_CONVERGED | Avaliação concluída para os hashes normativos registrados. Achado CONV-001: há diretórios temporários `rickcraft-*` em `impl/tests` inacessíveis para inspeção, em conflito com a afirmação corrente de que nenhum fixture permaneceu; requer reconciliação no estágio IMPLEMENT. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** Nenhuma tarefa de IMPLEMENT pendente; TASK-001 a TASK-013 executadas. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado no Debug real e exige sonda própria antes de qualquer uso.
-- **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT está COMPLETE após a correção de CA-009; CONVERGE permanece NOT_STARTED.
-- **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para IMPLEMENT. A lacuna de evidência CA-009 foi corrigida no teste; nenhum defeito de runtime foi identificado. ANALYZE-03 permanece PASS para os hashes registrados; CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Após a correção e regressões, revisar TASK-013/CA-009 antes de qualquer autorização separada para CONVERGE. Nenhum trabalho de CONVERGE foi iniciado.
+- **Mudanças pendentes:** TASK-001 a TASK-013 permanecem concluídas em IMPLEMENT. CONV-001 requer reconciliação de resíduos/afirmação histórica pela etapa IMPLEMENT. O fallback Debug não foi sondado e permanece sem declaração de utilizabilidade; exige D-02 própria antes de qualquer uso.
+- **Etapas invalidadas:** ANALYZE FAIL de -01 e PASS de -02 permanecem históricos para suas versões; `ANALYZE-2026-10-10-SPEC-0000000001-03` permanece o gate ANALYZE válido para os hashes indicados. IMPLEMENT permanece COMPLETE até retorno autorizado ao estágio proprietário. CONVERGE está NOT_CONVERGED pelo execution ID desta avaliação.
+- **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. Nenhuma invalidação normativa foi necessária.
+- **Bloqueios:** CONV-001 é uma lacuna de evidência ambiental; não foi possível ler os diretórios temporários existentes. Nenhum Release foi produzido ou autorizado.
+- **Próxima autorização necessária:** Autorizar retorno limitado a IMPLEMENT para identificar/reconciliar CONV-001; somente depois reexecutar CONVERGE. Release continua exigindo autorização separada.
 
 ## Validade do ANALYZE anterior
 
@@ -1308,3 +1310,96 @@ Revisar esta correção antes de qualquer autorização explícita separada para
 
 ## Ponto de parada
 Não executar CONVERGE, não gerar Release e não fazer push.
+
+## CONVERGE — CONVERGE-2026-10-11-SPEC-0000000001-01
+
+### Versões e execução avaliadas
+
+- Data: 2026-10-11. CONVERGE iniciou após confirmar que este execution ID não existia.
+- SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`; PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`; TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. Recalculados e iguais às versões de `ANALYZE-2026-10-10-SPEC-0000000001-03`.
+- Estado inicial confirmado: SPEC/PLAN/TASKS COMPLETE, ANALYZE PASS, IMPLEMENT COMPLETE, CONVERGE NOT_STARTED e TASK-001–TASK-013 executadas.
+- SHA-256 dos 24 artefatos runtime/teste correntes da tabela foram recalculados; todos coincidem com os hashes ali registrados. `test_workspace_integration.py` é `7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4`, igual ao exigido para a evidência final CA-009. Nenhum código/teste foi alterado.
+- Ambiente registrado por IMPLEMENT: Python 3.12.9, Windows 11 10.0.26200-SP0, win32. Resultados registrados: TASK-013 4/4; TASK-009 28 executados (27 PASS, 1 SKIP); TASK-007 45/45; TASK-008 47/47; suíte completa 434 executados (433 PASS, 1 SKIP). Regressões focais restantes constam na seção de regressão anterior. CONVERGE não rerodou testes, D-02, publicação ou recuperação.
+- Fontes examinadas: README_PTBr.md, README.md, POL-0000000001–0000000003, registries de policies/grupos/specifications, SPEC, PLAN, TASKS, status, todos os módulos runtime e testes listados na tabela vigente. A tabela de hashes identifica exatamente as versões auditadas.
+
+### RF-001–RF-014
+
+Conclusões reavaliadas contra o requisito original, decisão PLAN, tarefa, fonte, teste e resultado registrado. A matriz IMPLEMENT foi tratada como índice de localização, não como veredito.
+
+| RF | Decisões / tarefas | Fonte e evidência verificada | Resultado |
+|---|---|---|---|
+| RF-001 | D-01–D-04; TASK-001–003 | `rickcraft_root.py`, `workspace_resolver.py`, `workspace_probe.py`; testes de RickCraftRoot explícito, CWD independente, derivação e precedência. | SATISFIED |
+| RF-002 | D-02–D-04; TASK-002–003 | `test_raiz_ausente_e_capacidades_reais_em_fixture`; integração `test_sonda_real_em_fixture_prova_precedencia_fallback_e_bloqueio`; evidência Debug abaixo. | SATISFIED |
+| RF-003 | D-05–D-07; TASK-004–005 | Testes UUIDv4/retomada, criação exclusiva, catálogo fechado V1 e derivação contida; integração de publicação fixture. | SATISFIED |
+| RF-004 | D-07–D-09, D-13; TASK-005–006, TASK-008 | Testes round-trip pt-BR, JSON/UTF-8 e `test_destino_final_rele_hash_parse_e_flags_sao_confirmados`; documento integrado validado. | SATISFIED |
+| RF-005 | D-09–D-10, D-13; TASK-008–009 | Append-only, divergência de ID/hash, concorrência e comparação de bytes/hash/metadata antes/depois na integração. | SATISFIED |
+| RF-006 | D-04–D-10, D-12; TASK-004, TASK-009–010, TASK-013 | Retomada sem novo ID; processo B recupera do filesystem; teste cross-process CA-009 usa input persistido. | SATISFIED |
+| RF-007 | D-09–D-11; TASK-006–007, TASK-009 | Vetor SHA-256, locator diferente com mesmos bytes, UNAVAILABLE e comparação integrada CHANGED_REASSESS. | SATISFIED |
+| RF-008 | D-04, D-10–D-12; TASK-007, TASK-009–010 | Preservação da referência histórica, ordenação UTC, filtros estruturados/textuais e busca integrada por relação/input. | SATISFIED |
+| RF-009 | Regras de autonomia e lacuna; TASK-011, TASK-013 | Testes de escopo independente e bloqueio transitivo; integração classifica e persiste sem executar trabalho. | SATISFIED |
+| RF-010 | D-03, D-07–D-10; TASK-003, TASK-011, TASK-013 | Teste de blocker que solicita identificar autoridade; integração persiste causa, escopo e informação requerida. | SATISFIED |
+| RF-011 | Hierarquia do PLAN; TASK-006, TASK-009, TASK-011, TASK-013 | Testes de autoridade explícita/não inferida; integração mantém normativa acima de workspace e conflito sem vencedor. | SATISFIED |
+| RF-012 | D-14; TASK-012–013 | `test_inventario_positivo_exclui_workspaces_preferencial_e_fallback`; teste de traversal/externo; path fallback físico exato presente na allowlist e excluído. | SATISFIED |
+| RF-013 | D-14; TASK-012–013 | AST/spies de rede, subprocess/shell e interfaces externas; fluxo local não invoca publicação externa. | SATISFIED |
+| RF-014 | D-08–D-12; TASK-006–010 | Testes de metadata/input/relation/texto/ordenação e busca integrada do segundo DOC. | SATISFIED |
+
+### CA-001–CA-015
+
+Cada PASS abaixo referencia testes e/ou artefato da versão auditada (hash na tabela `Artefatos e versões`); os resultados são os efetivamente registrados por IMPLEMENT, não reexecutados por CONVERGE.
+
+| CA | Teste/evidência e resultado registrado | Resultado |
+|---|---|---|
+| CA-001 | `test_raiz_ausente_e_capacidades_reais_em_fixture`; integração D-02 fixture; D-02 Debug atual e DOC recuperável no preferred. | PASS |
+| CA-002 | `test_preferencial_e_avaliado_primeiro`, `test_preferencial_utilizavel_nao_avalia_fallback`. | PASS |
+| CA-003 | `test_impossibilidade_concreta_preferencial_permite_sonda_fallback`, `test_erro_desconhecido_preferencial_nao_sonda_fallback`; fixture seleciona fallback ou bloqueia conforme causa. | PASS |
+| CA-004 | Testes UUIDv4, retomada idêntica e `test_oito_colisoes_nao_tentam_nono_uuid`. | PASS |
+| CA-005 | Testes de layout/catálogo e `test_destino_final_rele_hash_parse_e_flags_sao_confirmados`; integração valida filename, metadados, tipo e root kind. | PASS |
+| CA-006 | `test_retoma_id_valido_existente_sem_alterar_identidade`; processo independente recupera e pesquisa pelo filesystem sem conversa/objetos transferidos. | PASS |
+| CA-007 | `test_append_only_preserva_documento_anterior`, teste de concorrência e asserções cross-process de bytes/hash/metadata. | PASS |
+| CA-008 | Testes MATCHED somente por comparação, UNAVAILABLE e UNVERIFIABLE; integração registra CHANGED_REASSESS após mudança real na fixture. | PASS |
+| CA-009 | `test_publicacao_recuperacao_processo_novo_proveniencia_e_append_only`, `test_workspace_integration.py` SHA-256 `7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4`, 4/4 PASS. B recupera o input/locator persistido, altera a fixture, verifica CHANGED_REASSESS, publica e recupera DOC `complements`, e pesquisa o resultado; pai só verifica persistência. | PASS |
+| CA-010 | `test_blocker_registra_identificacao_de_autoridade_ainda_desconhecida`; integração persiste causa e informação sem owner inventado. | PASS |
+| CA-011 | Testes `test_dependencia_transitiva_bloqueia_cadeia_completa`, `test_escopo_depende_de_escopo_continuavel_sem_bloqueio`, `test_dependencia_nao_avaliada_impede_continuidade`; integração mantém escopo independente apto. | PASS |
+| CA-012 | Testes de autoridade preservada/blocker; integração registra prevalência normativa e conflito sem vencedor/owner inferido. | PASS |
+| CA-013 | `test_inventario_positivo_exclui_workspaces_preferencial_e_fallback`; hash do teste vigente conferido; `.workspace` precede allowlist, `meu.workspace.txt` é permitido; nenhum Release criado. | PASS |
+| CA-014 | `test_runtime_nao_importa_ou_invoca_integracoes_externas` e spies da integração; sem rede/Git/upload/sync do runtime. | PASS |
+| CA-015 | Testes round-trip e publicação/leitura local pt-BR; README/status internos em pt-BR/UTF-8; sem Release/artefato inglês. | PASS |
+
+### D-01–D-14
+
+| Decisão | Avaliação / localização | Resultado |
+|---|---|---|
+| D-01 | Root explícito, absoluto, validado e independente de CWD em `rickcraft_root.py`; testes focalizados. | Conforme |
+| D-02 | `workspace_probe.py` realiza mkdir, exclusividade, escrita, flush/fsync aplicável, releitura, link create-if-absent e limpeza; integração executa sonda concreta em fixture. Debug selecionou preferred; fallback não sondado. | Conforme |
+| D-03 | Somente causas/códigos concretos e disponíveis autorizam fallback; errno ausente/None e EEXIST bloqueiam; testes TASK-003. | Conforme |
+| D-04 | Resolver reavalia por operação; publisher reavalia antes das publicações; recuperação faz união read-only, anota raiz não lida e não copia/apaga histórico. | Conforme |
+| D-05 | `uuid.uuid4`, ANL canônico e retomada explícita sem identidade nova. | Conforme |
+| D-06 | `mkdir()` exclusivo para ANL; DOC publicado por hard link; até oito colisões, novo ID e reconstrução; testes de limite/concorrência. | Conforme |
+| D-07 | Catálogo V1 fechado, oito tokens, paths validados e contidos. | Conforme |
+| D-08 | Envelope Markdown/JSON, UTF-8/JSON estritos e validação de estrutura; rejeições cobertas. | Conforme |
+| D-09 | DOC UUID, filename, tokens e relações; recovery valida alvo/analysis_id, inclusive regra cross-analysis corrigida. | Conforme |
+| D-10 | Append-only; novo DOC relacionado; anterior não é sobrescrito; hashes/bytes testados. | Conforme |
+| D-11 | SHA-256 dos bytes exatos; locator local absoluto normalizado, document_id para workspace, fonte versionada sem rede; quatro estados e motivos. | Conforme |
+| D-12 | Busca sob demanda por filtros/metadados/texto, ordenada em UTC, sem índice/cache; latência é limite documentado. | Conforme |
+| D-13 | Temporário exclusivo no tipo, bytes validados, flush/fsync aplicável, `os.link` sem overwrite, hash final, colisões/concorrência e resíduos; nenhuma degradação rename/copy. | Conforme |
+| D-14 | Persistência limitada ao workspace; inventário positivo exclui componente `.workspace` antes da allowlist; spies sem externalidade; nenhum Release. | Conforme |
+
+### Verificações especiais e limitações
+
+- **CA-009:** revisão direta do código de `test_workspace_integration.py` confirmou processo A publicando apenas o primeiro DOC; processo B recebe root/analysis_id/first_document_id, recupera input e locator do metadata persistido, altera a entrada temporária, chama `verificar_arquivo_local` sobre o histórico recuperado, obtém CHANGED_REASSESS, publica novo DOC com `complements`, recupera e pesquisa histórico. Antes do subprocesso o pai descarta referências à observação/source/publicação; depois apenas verifica filesystem. Primeiro DOC permanece byte a byte igual. IDs e SHA do input estão registrados na evidência TASK-013.
+- **Publicação e recuperação:** fonte e testes atuais cobrem create-exclusive, temporário, validação, `os.link` como única criação final, não substituição, verificação de hash final, oito tentativas/reconstrução, limpeza/resíduos com erro principal, deduplicação same-ID/same-hash, divergência same-ID/different-hash, `.tmp` inválido para leitura, containment físico, redirecionamentos, relações/ciclos e revalidação de inputs sem alterar histórico.
+- **D-02 Debug:** registro de IMPLEMENT indica `resolver_workspace(RickCraftRoot, AvaliadorWorkspace())`, preferred `impl/.workspace` UTILIZÁVEL/selecionado, errno/winerror ausentes, avisos/resíduos vazios e fallback não sondado por precedência. É coerente com o publisher, que resolve/sonda antes da gravação, e com o DOC persistido `DOC-e94fe576-a13a-422a-bd12-406629018cec` (root_kind preferred, SHA-256 `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`) que foi recuperado/pesquisado. Snapshot registrado lista cinco ANL, somente esse DOC e nenhum resíduo. A ausência de sonda real do fallback é limitação explícita e não bloqueante; não se declara fallback Debug utilizável. D-02 em fixture cobre fallback autorizado e erro desconhecido bloqueante.
+- **Skip:** único SKIP é symlink real em Windows sem privilégio. Redirect/junction/reparse têm testes determinísticos/stdlib, incluindo `test_junction_detectada_pela_stdlib_bloqueia_retomada`; nenhuma CA depende exclusivamente do symlink físico. Limitação ambiental não bloqueante.
+- **WinError 5 e resíduo:** tentativa sandboxada não foi contada como PASS; resultados finais de IMPLEMENT foram obtidos por repetição autorizada, sem converter elevação em requisito. O status anterior declara que quatro fixtures foram removidos. Nesta auditoria, `git status --short` emitiu acesso negado para 34 diretórios adicionais sob `impl/tests` (4 `rickcraft-integration-*` e 30 `rickcraft-recovery-*`). `Get-ChildItem` e `Get-Acl` também receberam Access Denied; conteúdo, proprietário e relação com execuções não puderam ser confirmados. Não foram removidos nem considerados vazios. São diretórios sob a árvore de testes, não dentro do workspace operacional, mas sua origem/conteúdo não é verificável nesta execução. Isso contradiz a afirmação abrangente de que nenhum fixture permaneceu e constitui CONV-001; não demonstra defeito do runtime.
+- **Histórico negativo:** falhas/invalidações antigas de ANALYZE, correções finais TASK-007/008/009/011/012 e lacuna anterior de CA-009 permanecem preservadas. As correções aparecem nos artefatos correntes, hashes correspondem às versões testadas e regressões finais estão registradas; os erros iniciais do harness foram corrigidos antes dos resultados finais.
+- **Validação humana:** adicional não requerida. A auditoria técnica cobre critérios observáveis; não há decisão substantiva pendente. A limitação de fallback real foi registrada e não é requisito para usá-lo sem sonda própria.
+- **CONV-001 — IMPLEMENT/evidência, TASK-013 e regressões:** evidência de limpeza de fixtures temporários não está reconciliada com o filesystem atual. Observado: 34 diretórios `rickcraft-*` em `impl/tests`, todos inacessíveis para listagem/ACL nesta execução; `git status --short` também registrou Access Denied. Esperado: resíduos de teste próprios identificados e removidos, ou classificados com evidência verificável, sem afirmar que nenhum permaneceu. Impacto: não é possível confirmar que os diretórios são vazios, de execuções anteriores ou removíveis; a declaração histórica “nenhum fixture ficou” não pode ser sustentada pelo estado observável. Estágio proprietário: IMPLEMENT, para inspeção/reconciliação da evidência/fixtures; não alterar código sem diagnóstico. Bloqueante para CONVERGED: sim. Nenhuma limpeza foi tentada por não ser possível confirmar propriedade/conteúdo.
+- Nenhum teste/suite, D-02, publicação Debug, Release, rede/Git externo, commit ou push foi executado nesta avaliação. Nenhuma norma, runtime ou teste foi modificado.
+
+### Conclusão e estado final
+
+Para os hashes exatos acima, RF-001–RF-014 estão **SATISFIED**, CA-001–CA-015 estão **PASS**, D-01–D-14 estão conformes e os hashes de implementação/testes correspondem aos resultados finais registrados. A evidência cross-process corrente satisfaz CA-009. Porém, CONV-001 impede confirmar a suficiência/coerência da declaração de limpeza de fixtures; portanto a condição de evidência integralmente reconciliada para convergência não foi satisfeita.
+
+**CONVERGE = NOT_CONVERGED** para `CONVERGE-2026-10-11-SPEC-0000000001-01`. Etapa atual CONVERGE; SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE NOT_CONVERGED. O gate foi concluído para as versões acima, mas não autoriza Release. O último gate ANALYZE válido continua sendo `ANALYZE-2026-10-10-SPEC-0000000001-03`; CONVERGE não foi aprovado.
+
+CONVERGED não significa certeza absoluta, ausência matemática de defeitos, Release produzido ou autorizado, instalação ou distribuição. Nenhum Release foi produzido ou autorizado por este resultado.

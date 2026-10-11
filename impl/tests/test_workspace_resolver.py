@@ -28,9 +28,30 @@ class ResolvedorWorkspaceTests(unittest.TestCase):
         ).resolve(strict=True)
         cls.caminhos = derivar_caminhos_workspace(cls.rickcraft_root)
 
-    def assert_sem_workspace_materializado(self) -> None:
-        self.assertFalse(self.caminhos.preferencial.exists())
-        self.assertFalse(self.caminhos.fallback.exists())
+    def resolver_sem_mutacoes(
+        self,
+        resultados: list[ResultadoCapacidade],
+        avaliados: list[Path],
+    ):
+        fila = iter(resultados)
+
+        def avaliar(candidata: Path) -> ResultadoCapacidade:
+            avaliados.append(candidata)
+            return next(fila)
+
+        with (
+            patch.object(Path, "mkdir") as mkdir,
+            patch.object(Path, "open") as abrir,
+            patch("os.link") as criar_link,
+            patch("os.fsync") as fsync,
+        ):
+            try:
+                return resolver_workspace(self.rickcraft_root, avaliar)
+            finally:
+                mkdir.assert_not_called()
+                abrir.assert_not_called()
+                criar_link.assert_not_called()
+                fsync.assert_not_called()
 
     def test_deriva_local_definido_usuario(self) -> None:
         self.assertEqual(
@@ -259,27 +280,44 @@ class ResolvedorWorkspaceTests(unittest.TestCase):
 
         self.assertEqual(resolvidos, self.caminhos)
 
-    def test_resolucao_controlada_nao_executa_operacoes_de_sonda(self) -> None:
-        def operacao_proibida(*args: object, **kwargs: object) -> None:
-            raise AssertionError("O resolvedor não deve sondar o filesystem.")
+    def test_preferencial_utilizavel_nao_executa_mutacoes_de_filesystem(self) -> None:
+        avaliados: list[Path] = []
 
-        with (
-            patch.object(Path, "mkdir", side_effect=operacao_proibida),
-            patch.object(Path, "open", side_effect=operacao_proibida),
-            patch("os.link", side_effect=operacao_proibida),
-            patch("os.fsync", side_effect=operacao_proibida),
-        ):
-            selecionada = resolver_workspace(
-                self.rickcraft_root,
-                lambda candidata: (
-                    ResultadoCapacidade.UTILIZAVEL
-                    if candidata == self.caminhos.preferencial
-                    else ResultadoCapacidade.ERRO_DESCONHECIDO
-                ),
-            )
+        selecionada = self.resolver_sem_mutacoes(
+            [ResultadoCapacidade.UTILIZAVEL],
+            avaliados,
+        )
 
         self.assertEqual(selecionada.caminho, self.caminhos.preferencial)
-        self.assert_sem_workspace_materializado()
+        self.assertEqual(avaliados, [self.caminhos.preferencial])
+
+    def test_fallback_controlado_nao_executa_mutacoes_de_filesystem(self) -> None:
+        avaliados: list[Path] = []
+
+        selecionada = self.resolver_sem_mutacoes(
+            [
+                ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA,
+                ResultadoCapacidade.UTILIZAVEL,
+            ],
+            avaliados,
+        )
+
+        self.assertEqual(selecionada.caminho, self.caminhos.fallback)
+        self.assertEqual(
+            avaliados,
+            [self.caminhos.preferencial, self.caminhos.fallback],
+        )
+
+    def test_erro_desconhecido_bloqueia_sem_mutacoes_ou_fallback(self) -> None:
+        avaliados: list[Path] = []
+
+        with self.assertRaises(ResultadoDesconhecidoError):
+            self.resolver_sem_mutacoes(
+                [ResultadoCapacidade.ERRO_DESCONHECIDO],
+                avaliados,
+            )
+
+        self.assertEqual(avaliados, [self.caminhos.preferencial])
 
     def test_resultado_semantico_invalido_bloqueia_sem_tentar_fallback(self) -> None:
         avaliados: list[Path] = []
@@ -292,10 +330,6 @@ class ResolvedorWorkspaceTests(unittest.TestCase):
             resolver_workspace(self.rickcraft_root, avaliar)  # type: ignore[arg-type]
 
         self.assertEqual(avaliados, [self.caminhos.preferencial])
-
-    def test_nenhuma_resolucao_cria_workspace(self) -> None:
-        self.assert_sem_workspace_materializado()
-
 
 if __name__ == "__main__":
     unittest.main()

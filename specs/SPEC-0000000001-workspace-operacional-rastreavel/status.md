@@ -65,7 +65,7 @@
 | 2026-10-10 | TASKS | COMPLETE | CA-003 agora aponta para TASK-002 e TASK-003: TASK-003 classifica e fornece o resultado; TASK-002 consome-o e decide sobre precedência/fallback. Fronteiras existentes preservadas. Novo SHA-256 de `tasks.md`: `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece INVALIDATED; último gate válido: Nenhum. |
 | 2026-10-10 | ANALYZE | IN_PROGRESS | Início da reexecução integral autorizada `ANALYZE-2026-10-10-SPEC-0000000001-03`, sobre SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. IMPLEMENT permanece IN_PROGRESS apenas como estágio previamente iniciado; nenhuma TASK, implementação, teste ou sonda foi executada nesta análise. |
 | 2026-10-10 | ANALYZE | PASS | Gate documental integral concluído para as três versões exatas registradas. TASK-002/TASK-003 são executáveis sem circularidade semântica; CA-003 está coerente; não foram encontrados achados bloqueantes. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. IMPLEMENT permanece IN_PROGRESS, sem retomada nesta execução; CONVERGE permanece NOT_STARTED. Último gate válido: ANALYZE PASS somente para esses hashes. |
-| 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-002 executada com testes específicos e regressão completa aprovados. Arquivos novos: `impl/src/RickCraft/workspace_resolver.py` SHA-256 `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A`; `impl/tests/test_workspace_resolver.py` SHA-256 `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E`. TASK-001 permaneceu inalterada; TASK-003–TASK-013 não foram iniciadas. ANALYZE-03 continua válido para SPEC/PLAN/TASKS; CONVERGE permanece NOT_STARTED. |
+| 2026-10-10 | IMPLEMENT | IN_PROGRESS | Corrigido o isolamento da suíte de testes de TASK-002: removida a dependência da inexistência global de `.workspace/`; os testes verificam ausência de operações mutáveis do resolvedor nos fluxos preferencial, fallback e erro desconhecido. Hash atual de `test_workspace_resolver.py`: `58C9CF9CD1A26D3BC80D878B13A94B3D81200DCDDCDC4DD6726B5BB79F4B5334`. Suíte específica: 20/20; regressão completa: 33/33 na execução final elevada. `workspace_resolver.py` e arquivos da TASK-001 permaneceram inalterados. TASK-003 não foi iniciada; D-02 não foi executada; CONVERGE permanece NOT_STARTED. |
 
 ## Pendências e invalidações
 
@@ -356,7 +356,7 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 | Arquivo | Conteúdo | SHA-256 |
 |---|---|---|
 | `impl/src/RickCraft/workspace_resolver.py` | Derivação de caminhos, resultados semânticos tipados e seleção sem cache entre chamadas. | `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A` |
-| `impl/tests/test_workspace_resolver.py` | Testes unitários controlados de TASK-002. | `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E` |
+| `impl/tests/test_workspace_resolver.py` | Testes unitários controlados de TASK-002 na conclusão inicial da tarefa; hash histórico anterior à correção de isolamento. | `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E` |
 
 **Arquivos TASK-001 preservados:** `rickcraft_root.py` SHA-256 `990BF4A64535F55C879FB9958F743BF2923C778AC474843FF227266CAFD56EDF`; `test_rickcraft_root.py` SHA-256 `8620D432184A77551E99F0C5BFD4C499164B006A926F4D72BA97B2D2356FF1E8`.
 
@@ -372,6 +372,18 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 ### Resultado de TASK-002
 
 TASK-002 foi implementada e sua suíte específica passou; a regressão completa também passou. A implementação deriva somente as duas localizações aprovadas, aceita resultados semânticos controlados e reavalia a prioridade em cada chamada, sem executar operações concretas de filesystem nas candidatas. Evidência satisfatória para o escopo de TASK-002; isso não é CONVERGE nem conclusão de IMPLEMENT. Próximo passo: revisão desta implementação e de suas evidências antes de autorização separada para TASK-003.
+
+## Correção de isolamento dos testes — IMPLEMENT TASK-002
+
+- **Data:** 2026-10-10.
+- **Defeito identificado:** os testes condicionavam sucesso à ausência física global de `.workspace/`, o que poderia falhar após uma execução legítima futura de D-02 sem defeito no resolvedor.
+- **Correção aplicada:** removidos `assert_sem_workspace_materializado()` e o teste baseado em inexistência global. Três cenários agora observam chamadas mutáveis durante `resolver_workspace(...)`: preferencial utilizável; impossibilidade concreta no preferencial e fallback utilizável; erro desconhecido no preferencial. Os testes verificam que `Path.mkdir`, `Path.open`, `os.link` e `os.fsync` não são chamados; também confirmam a seleção/fallback ou bloqueio e a sequência de candidatas.
+- **Arquivos alterados:** `impl/tests/test_workspace_resolver.py` e este `status.md`. Nenhum arquivo criado nesta correção. `workspace_resolver.py` permaneceu inalterado (SHA-256 `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A`).
+- **Novo SHA-256 de `test_workspace_resolver.py`:** `58C9CF9CD1A26D3BC80D878B13A94B3D81200DCDDCDC4DD6726B5BB79F4B5334`. O hash `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E` permanece registrado acima como versão anterior à correção.
+- **Suíte específica:** `python -B -m unittest -v impl.tests.test_workspace_resolver` — 20 testes executados, 20 aprovados.
+- **Regressão completa:** `python -B -m unittest discover -s impl/tests -v` — execução final elevada: 33 testes executados, 33 aprovados, incluindo 13 testes de TASK-001 e 20 de TASK-002.
+- **Limitação ambiental:** a execução completa no sandbox terminou com 18 erros `WinError 5` ao limpar fixtures temporárias da suíte TASK-001. Após repetição autorizada com elevação, a suíte completa passou. Os diretórios temporários órfãos foram removidos depois de confirmar que eram filhos diretos de `impl/tests/`.
+- **Hashes normativos e estado:** SPEC, PLAN e TASKS permanecem respectivamente `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`; ANALYZE-03 permanece PASS. IMPLEMENT continua IN_PROGRESS e TASK-002 está concluída com a correção; TASK-001 e seus arquivos permanecem preservados. TASK-003 não foi iniciada, D-02 não foi executada, nenhuma `.workspace/` foi criada nesta correção, nenhuma dependência foi adicionada e nenhum Release foi produzido. CONVERGE permanece NOT_STARTED.
 
 ## Evidência do ANALYZE-03
 

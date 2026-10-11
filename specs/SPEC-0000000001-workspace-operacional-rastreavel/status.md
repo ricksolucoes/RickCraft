@@ -27,7 +27,9 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001, TASK-002 e TASK-003 executadas; TASK-004 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-004 executadas; TASK-005 a TASK-013 pendentes. |
+| `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `AC28E38E0B1107708F912BF8353A863F40DF24761C77EA3472298EB3C06B32BA` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada explícita sem geração de nova identidade. |
+| `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5F212FE3C614C5D4BB5C2C38C909587AA06DF549B4BD6282BA154F6D7D7A79DE` | 25 testes específicos cobrindo identidade, colisões, retomada e resolução do workspace. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
 | `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600` | 17 testes específicos, incluindo ausência de errno/símbolo opcional e bloqueio do resolvedor sem sonda de fallback. |
 
@@ -71,13 +73,15 @@
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-003 implementada e testada sem alterar TASK-001/TASK-002. `workspace_probe.py` SHA-256 `3A3298C0B0C982F3D126593012C89231E529D8D9FBF95512608A8A93D86EC3C4`; `test_workspace_probe.py` SHA-256 `BC8DAF114890D11AFF28863CD0E5D3E45BE1D9D1E71C18C3AE13F6F3CD12C206`. Python 3.12.9 em Windows 11 (`win32`). Testes finais: TASK-003 13/13; TASK-002 20/20; suíte completa 46/46. As suítes precisaram de execução elevada porque o sandbox negou criação/limpeza de fixtures em TEMP; a sonda real foi executada sem elevação no contexto desta sessão. D-02 real: `impl/.workspace/` UTILIZÁVEL e selecionado como `preferred`; criação exclusiva, escrita, flush, fsync, releitura, `os.link` para destino ausente e rejeição de destino existente com bytes sentinela preservados foram observados. Nenhum erro D-03, resíduo ou aviso de limpeza; fallback `impl/src/RickCraft/.workspace/` não sondado porque o preferencial passou. A raiz operacional foi criada e permaneceu vazia; nenhum ANL/DOC nem documento operacional foi criado. TASK-004 a TASK-013 pendentes; CONVERGE NOT_STARTED. |
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | Correção final D-03 em TASK-003: `errno=None` podia coincidir com símbolos opcionais ausentes tratados como `None`. A classificação agora só considera códigos errno presentes; `OSError` sem código é ERRO_DESCONHECIDO e bloqueia o fallback. TASK-001/TASK-002 e contratos normativos preservados. Novos hashes: `workspace_probe.py` `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0`; `test_workspace_probe.py` `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600`. Testes finais: TASK-003 17/17; TASK-002 20/20; suíte completa 50/50 antes e depois da sonda real. A execução sandboxada de testes encontrou WinError 5 nos fixtures TEMP; as repetições elevadas passaram. D-02 real repetida no código final: `impl/.workspace/` UTILIZÁVEL e selecionado como `preferred`; fallback não sondado; nenhum resíduo ou aviso. TASK-004 não iniciada; nenhum ANL/DOC ou Release produzido; CONVERGE permanece NOT_STARTED. |
 
+| 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-004 executada e testada; criação exclusiva e retomada de `ANL-UUIDv4` concluídas. Suíte específica 25/25; TASK-003 17/17; TASK-002 20/20; suíte completa 75/75 antes e depois da integração Debug. Criação e retomada reavaliaram D-02, selecionaram `preferred` e preservaram o mesmo ID. Evidência e hashes registrados abaixo. TASK-005 a TASK-013 pendentes; CONVERGE permanece NOT_STARTED. |
+
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001, TASK-002 e TASK-003 foram executadas com evidências registradas; TASK-004 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nesta resolução; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
+- **Mudanças pendentes:** TASK-001 a TASK-004 foram executadas com evidências registradas; TASK-005 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nesta resolução e nas duas operações de TASK-004; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-003. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-003 antes de autorizar TASK-004.
+- **Bloqueios:** Nenhum bloqueio material para TASK-004. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-004 antes de autorizar TASK-005.
 
 ## Validade do ANALYZE anterior
 
@@ -578,4 +582,42 @@ Foram encontradas exatamente 13 tarefas, TASK-001 a TASK-013. O grafo é acícli
 - [Documentação Python 3.12 — errno](https://docs.python.org/3.12/library/errno.html): símbolos não usados na plataforma corrente não são definidos.
 - [Documentação Python 3.12 — exceções embutidas / OSError](https://docs.python.org/3.12/library/exceptions.html#OSError): `errno` e `winerror` podem ser `None`; `winerror` é específico do Windows.
 
-TASK-004 não foi iniciada. Não foram criados `ANL-*` nem `DOC-*.md`; nenhum Release foi gerado. CONVERGE permanece NOT_STARTED.
+O registro acima encerra a evidência da correção de D-03 anterior à execução de TASK-004. A situação atualizada está registrada a seguir.
+
+## IMPLEMENT TASK-004 — evidência
+
+### Estado, gate e escopo
+
+- Execução: IMPLEMENT limitada a TASK-004 — identidade ANL-UUIDv4, criação exclusiva do diretório, colisões e retomada explícita.
+- Gate preservado: `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS somente para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`.
+- Estado final: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED; último gate válido permanece ANALYZE-03. TASK-001 a TASK-004 executadas; TASK-005 a TASK-013 pendentes.
+- Ambiente: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa foi instalada ou adicionada.
+- SPEC, PLAN e TASKS mantiveram os hashes aprovados. TASK-001, TASK-002 e TASK-003 e suas evidências não foram alteradas.
+
+### Implementação e testes
+
+- Criado `impl/src/RickCraft/analysis_lifecycle.py`, SHA-256 `AC28E38E0B1107708F912BF8353A863F40DF24761C77EA3472298EB3C06B32BA`.
+- Criado `impl/tests/test_analysis_lifecycle.py`, SHA-256 `5F212FE3C614C5D4BB5C2C38C909587AA06DF549B4BD6282BA154F6D7D7A79DE`.
+- A implementação usa `uuid.uuid4()` por padrão, valida `ANL-UUIDv4` canônico, cria o diretório final por `Path.mkdir()` exclusivo e limita a oito candidatos. Somente `FileExistsError` com EEXIST/código Windows equivalente repete a tentativa; outros erros propagam. Retomada valida o ID, resolve/sonda novamente o workspace e exige que o mesmo caminho exista como diretório, sem gerar UUID.
+- Testes específicos: `python -B -m unittest discover -s impl/tests -p test_analysis_lifecycle.py -v` — 25/25 passaram.
+- Regressão TASK-003: `python -B -m unittest discover -s impl/tests -p test_workspace_probe.py -v` — 17/17 passaram.
+- Regressão TASK-002: `python -B -m unittest discover -s impl/tests -p test_workspace_resolver.py -v` — 20/20 passaram.
+- Suíte completa antes da integração real: `python -B -m unittest discover -s impl/tests -v` — 75/75 passaram.
+- Suíte completa após a integração real: `python -B -m unittest discover -s impl/tests -v` — 75/75 passaram.
+- Os testes controlados cobrem UUID válido/v4/canônico, criação exclusiva, ausência de diretórios de tipo, colisões sucessivas e limite de oito sem nona tentativa, falhas diferentes de colisão, validação e retomada, ID inexistente/arquivo, seleção preferencial/fallback e bloqueio por erro desconhecido sem diretório ANL. O fixture fornece resultados semânticos ao resolvedor; não substitui a sonda real.
+- A primeira execução no sandbox foi impedida por `WinError 5` ao criar/limpar fixtures Windows. As execuções finais foram repetidas com elevação e passaram; elevação é limitação ambiental, não requisito do produto.
+- Uma execução intermediária também encontrou erro de setup nos testes controlados porque o fixture não criava previamente os diretórios-pai da raiz selecionada; um assert comparava o token técnico `ANL-` como se também devesse estar em minúsculas. Setup e assert foram corrigidos; a suíte final de TASK-004 passou integralmente.
+
+### Integração real Debug — criação e retomada
+
+- Comando: `python -B -c` com duas chamadas independentes a `criar_ou_retomar_analise`, fornecendo `RickCraftRoot` explicitamente como `impl/src/RickCraft`, usando `AvaliadorWorkspace()` novo por chamada e emitindo JSON com as evidências de cada sonda.
+- Nova análise criada: `ANL-fb52688a-30c8-4de1-8c45-42377a7b994e`; UUID interno versão 4, canônico e em minúsculas.
+- Criação: raiz selecionada `preferred`, `C:\Projects\Language\Skills\RickCraft\impl\.workspace\`. A sonda D-02 desta operação retornou UTILIZÁVEL e registrou criação/validação da raiz, diretório isolado, `open("xb")`, escrita, flush/fsync, releitura, `os.link` para destino ausente, verificação final e rejeição de destino existente sem substituição. Sem falhas, avisos ou resíduos.
+- Retomada: uma nova chamada reavaliou D-02 e selecionou novamente `preferred`. A sonda repetiu as capacidades acima sem falhas, avisos ou resíduos. O mesmo `analysis_id` e diretório foram retornados; um gerador que falharia se chamado confirmou que nenhum UUID novo foi gerado.
+- O diretório persistente `impl/.workspace/ANL-fb52688a-30c8-4de1-8c45-42377a7b994e/` permanece vazio. A raiz preferencial já existia; não foi criado workspace fallback. O fallback não foi sondado porque o preferencial passou.
+- Nenhum diretório de TipoDocumento, arquivo, `.md`, `DOC-*`, análise adicional ou Release foi criado. Nenhuma publicação externa/Git foi executada. TASK-005 não foi iniciada.
+
+### Limites
+
+- TASK-004 comprova apenas a identidade e a existência do diretório ANL. Não implementa catálogo, conteúdo documental, diretórios de tipo, leitura/união histórica ou recuperação documental da TASK-009.
+- IMPLEMENT permanece IN_PROGRESS e CONVERGE permanece NOT_STARTED. A próxima autorização necessária é revisão de TASK-004 antes de iniciar TASK-005.

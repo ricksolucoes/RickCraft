@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-005 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS — TASK-006 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -658,3 +658,41 @@ SPEC/PLAN/TASKS permanecem nos hashes aprovados `F43B54ACBC1C6D7F4A2B1F9647E9FCB
 ### HANDOFF PARA REVISÃO — correção pontual TASK-005
 
 Revisar o teste explícito de scope incompatível em `impl/tests/test_review_protocol.py` e este registro. A revisão não autoriza TASK-006; autorização explícita separada continua necessária.
+
+## IMPLEMENT — TASK-006 — Conflitos, lacunas e continuidade localizada — 2026-10-11
+
+O responsável confirmou a aprovação externa de TASK-005. Baseline aceita: `review_protocol.py` SHA-256 `3F882DA171C425891A8DA55FAFC95F2F168C8F7255A72B5EBE6430CC0185DB9D` (blob Git `ac8656a0fc0be9f676f2757cd350cf772d689484`) e `test_review_protocol.py` SHA-256 `A52D03DE2DF9A84A34DF91D34D51BE567A947F73EA6B91459F16F8B7E9B1E0D7` (blob Git `6071c8f1933d45cffecc2d1d36e8f88f51c1d9cf`; commit da correção aprovada `6507383c1f8b24de1a202dc0017b7a298445f81c`). SPEC/PLAN/TASKS foram recalculadas e conferem com `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`. ANALYZE `ANALYZE-2026-10-11-SPEC-0000000002-01` permanece PASS; as entradas normativas não mudaram.
+
+Etapa atual = IMPLEMENT; TASK-006 passou a IN_PROGRESS e foi concluída nesta execução. Foram adicionados `evaluate_source_conflict` e `evaluate_scope_continuity`. A integração consome read-only `gap_handling.SourceReference`, `ScopeRequest`, `ConflictAssessment`, `ContinuityAssessment`, `avaliar_conflito_fontes` e `avaliar_continuidade_localizada`. O conflito consulta primeiro `AuthorityContext.precedence_for` para o par e scope exatos; precedência válida retorna a relação explícita sem classificar conflito não resolvido. Sem precedência, o resultado SPEC1 é preservado, inclusive ausência de vencedor, `authoritative_reference=None`, blocker requerido e `required_information` quando nenhuma autoridade é informada. `required_authority` é opcional e só é mapeada de uma `AuthorityReference` explicitamente pertencente ao contexto e competente no scope; o campo textual SPEC1 recebe seu `source_reference`, preservando a identidade declarada sem sintetizar owner ou escolher fonte vencedora. Normativa × workspace e incompatibilidade falsa mantêm os resultados do evaluator.
+
+Para continuidade, `ReviewScope.scope_id` e `depends_on` são copiados sem descoberta. `readiness_by_scope` precisa cobrir exatamente os scopes e fornecer, em tupla, os cinco booleanos explícitos na ordem autorização/informação/evidência/autoridade/conflito. Os requests são passados ao evaluator SPEC1 na ordem recebida; resultados e razões não são reordenados. A propagação transitiva e dependências desconhecidas permanecem exclusivamente em `avaliar_continuidade_localizada`. Spies confirmam ausência de chamadas a registradores ou publicador.
+
+Regressão SPEC1: `python -B -m unittest -v impl.tests.test_gap_handling`. A tentativa inicial dentro do sandbox falhou antes das asserções: 89 testes, 178 erros de setup/cleanup por `WinError 5` ao criar/remover fixtures em `%TEMP%`. O mesmo comando foi repetido pelo mecanismo elevado autorizado: 89 testes, 89 PASS, 0 FAIL, 0 SKIP. A falha sandboxada não foi tratada como resultado do produto. Regressão SPEC2: `python -B -m unittest -v impl.tests.test_review_protocol`; a primeira execução teve 117 testes e 2 FAIL porque os asserts esperavam uma versão abreviada da razão de autorização. Os asserts foram ajustados para preservar o texto real de SPEC1 e foi adicionado teste explícito de ramo sem autorização. Repetição final: 118 testes, 118 PASS, 0 FAIL, 0 SKIP.
+
+Não foram chamados `registrar_divergencia`, `registrar_blocker`, `registrar_decisao_existente`, `registrar_resultado` ou `publicar_documento`; não houve persistência, acesso a workspace/Debug, rede, subprocesso, Git como efeito de produto ou Release. Nenhuma regra SPEC1 foi reimplementada. Nenhum módulo/teste SPEC1 foi alterado. Hashes de `gap_handling.py` e `test_gap_handling.py` foram verificados ao final contra os arquivos locais e estão registrados abaixo.
+
+Hashes SHA-256 finais, após releitura UTF-8 estrita e confirmação repetida:
+
+- `impl/src/RickCraft/review_protocol.py`: `409A369F3FB999AC1458644E11A0FE877096FC691B221E07642DE45F08C2550B`
+- `impl/tests/test_review_protocol.py`: `6DD95B3C510F25BB0268537879F11670C367496E37D951A654468F93559BB06C`
+- `impl/src/RickCraft/gap_handling.py` (read-only): `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`
+- `impl/tests/test_gap_handling.py` (read-only): `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`
+
+Estado final: TASK-001–TASK-005 = COMPLETE e aprovadas; TASK-006 = COMPLETE, aguardando revisão; TASK-007–TASK-013 não executadas. IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED. Nenhum bloqueio material identificado.
+
+Validação final: `git diff --check` passou. `git status --short` mostra somente `review_protocol.py`, `test_review_protocol.py` e este `status.md`; `gap_handling.py` e `test_gap_handling.py` não aparecem como modificados. Git emitiu somente avisos de conversão LF→CRLF para os três arquivos alterados no Windows.
+
+### CHECKPOINT RICKCRAFT — TASK-006
+
+- **Fase:** IMPLEMENT — TASK-006 — SPEC-0000000002.
+- **Objetivo:** integrar conflito e continuidade aos avaliadores puros SPEC1, sem persistência.
+- **Estado:** AGUARDANDO_APROVAÇÃO; TASK-006 COMPLETE, aguardando revisão.
+- **Arquivos alterados:** `review_protocol.py`, `test_review_protocol.py` e este `status.md`.
+- **APIs SPEC1 consumidas:** `SourceReference`, `ScopeRequest`, `ConflictAssessment`, `ContinuityAssessment`, `avaliar_conflito_fontes`, `avaliar_continuidade_localizada`.
+- **Testes:** `test_gap_handling` 89/89 PASS em repetição elevada após WinError 5 sandboxado; `test_review_protocol` 118/118 PASS na repetição final.
+- **Próximo passo:** revisar exclusivamente TASK-006 antes de qualquer autorização da TASK-007.
+- **Não fazer ainda:** não iniciar TASK-007, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-006
+
+Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro, além das APIs SPEC1 referenciadas em modo read-only. TASK-006 está COMPLETE e aguarda revisão. É necessária autorização explícita separada antes de TASK-007.

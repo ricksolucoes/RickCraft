@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Sequence
+from typing import Mapping, Sequence
+
+import gap_handling
 
 
 class ReviewInputError(ValueError):
@@ -725,3 +727,127 @@ class ReviewConclusion:
         object.__setattr__(self, "versions", versions)
         object.__setattr__(self, "evidence", evidence)
         object.__setattr__(self, "claims", claims)
+
+
+def evaluate_source_conflict(
+    source_a: gap_handling.SourceReference,
+    source_b: gap_handling.SourceReference,
+    *,
+    scope: str,
+    impact: str,
+    resume_condition: str,
+    materially_incompatible: bool,
+    authority_context: AuthorityContext,
+    required_authority: AuthorityReference | None = None,
+) -> AuthorizedPrecedence | gap_handling.ConflictAssessment | None:
+    """Uses explicit precedence first, then delegates conflict rules to SPEC1.
+
+    ``required_authority`` must be supplied explicitly and belong to the given
+    context. SPEC1 receives its explicit ``source_reference`` as the textual
+    requirement; this preserves identity without inventing an owner.
+    """
+    _validate_gap_source(source_a, "source_a")
+    _validate_gap_source(source_b, "source_b")
+    _gap_text(scope, "scope")
+    _gap_text(impact, "impact")
+    _gap_text(resume_condition, "resume_condition")
+    if type(materially_incompatible) is not bool:
+        raise ReviewInputError("materially_incompatible deve ser booleano explícito.")
+    if not isinstance(authority_context, AuthorityContext):
+        raise ReviewInputError("authority_context deve ser AuthorityContext explícito.")
+    required_authority_reference: str | None = None
+    if required_authority is not None:
+        if not isinstance(required_authority, AuthorityReference):
+            raise ReviewInputError("required_authority deve ser AuthorityReference explícita.")
+        if required_authority not in authority_context.authorities:
+            raise ReviewInputError("required_authority deve pertencer ao AuthorityContext.")
+        if scope not in required_authority.scopes:
+            raise ReviewInputError("required_authority não declara competência para o scope.")
+        _gap_text(required_authority.source_reference, "required_authority.source_reference")
+        required_authority_reference = required_authority.source_reference
+
+    if materially_incompatible:
+        precedence = authority_context.precedence_for(
+            source_a.reference, source_b.reference, scope
+        )
+        if precedence is not None:
+            return precedence
+    try:
+        return gap_handling.avaliar_conflito_fontes(
+            source_a,
+            source_b,
+            affected_scope=scope,
+            impact=impact,
+            resume_condition=resume_condition,
+            materially_incompatible=materially_incompatible,
+            required_authority=required_authority_reference,
+        )
+    except gap_handling.GapHandlingError as exc:
+        raise ReviewInputError("Os dados explícitos do conflito são inválidos para SPEC1.") from exc
+
+
+def _validate_gap_source(source: object, field: str) -> None:
+    if not isinstance(source, gap_handling.SourceReference):
+        raise ReviewInputError(f"{field} deve ser SourceReference explícita.")
+    categories = {"normative", "workspace", "evidence", "operational"}
+    if type(source.category) is not str or source.category not in categories:
+        raise ReviewInputError(f"{field}.category deve ser categoria aceita por SPEC1.")
+    _gap_text(source.reference, f"{field}.reference")
+    _gap_text(source.statement, f"{field}.statement")
+    if source.authority is not None:
+        _gap_text(source.authority, f"{field}.authority")
+    elif source.category == "normative":
+        raise ReviewInputError(f"{field} requer authority explícita para fonte normativa.")
+
+
+def _gap_text(value: object, field: str) -> str:
+    text = _texto_obrigatorio(value, field)
+    if "\x00" in text:
+        raise ReviewInputError(f"{field} não pode conter NUL para o contrato SPEC1.")
+    return text
+
+
+def evaluate_scope_continuity(
+    affected_scopes: Sequence[str],
+    review_scopes: Sequence[ReviewScope],
+    readiness_by_scope: Mapping[str, tuple[bool, bool, bool, bool, bool]],
+) -> gap_handling.ContinuityAssessment:
+    """Adapts ReviewScope facts to SPEC1; the evaluator owns all propagation."""
+    affected = _textos_unicos(affected_scopes, "affected_scopes", ordenar=False)
+    if not affected:
+        raise ReviewInputError("affected_scopes requer ao menos um scope explícito.")
+    scopes = _sequencia(review_scopes, "review_scopes")
+    if not scopes:
+        raise ReviewInputError("review_scopes requer ao menos um ReviewScope.")
+    if any(not isinstance(item, ReviewScope) for item in scopes):
+        raise ReviewInputError("review_scopes deve conter somente ReviewScope.")
+    ids = tuple(item.scope_id for item in scopes)
+    if len(set(ids)) != len(ids):
+        raise ReviewInputError("review_scopes não pode repetir scope_id.")
+    if not isinstance(readiness_by_scope, Mapping):
+        raise ReviewInputError("readiness_by_scope deve ser mapeamento explícito por scope_id.")
+    if set(readiness_by_scope) != set(ids):
+        raise ReviewInputError("readiness_by_scope deve cobrir exatamente os ReviewScope informados.")
+    requests: list[gap_handling.ScopeRequest] = []
+    for scope in scopes:
+        facts = readiness_by_scope[scope.scope_id]
+        if not isinstance(facts, tuple) or len(facts) != 5:
+            raise ReviewInputError(
+                "Cada readiness entry deve ser tupla de cinco booleanos explícitos."
+            )
+        if any(type(value) is not bool for value in facts):
+            raise ReviewInputError("Os cinco critérios de continuidade devem ser bool explícitos.")
+        authorized, information, evidence, authority, conflict_free = facts
+        requests.append(gap_handling.ScopeRequest(
+            scope=scope.scope_id,
+            depends_on=scope.depends_on,
+            explicitly_authorized=authorized,
+            information_sufficient=information,
+            evidence_sufficient=evidence,
+            authority_sufficient=authority,
+            conflict_free=conflict_free,
+        ))
+    try:
+        return gap_handling.avaliar_continuidade_localizada(affected, tuple(requests))
+    except gap_handling.GapHandlingError as exc:
+        raise ReviewInputError("Os dados explícitos de continuidade são inválidos para SPEC1.") from exc

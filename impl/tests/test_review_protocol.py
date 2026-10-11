@@ -4,10 +4,12 @@ from dataclasses import FrozenInstanceError
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 RUNTIME_DIRECTORY = Path(__file__).resolve().parents[1] / "src" / "RickCraft"
 sys.path.insert(0, str(RUNTIME_DIRECTORY))
 
+import gap_handling as gaps  # noqa: E402
 from review_protocol import (  # noqa: E402
     AuthorizationGrant,
     AssessmentCharacter,
@@ -29,6 +31,8 @@ from review_protocol import (  # noqa: E402
     TechnicalDimension,
     VerificationClaim,
     VerificationStatus,
+    evaluate_scope_continuity,
+    evaluate_source_conflict,
     sort_review_findings,
 )
 
@@ -1034,6 +1038,212 @@ class ReviewConclusionTests(unittest.TestCase):
         self.assertEqual(len(result.claims), 1)
         with self.assertRaises(FrozenInstanceError):
             result.state = ConclusionState.BLOCKED  # type: ignore[misc]
+
+
+class GapHandlingIntegrationTests(unittest.TestCase):
+    @staticmethod
+    def normative(reference: str, statement: str = "regra") -> gaps.SourceReference:
+        return gaps.SourceReference("normative", reference, statement, "authority from host")
+
+    @staticmethod
+    def workspace(reference: str, statement: str = "registro operacional") -> gaps.SourceReference:
+        return gaps.SourceReference("workspace", reference, statement)
+
+    @staticmethod
+    def scope(scope_id: str, dependencies: tuple[str, ...] = ()) -> ReviewScope:
+        return ReviewScope(scope_id, f"Escopo {scope_id}", dependencies, (f"{scope_id}.py",))
+
+    @staticmethod
+    def ready(**overrides: tuple[bool, bool, bool, bool, bool]) -> dict[str, tuple[bool, bool, bool, bool, bool]]:
+        facts = {"scope": (True, True, True, True, True)}
+        facts.update(overrides)
+        return facts
+
+    def conflict(self, **overrides: object):
+        values: dict[str, object] = {
+            "source_a": self.normative("POL-A"),
+            "source_b": self.normative("POL-B"),
+            "scope": "scope",
+            "impact": "impacto material",
+            "resume_condition": "precedência formal explícita",
+            "materially_incompatible": True,
+            "authority_context": AuthorityContext(),
+        }
+        values.update(overrides)
+        return evaluate_source_conflict(**values)  # type: ignore[arg-type]
+
+    def test_duas_normativas_sem_precedencia_preservam_conflito_sem_vencedor(self) -> None:
+        result = self.conflict()
+        self.assertIsInstance(result, gaps.ConflictAssessment)
+        self.assertTrue(result.blocker_required)
+        self.assertIsNone(result.authoritative_reference)
+        self.assertIsNone(result.required_authority)
+        self.assertIsNone(result.divergence.required_authority)
+        self.assertIn("identificar a autoridade competente", result.divergence.required_information)
+
+    def test_autoridade_competente_explicita_fica_requisito_sem_resolver(self) -> None:
+        authority = AuthorityReference("authority:ref-1", "Owner informado", "competência declarada", ("scope",))
+        context = AuthorityContext(authorities=(authority,))
+        result = self.conflict(authority_context=context, required_authority=authority)
+        self.assertIsInstance(result, gaps.ConflictAssessment)
+        self.assertEqual(result.required_authority, "authority:ref-1")
+        self.assertEqual(result.divergence.required_authority, "authority:ref-1")
+        self.assertTrue(result.blocker_required)
+        self.assertIsNone(result.authoritative_reference)
+        self.assertIn("nenhuma vencedora", result.divergence.unresolved_reason)
+
+    def test_precedencia_valida_do_par_e_scope_exatos_e_reconhecida_primeiro(self) -> None:
+        authority = AuthorityReference("authority:ref-1", "Owner", "competência", ("scope",))
+        relation = AuthorizedPrecedence("POL-A", "POL-B", "scope", "authority:ref-1", "decision:7")
+        context = AuthorityContext((authority,), (relation,))
+        result = self.conflict(authority_context=context)
+        self.assertIs(result, relation)
+
+    def test_precedencia_de_outro_scope_nao_resolve_conflito(self) -> None:
+        authority = AuthorityReference("authority:ref-1", "Owner", "competência", ("other",))
+        relation = AuthorizedPrecedence("POL-A", "POL-B", "other", "authority:ref-1", "decision:7")
+        result = self.conflict(authority_context=AuthorityContext((authority,), (relation,)))
+        self.assertIsInstance(result, gaps.ConflictAssessment)
+        self.assertTrue(result.blocker_required)
+        self.assertIsNone(result.authoritative_reference)
+
+    def test_normative_versus_workspace_preserva_resultado_spec1(self) -> None:
+        result = self.conflict(source_a=self.workspace("DOC-workspace"),
+                               source_b=self.normative("POL-A"))
+        self.assertIsInstance(result, gaps.ConflictAssessment)
+        self.assertEqual(result.authoritative_reference, "POL-A")
+        self.assertFalse(result.blocker_required)
+        self.assertIn("workspace é evidência operacional", result.divergence.unresolved_reason)
+
+    def test_incompatibilidade_falsa_retorna_ausencia_de_conflito(self) -> None:
+        self.assertIsNone(self.conflict(materially_incompatible=False))
+
+    def test_nomes_datas_e_ordem_nao_criam_precedencia(self) -> None:
+        one = self.conflict(source_a=self.normative("newest-2026", "mais nova"),
+                            source_b=self.normative("specific-policy", "mais específica"))
+        two = self.conflict(source_a=self.normative("specific-policy", "mais específica"),
+                            source_b=self.normative("newest-2026", "mais nova"))
+        for result in (one, two):
+            self.assertIsInstance(result, gaps.ConflictAssessment)
+            self.assertIsNone(result.authoritative_reference)
+            self.assertTrue(result.blocker_required)
+
+    def test_authority_required_deve_ser_referencia_competente_no_contexto(self) -> None:
+        authority = AuthorityReference("authority:ref", "Owner", "competência", ("elsewhere",))
+        context = AuthorityContext((authority,))
+        with self.assertRaisesRegex(ReviewInputError, "não declara competência"):
+            self.conflict(authority_context=context, required_authority=authority)
+        with self.assertRaisesRegex(ReviewInputError, "deve pertencer"):
+            self.conflict(required_authority=authority)
+
+    def test_criterios_de_continuidade_sao_bools_explicitos(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "cinco booleanos"):
+            evaluate_scope_continuity(("A",), (self.scope("B"),), {"B": (True, True)})  # type: ignore[dict-item]
+        with self.assertRaisesRegex(ReviewInputError, "bool explícitos"):
+            evaluate_scope_continuity(("A",), (self.scope("B"),),
+                                      {"B": (1, True, True, True, True)})  # type: ignore[dict-item]
+
+    def test_scope_affected_diretamente_nao_continua(self) -> None:
+        assessment = evaluate_scope_continuity(
+            ("A",), (self.scope("A"),), {"A": (True, True, True, True, True)}
+        )
+        item = assessment.scopes[0]
+        self.assertFalse(item.continuable)
+        self.assertIn("escopo diretamente afetado pela lacuna", item.reasons)
+
+    def test_scope_independente_totalmente_apto_continua(self) -> None:
+        result = evaluate_scope_continuity(
+            ("A",), (self.scope("B"),), {"B": (True, True, True, True, True)}
+        )
+        self.assertEqual(result.continuable_scopes, ("B",))
+
+    def test_falha_de_cada_criterio_preserva_razao_spec1(self) -> None:
+        cases = (
+            (0, "não há autorização explícita para este escopo"),
+            (1, "informação necessária insuficiente"),
+            (2, "evidência necessária insuficiente"),
+            (3, "autoridade necessária insuficiente"),
+            (4, "há conflito material não resolvido"),
+        )
+        for index, expected_reason in cases:
+            facts = [True, True, True, True, True]
+            facts[index] = False
+            with self.subTest(index=index):
+                result = evaluate_scope_continuity(
+                    ("A",), (self.scope("B"),), {"B": tuple(facts)}  # type: ignore[dict-item]
+                )
+                item = result.scopes[0]
+                self.assertFalse(item.continuable)
+                self.assertEqual(item.reasons, (expected_reason,))
+
+    def test_dependencia_desconhecida_permanece_nao_avaliada(self) -> None:
+        result = evaluate_scope_continuity(
+            ("A",), (self.scope("B", ("UNKNOWN",)),),
+            {"B": (True, True, True, True, True)},
+        )
+        self.assertIn("depende de escopo não avaliado: UNKNOWN", result.scopes[0].reasons)
+
+    def test_propagacao_transitiva_e_delegada_a_gap_handling(self) -> None:
+        scopes = (self.scope("A"), self.scope("B", ("A",)), self.scope("C", ("B",)))
+        result = evaluate_scope_continuity(
+            ("A",), scopes,
+            {key: (True, True, True, True, True) for key in ("A", "B", "C")},
+        )
+        self.assertEqual(result.continuable_scopes, ())
+        for item in result.scopes:
+            self.assertFalse(item.continuable)
+        self.assertIn("depende de escopo bloqueado: A", result.scopes[1].reasons)
+        self.assertIn("depende de escopo bloqueado: B", result.scopes[2].reasons)
+
+    def test_scope_independente_continua_apesar_de_outro_ramo_bloqueado(self) -> None:
+        scopes = (self.scope("A"), self.scope("B", ("A",)), self.scope("Independent"))
+        result = evaluate_scope_continuity(
+            ("A",), scopes,
+            {key: (True, True, True, True, True) for key in ("A", "B", "Independent")},
+        )
+        self.assertEqual(result.continuable_scopes, ("Independent",))
+
+    def test_autorizacao_ausente_bloqueia_scope_e_dependente_sem_bloquear_independente(self) -> None:
+        scopes = (self.scope("B"), self.scope("C", ("B",)), self.scope("Independent"))
+        result = evaluate_scope_continuity(
+            ("Outside",), scopes,
+            {
+                "B": (False, True, True, True, True),
+                "C": (True, True, True, True, True),
+                "Independent": (True, True, True, True, True),
+            },
+        )
+        self.assertEqual(result.continuable_scopes, ("Independent",))
+        self.assertIn("não há autorização explícita para este escopo", result.scopes[0].reasons)
+        self.assertTrue(any("depende de escopo bloqueado" in reason for reason in result.scopes[1].reasons))
+
+    def test_ordem_e_razoes_do_evaluator_spec1_sao_preservadas(self) -> None:
+        scopes = (self.scope("z"), self.scope("a"))
+        result = evaluate_scope_continuity(
+            ("affected",), scopes,
+            {"z": (False, False, False, False, False), "a": (True, True, True, True, True)},
+        )
+        self.assertEqual(tuple(item.scope for item in result.scopes), ("z", "a"))
+        self.assertEqual(result.scopes[0].reasons, (
+            "não há autorização explícita para este escopo",
+            "informação necessária insuficiente",
+            "evidência necessária insuficiente",
+            "autoridade necessária insuficiente",
+            "há conflito material não resolvido",
+        ))
+
+    def test_adaptadores_nao_chamam_persistencia(self) -> None:
+        with patch.object(gaps, "registrar_divergencia", side_effect=AssertionError) as divergence, \
+             patch.object(gaps, "registrar_blocker", side_effect=AssertionError) as blocker, \
+             patch.object(gaps, "registrar_decisao_existente", side_effect=AssertionError) as decision, \
+             patch.object(gaps, "registrar_resultado", side_effect=AssertionError) as result, \
+             patch.object(gaps, "publicar_documento", side_effect=AssertionError) as publish:
+            self.conflict()
+            evaluate_scope_continuity(
+                ("A",), (self.scope("B"),), {"B": (True, True, True, True, True)}
+            )
+        for spy in (divergence, blocker, decision, result, publish):
+            spy.assert_not_called()
 
 
 if __name__ == "__main__":

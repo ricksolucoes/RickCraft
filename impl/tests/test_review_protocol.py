@@ -16,6 +16,7 @@ from review_protocol import (  # noqa: E402
     AuthorityContext,
     AuthorityReference,
     AuthorizedPrecedence,
+    BehaviorComparison,
     BehaviorAssessment,
     BehaviorAssessmentState,
     BehaviorIntent,
@@ -963,6 +964,42 @@ class ChangeProposalTests(unittest.TestCase):
             version=version,
         )
 
+    @staticmethod
+    def comparison(
+        target: str = "src/a.py",
+        case: str = "case:public-api",
+        base: str = "base-1",
+        candidate: str = "candidate-1",
+        *,
+        status: VerificationStatus = VerificationStatus.EXECUTED_OBSERVED,
+        kind: EvidenceKind = EvidenceKind.DIRECT_OBSERVATION,
+        limitation: str | None = None,
+        reference: str = "compare:run-1",
+        claim_case: str | None = None,
+    ) -> BehaviorComparison:
+        evidence = EvidenceReference(
+            kind, "comparison-run", reference, target, limitation=limitation
+        )
+        claim = VerificationClaim(
+            assertion=case if claim_case is None else claim_case,
+            target=target, status=status,
+            evidence=(evidence,),
+        )
+        return BehaviorComparison(
+            target, case, base, candidate, reference, claim
+        )
+
+    def compared_proposal(self, **overrides: object) -> ChangeProposal:
+        values: dict[str, object] = {
+            "base_versions": (("src/a.py", "base-1"),),
+            "candidate_versions": (("src/a.py", "candidate-1"),),
+            "behavior_contract": "API pública conserva o contrato declarado",
+            "verified_cases": ("case:public-api",),
+            "comparisons": (self.comparison(),),
+        }
+        values.update(overrides)
+        return self.proposal(**values)
+
     def complete_proposal(self, **overrides: object) -> ChangeProposal:
         claims = tuple(
             self.observed_claim("src/a.py", version, "case:public-api")
@@ -1058,6 +1095,96 @@ class ChangeProposalTests(unittest.TestCase):
     def test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada(self) -> None:
         result = assess_change_proposal(self.complete_proposal(), self.request())
         self.assertIs(result.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_comparacao_explicitamente_identificada_sustenta_preservacao_limitada(self) -> None:
+        proposal = self.compared_proposal()
+        assessment = assess_change_proposal(proposal, self.request())
+        self.assertIs(assessment.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_referencia_textual_sem_objeto_comparacao_nao_evidencia_preservacao(self) -> None:
+        proposal = self.proposal(
+            proposal_reference="comparado e equivalente",
+            preservation_assertion="A comparação foi concluída.",
+        )
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.PRESERVATION_ASSERTED)
+
+    def test_comparacao_sem_versao_base_ou_candidata_nao_evidencia(self) -> None:
+        for field in ("base_versions", "candidate_versions"):
+            values: dict[str, object] = {field: ()}
+            proposal = self.compared_proposal(**values)
+            with self.subTest(field=field):
+                self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                              BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_comparacao_requer_claim_executed_observed(self) -> None:
+        for status in (VerificationStatus.HISTORICAL_IDENTIFIED,
+                       VerificationStatus.NOT_EXECUTED,
+                       VerificationStatus.UNAVAILABLE,
+                       VerificationStatus.INCONCLUSIVE):
+            with self.subTest(status=status), self.assertRaises(ReviewInputError):
+                self.comparison(status=status)
+
+    def test_comparacao_requer_evidencia_direta_localizavel(self) -> None:
+        for kind in (EvidenceKind.REPORTED, EvidenceKind.INFERENCE):
+            with self.subTest(kind=kind), self.assertRaises(ReviewInputError):
+                self.comparison(kind=kind)
+        with self.assertRaisesRegex(ReviewInputError, "locator"):
+            self.comparison(limitation="Comparação parcial")
+
+    def test_comparacao_de_target_ou_caso_incompativel_nao_e_aceita(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.compared_proposal(comparisons=(self.comparison(target="src/b.py"),))
+        with self.assertRaises(ReviewInputError):
+            self.comparison(claim_case="case:different")
+
+    def test_comparacao_com_versoes_divergentes_nao_evidencia_preservacao(self) -> None:
+        proposal = self.compared_proposal(
+            comparisons=(self.comparison(base="other-base"),)
+        )
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_comparacao_de_caso_nao_declarado_nao_evidencia_preservacao(self) -> None:
+        proposal = self.compared_proposal(
+            comparisons=(self.comparison(case="case:other"),)
+        )
+        self.assertIs(assess_change_proposal(proposal, self.request()).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_comparacao_limitada_nao_evidencia_preservacao(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "locator"):
+            self.comparison(limitation="Não cobre o caso declarado")
+
+    def test_multiplos_targets_e_casos_exigem_comparacao_para_cada_combinacao(self) -> None:
+        targets = ("src/a.py", "src/b.py")
+        cases = ("case:one", "case:two")
+        request = self.request(targets=targets)
+        comparisons = tuple(
+            self.comparison(target, case)
+            for target in targets for case in cases
+        )
+        kwargs = {
+            "targets": targets,
+            "base_versions": tuple((target, "base-1") for target in targets),
+            "candidate_versions": tuple((target, "candidate-1") for target in targets),
+            "verified_cases": cases,
+            "comparisons": comparisons,
+        }
+        complete = self.compared_proposal(**kwargs)
+        self.assertIs(assess_change_proposal(complete, request).state,
+                      BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+        partial = self.compared_proposal(**{**kwargs, "comparisons": comparisons[:-1]})
+        self.assertIs(assess_change_proposal(partial, request).state,
+                      BehaviorAssessmentState.NOT_VERIFIED)
+
+    def test_comparacao_e_proposta_sao_imutaveis_e_copiam_colecoes(self) -> None:
+        comparisons = [self.comparison()]
+        proposal = self.compared_proposal(comparisons=comparisons)
+        comparisons.clear()
+        self.assertEqual(len(proposal.comparisons), 1)
+        with self.assertRaises(FrozenInstanceError):
+            proposal.comparisons[0].case = "other"  # type: ignore[misc]
 
     def test_historico_identificado_nao_prova_preservacao_atual(self) -> None:
         historical = VerificationClaim(
@@ -1299,7 +1426,9 @@ class ChangeProposalTests(unittest.TestCase):
              patch.object(subprocess, "Popen", side_effect=AssertionError("processo")) as process, \
              patch.object(socket, "create_connection", side_effect=AssertionError("rede")) as network:
             result = assess_change_proposal(proposal, request)
+            compared_result = assess_change_proposal(self.compared_proposal(), request)
         self.assertIs(result.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+        self.assertIs(compared_result.state, BehaviorAssessmentState.PRESERVATION_EVIDENCED)
         opened.assert_not_called()
         process.assert_not_called()
         network.assert_not_called()

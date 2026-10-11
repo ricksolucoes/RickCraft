@@ -434,6 +434,47 @@ class BehaviorAssessmentState(Enum):
 
 
 @dataclass(frozen=True)
+class BehaviorComparison:
+    """Identificação explícita de uma comparação observada base↔candidata."""
+
+    target: str
+    case: str
+    base_version: str
+    candidate_version: str
+    comparison_reference: str
+    claim: VerificationClaim
+
+    def __post_init__(self) -> None:
+        _texto_obrigatorio(self.target, "comparison target")
+        _texto_obrigatorio(self.case, "comparison case")
+        _texto_obrigatorio(self.base_version, "comparison base_version")
+        _texto_obrigatorio(self.candidate_version, "comparison candidate_version")
+        _texto_obrigatorio(self.comparison_reference, "comparison_reference")
+        if not isinstance(self.claim, VerificationClaim):
+            raise ReviewInputError("comparison claim deve ser VerificationClaim explícito.")
+        if (
+            self.claim.status is not VerificationStatus.EXECUTED_OBSERVED
+            or self.claim.target != self.target
+            or self.claim.assertion != self.case
+        ):
+            raise ReviewInputError(
+                "A comparação requer claim EXECUTED_OBSERVED do mesmo target e caso."
+            )
+        if not any(
+            evidence.kind is EvidenceKind.DIRECT_OBSERVATION
+            and evidence.reference == self.comparison_reference
+            and evidence.target == self.target
+            and evidence.limitation is None
+            and evidence.verifiability not in ("UNAVAILABLE", "UNVERIFIABLE")
+            and evidence.version in (None, self.base_version, self.candidate_version)
+            for evidence in self.claim.evidence
+        ):
+            raise ReviewInputError(
+                "A comparação requer EvidenceReference direta e compatível com seu locator."
+            )
+
+
+@dataclass(frozen=True)
 class ChangeProposal:
     """Envelope declarativo de mudança; não contém nem aplica patch."""
 
@@ -449,6 +490,7 @@ class ChangeProposal:
     behavior_contract: str | None = None
     verified_cases: tuple[str, ...] = ()
     claims: tuple[VerificationClaim, ...] = ()
+    comparisons: tuple[BehaviorComparison, ...] = ()
     preservation_assertion: str | None = None
     finding: ReviewFinding | None = None
     objective_reference: str | None = None
@@ -498,6 +540,17 @@ class ChangeProposal:
         object.__setattr__(self, "claims", tuple(sorted(claims, key=lambda item: (
             item.target, item.status.value, item.assertion, item.version or ""
         ))))
+        comparisons = _sequencia(self.comparisons, "proposal comparisons")
+        if any(not isinstance(item, BehaviorComparison) for item in comparisons):
+            raise ReviewInputError("comparisons deve conter somente BehaviorComparison.")
+        if len(set(comparisons)) != len(comparisons):
+            raise ReviewInputError("comparisons não pode conter duplicatas.")
+        if any(item.target not in targets for item in comparisons):
+            raise ReviewInputError("Cada comparação deve apontar para target da proposta.")
+        object.__setattr__(self, "comparisons", tuple(sorted(comparisons, key=lambda item: (
+            item.target, item.case, item.base_version, item.candidate_version,
+            item.comparison_reference,
+        ))))
         if self.finding is not None and not isinstance(self.finding, ReviewFinding):
             raise ReviewInputError("finding deve ser ReviewFinding explícito.")
         object.__setattr__(
@@ -538,11 +591,12 @@ def _preservation_is_evidenced(proposal: ChangeProposal) -> bool:
         or set(dict(proposal.candidate_versions)) != set(proposal.targets)
     ):
         return False
-    version_sets = (dict(proposal.base_versions), dict(proposal.candidate_versions))
+    base_versions = dict(proposal.base_versions)
+    candidate_versions = dict(proposal.candidate_versions)
     for target in proposal.targets:
         for case in proposal.verified_cases:
-            for version_map in version_sets:
-                version = version_map[target]
+            independent_evidence_complete = True
+            for version in (base_versions[target], candidate_versions[target]):
                 matching = [
                     claim for claim in proposal.claims
                     if claim.assertion == case
@@ -551,7 +605,8 @@ def _preservation_is_evidenced(proposal: ChangeProposal) -> bool:
                     and claim.status is VerificationStatus.EXECUTED_OBSERVED
                 ]
                 if not matching:
-                    return False
+                    independent_evidence_complete = False
+                    break
                 if not any(
                     evidence.kind is EvidenceKind.DIRECT_OBSERVATION
                     and evidence.target == target
@@ -561,7 +616,19 @@ def _preservation_is_evidenced(proposal: ChangeProposal) -> bool:
                     for claim in matching
                     for evidence in claim.evidence
                 ):
-                    return False
+                    independent_evidence_complete = False
+                    break
+            if independent_evidence_complete:
+                continue
+            comparison = next((
+                item for item in proposal.comparisons
+                if item.target == target
+                and item.case == case
+                and item.base_version == base_versions[target]
+                and item.candidate_version == candidate_versions[target]
+            ), None)
+            if comparison is None:
+                return False
     return True
 
 

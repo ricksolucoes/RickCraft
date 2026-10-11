@@ -10,14 +10,14 @@
 
 ## Estado atual
 
-- **Etapa atual:** IMPLEMENT
+- **Etapa atual:** CONVERGE
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
 - **ANALYZE:** PASS
 - **IMPLEMENT:** COMPLETE
-- **CONVERGE:** INVALIDATED
-- **Último gate válido:** `ANALYZE PASS` da execução `ANALYZE-2026-10-10-SPEC-0000000001-03`, exclusivamente para os hashes de SPEC, PLAN e TASKS registrados na evidência dessa execução. Os resultados -01 e -02 permanecem históricos; -02 foi invalidado pela alteração material de TASKS.
+- **CONVERGE:** CONVERGED
+- **Último gate válido:** `CONVERGE-2026-10-11-SPEC-0000000001-02`, após ANALYZE PASS da execução `ANALYZE-2026-10-10-SPEC-0000000001-03` para os hashes normativos registrados. Os resultados ANALYZE -01 e -02 permanecem históricos; -02 foi invalidado pela alteração material de TASKS.
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
 - **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
 
@@ -101,14 +101,16 @@
 | 2026-10-11 | CONVERGE | NOT_CONVERGED | Avaliação concluída para os hashes normativos registrados. Achado CONV-001: há diretórios temporários `rickcraft-*` em `impl/tests` inacessíveis para inspeção, em conflito com a afirmação corrente de que nenhum fixture permaneceu; requer reconciliação no estágio IMPLEMENT. |
 | 2026-10-11 | IMPLEMENT | IN_PROGRESS | Retorno limitado autorizado para reconciliar CONV-001. O cabeçalho anterior ainda indicava CONVERGE IN_PROGRESS, embora CONVERGE-2026-10-11-SPEC-0000000001-01 tivesse concluído NOT_CONVERGED; a inconsistência foi identificada. CONVERGE-01 passa a INVALIDATED enquanto a base material (resíduos) é inspecionada/modificada. Nenhum gate normativo foi alterado. |
 | 2026-10-11 | IMPLEMENT | COMPLETE | CONV-001 reconciliado: 30 diretórios temporários reconhecidos foram individualmente enumerados, confirmados vazios/contidos/sem redirecionamento e removidos com `rmdir` sem recursão. Inventário final sem filhos `rickcraft-*`; `git status --short` sem avisos de acesso. Nenhum runtime/teste ou gate normativo foi alterado. CONVERGE-01 permanece histórico NOT_CONVERGED e corrente INVALIDATED. |
+| 2026-10-11 | CONVERGE | IN_PROGRESS | Iniciada a reexecução `CONVERGE-2026-10-11-SPEC-0000000001-02` após confirmar que o ID não existe no histórico, que CONVERGE-01 permanece NOT_CONVERGED histórico, CONVERGE corrente INVALIDATED, IMPLEMENT COMPLETE e os hashes normativos preservados. Escopo incremental: revalidar CONV-001 e confirmar a identidade das demais entradas auditadas. |
+| 2026-10-11 | CONVERGE | CONVERGED | Reexecução incremental concluída. CONV-001 revalidado: a enumeração original disponível e a inspeção posterior sustentam os mesmos 30 itens (4 integration + 26 recovery); a declaração 34 era inconsistência de contagem do resumo, sem evidência primária de quatro itens adicionais. Inventário corrente vazio, git status sem alterações/avisos e hashes normativos/27 artefatos conferidos. RF/CA/D anteriores permanecem sustentados pelas entradas inalteradas. CONVERGE-01 NOT_CONVERGED preservado como histórico. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-013 permanecem concluídas; CONV-001 foi reconciliado em IMPLEMENT. O fallback Debug não foi sondado e permanece sem declaração de utilizabilidade; exige D-02 própria antes de qualquer uso.
-- **Etapas invalidadas:** ANALYZE FAIL de -01 e PASS de -02 permanecem históricos para suas versões; `ANALYZE-2026-10-10-SPEC-0000000001-03` permanece o gate ANALYZE válido para os hashes indicados. IMPLEMENT está COMPLETE após a reconciliação. CONVERGE-01 permanece histórico NOT_CONVERGED e está INVALIDATED como resultado corrente; novo CONVERGE exige autorização explícita.
+- **Mudanças pendentes:** TASK-001 a TASK-013 permanecem concluídas; CONV-001 foi reconciliado em IMPLEMENT e revalidado por CONVERGE-02. O fallback Debug não foi sondado e permanece sem declaração de utilizabilidade; exige D-02 própria antes de qualquer uso.
+- **Etapas invalidadas:** ANALYZE FAIL de -01 e PASS de -02 permanecem históricos para suas versões; `ANALYZE-2026-10-10-SPEC-0000000001-03` permanece o gate ANALYZE válido para os hashes indicados. IMPLEMENT está COMPLETE. CONVERGE-01 permanece histórico NOT_CONVERGED e INVALIDATED; CONVERGE-02 é o resultado corrente CONVERGED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. Nenhuma invalidação normativa foi necessária.
 - **Bloqueios:** Nenhum bloqueio remanescente de CONV-001. Nenhum Release foi produzido ou autorizado.
-- **Próxima autorização necessária:** Revisar exclusivamente a reconciliação publicada de CONV-001 antes de autorizar novo CONVERGE.
+- **Próxima autorização necessária:** Revisar exclusivamente CONVERGE-02 antes de qualquer decisão sobre Release ou próxima Specification; CONVERGED não autoriza Release.
 
 ## Validade do ANALYZE anterior
 
@@ -1526,6 +1528,128 @@ Revisar exclusivamente a reconciliação de CONV-001.
 
 ## Autorização necessária
 Nova autorização explícita antes de reexecutar CONVERGE.
+
+## CONVERGE — CONVERGE-2026-10-11-SPEC-0000000001-02
+
+### Versões e escopo da reexecução
+
+- Data: 2026-10-11. O execution ID `CONVERGE-2026-10-11-SPEC-0000000001-02` não existia no status antes desta execução.
+- SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`; PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`; TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. Os três foram recalculados e conferem.
+- Entrada confirmada: SPEC/PLAN/TASKS COMPLETE, ANALYZE PASS para `ANALYZE-2026-10-10-SPEC-0000000001-03`, IMPLEMENT COMPLETE e CONVERGE INVALIDATED. CONVERGE-01 permanece histórico `NOT_CONVERGED`.
+- A transição para CONVERGE `IN_PROGRESS` foi registrada no histórico na mesma execução. O escopo foi incremental: revisar a reconciliação CONV-001 e verificar se as demais entradas materiais da auditoria -01 permaneceram idênticas; nenhum runtime/teste, teste, D-02, publicação ou documento foi executado.
+
+### Integridade das entradas reutilizadas
+
+- Foram recalculados os SHA-256 de todos os 27 artefatos runtime/teste listados na tabela corrente `Artefatos e versões`; todos conferem com os hashes registrados. Isso inclui `test_workspace_integration.py` (`7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4`), `test_release_boundaries.py` (`4E10856DFCA14EFFDC1FBF8BA19A8D48CDDA03DEC2522D519F5246C14749E7DE`), `gap_handling.py` (`EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`) e `document_recovery.py` (`22FC472830DC934392D08D22D23DA1654ADD1E61835D95BADC0B221CC3203FC4`).
+- Nenhuma implementação/teste mudou desde CONVERGE-01; a única base material alterada foi o registro de status/reconciliação de CONV-001. Portanto, as matrizes, testes e evidências de -01 foram revalidados contra as mesmas versões, sem copiar os vereditos sem checagem de identidade.
+- Os resultados de IMPLEMENT continuam sendo os resultados registrados: TASK-013 4/4; TASK-009 28 executados (27 PASS, 1 SKIP); TASK-007 45/45; TASK-008 47/47; suíte completa 434 executados (433 PASS, 1 SKIP), além das demais regressões listadas na evidência anterior. Nenhum teste foi rerodado nesta reexecução.
+
+### CONV-001 — reconciliação e inspeção corrente
+
+- CONVERGE-01 é preservado como histórico: sua seção relatou 34 diretórios (4 integration + 30 recovery). Esse texto não foi reescrito.
+- A enumeração original disponível no transcript lista 4 `rickcraft-integration-*` e 26 `rickcraft-recovery-*`, totalizando 30. A inspeção elevada posterior listou os mesmos 30 nomes; a seção `RECONCILIAÇÃO CONV-001 — IMPLEMENT` registra `lstat`, leitura, contenção, ausência de symlink/junction/reparse, classificação individual e remoção individual por `os.rmdir` dos mesmos 30.
+- Não há evidência primária de quatro nomes adicionais. A explicação sustentada é uma inconsistência de contagem no resumo que declarou 34, não o desaparecimento de quatro diretórios físicos. Não se afirma que itens não enumerados foram removidos.
+- A inspeção somente leitura atual enumerou os filhos diretos de `impl/tests` cujo nome começa por `rickcraft-`: zero itens. `git status --short` não exibiu entradas nem avisos de acesso negado. Nenhuma limpeza foi feita durante CONVERGE.
+- CONV-001: **RESOLVIDO E REVALIDADO POR CONVERGE-02** quanto aos 30 itens realmente enumerados e à discrepância documental. CONVERGE-01 continua histórico `NOT_CONVERGED`; não foi apagado nem reinterpretado.
+
+### Revalidação das matrizes e limitações
+
+- **RF-001–RF-014:** permanecem `SATISFIED`. Referência: matriz completa de CONVERGE-01 acima e hashes runtime/teste agora recalculados, sem divergência.
+- **CA-001–CA-015:** permanecem `PASS`. Referência: matriz e evidências nomeadas em CONVERGE-01, incluindo CA-009 na versão hash confirmada de `test_workspace_integration.py` e CA-013/014/015 na versão hash confirmada de `test_release_boundaries.py`. A alteração posterior de status não muda esses artefatos ou resultados.
+- **D-01–D-14:** permanecem conformes conforme a avaliação detalhada de CONVERGE-01; runtime/testes e hashes de entrada permanecem idênticos. A questão material de resíduos que limitou -01 está resolvida conforme a reconciliação acima.
+- O único SKIP registrado continua sendo o teste de symlink real indisponível sem privilégio no Windows, com proteção determinística coberta; nenhuma CA depende exclusivamente do teste físico. Limitação não bloqueante.
+- WinError 5 sandboxado continua classificado como falha ambiental, nunca como PASS; os resultados de IMPLEMENT foram obtidos pelas repetições já registradas. Elevação não é requisito do produto.
+- D-02 Debug, fallback Debug, documento histórico e ausência de resíduos permanecem conforme descritos no registro de CONVERGE-01; esta execução não acessou workspace Debug nem renovou D-02. Validação humana adicional não requerida.
+
+### Achados e conclusão
+
+- Novos achados: nenhum. CONV-001 está resolvido e revalidado; não foi criado CONV-002.
+- As versões normativas conferem; os hashes correntes de implementação/testes correspondem aos já auditados; a inspeção atual não encontrou resíduo nem acesso negado; RF-001–RF-014, CA-001–CA-015 e D-01–D-14 permanecem sustentados pelas evidências referenciadas.
+- **Resultado: CONVERGED** para `CONVERGE-2026-10-11-SPEC-0000000001-02`.
+- Estado final: etapa CONVERGE; SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE CONVERGED. Último gate válido: `CONVERGE-2026-10-11-SPEC-0000000001-02`. CONVERGE-01 permanece histórico `NOT_CONVERGED`.
+- CONVERGED não significa certeza absoluta, ausência matemática de defeitos, Release produzido/autorizado, instalação ou distribuição. Nenhum Release foi produzido ou autorizado. Nenhum artefato Debug (ANL/DOC), runtime ou teste foi criado/removido/alterado nesta execução; somente este status foi atualizado.
+
+# CHECKPOINT RICKCRAFT
+
+## Fase executada
+CONVERGE — REEXECUÇÃO 02 — SPEC-0000000001
+
+## Objetivo da execução
+Revalidar CONVERGE após a reconciliação de CONV-001 e confirmar as versões já auditadas.
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Resultado do gate
+CONVERGED
+
+## CONV-001
+Resolvido e revalidado: 30 nomes na enumeração original e posterior (4 integration + 26 recovery); os mesmos 30 foram individualmente inspecionados/removidos. O relato histórico de 34 é preservado como inconsistência de contagem, sem evidência de quatro itens físicos adicionais.
+
+## Versões avaliadas
+SPEC `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`; PLAN `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`; TASKS `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. 27 hashes de runtime/teste conferidos.
+
+## Revalidação RF/CA/D
+RF-001–RF-014 SATISFIED; CA-001–CA-015 PASS; D-01–D-14 conformes, revalidados contra as mesmas versões e evidências de CONVERGE-01.
+
+## Inspeção de resíduos
+Zero filhos diretos `rickcraft-*` em `impl/tests`; `git status --short` vazio e sem avisos de acesso.
+
+## Achados
+Nenhum. CONV-001 resolvido; nenhum CONV-002.
+
+## Limitações
+Skip ambiental de symlink Windows e fallback Debug não sondado permanecem não bloqueantes conforme análise anterior. Testes e D-02 não foram reexecutados.
+
+## Validação humana
+Adicional não requerida.
+
+## Estado SDD final
+SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE CONVERGED. CONVERGE-01 permanece histórico NOT_CONVERGED.
+
+## Arquivos criados
+Nenhum.
+
+## Arquivos alterados
+- `specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`
+
+## Próximo passo recomendado
+Revisar exclusivamente CONVERGE-02 antes de qualquer decisão sobre Release ou próxima Specification.
+
+## O que NÃO deve ser feito ainda
+Não gerar Release, não iniciar nova SPEC e não fazer push.
+
+# HANDOFF PARA REVISÃO — RICKCRAFT
+
+## Fase
+CONVERGE — REEXECUÇÃO 02 — SPEC-0000000001
+
+## Estado
+AGUARDANDO_APROVAÇÃO
+
+## Resultado
+CONVERGED
+
+## Objetivo executado
+Reavaliar a unidade após a resolução de CONV-001, reutilizando evidências somente após conferir a identidade das versões.
+
+## Evidências avaliadas
+Hashes normativos e 27 hashes runtime/teste; transcript e inventários de CONV-001; inspeção corrente de `impl/tests`; `git status --short`; matrizes RF/CA/D e resultados de IMPLEMENT registrados na seção CONVERGE-01.
+
+## CONV-001
+Resolvido e revalidado. O total 34 permanece no registro histórico -01; a enumeração disponível sustenta 30 e não apresenta quatro nomes adicionais.
+
+## Achados bloqueantes
+Nenhum.
+
+## Estado SDD final
+SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT COMPLETE; CONVERGE CONVERGED. Último gate: `CONVERGE-2026-10-11-SPEC-0000000001-02`; CONVERGE-01 permanece histórico NOT_CONVERGED.
+
+## Próximo passo proposto
+Revisar exclusivamente o resultado de CONVERGE-02.
+
+## Autorização necessária
+Revisão externa antes de qualquer etapa posterior. CONVERGED não autoriza Release.
 
 ## Arquivos que o revisor deve analisar
 - `specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`

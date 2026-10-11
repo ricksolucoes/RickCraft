@@ -10,6 +10,7 @@ RUNTIME_DIRECTORY = Path(__file__).resolve().parents[1] / "src" / "RickCraft"
 sys.path.insert(0, str(RUNTIME_DIRECTORY))
 
 import gap_handling as gaps  # noqa: E402
+import review_protocol as protocol  # noqa: E402
 from review_protocol import (  # noqa: E402
     AuthorizationGrant,
     AssessmentCharacter,
@@ -30,6 +31,7 @@ from review_protocol import (  # noqa: E402
     RequestedEffect,
     ReviewConclusion,
     ReviewFinding,
+    ReviewEvaluationResult,
     ReviewInputError,
     ReviewRequest,
     ReviewResponse,
@@ -43,6 +45,7 @@ from review_protocol import (  # noqa: E402
     assess_change_proposal,
     evaluate_scope_continuity,
     evaluate_source_conflict,
+    evaluate_review,
     renderizar_resposta,
     sort_review_findings,
 )
@@ -1972,6 +1975,387 @@ class ReviewResponseTests(unittest.TestCase):
         response = ReviewResponse(request.language, self.blocks())
         self.assertEqual(response.language, request.language)
         self.assertEqual(renderizar_resposta(response).count("## "), 3)
+
+
+class IntegratedReviewTests(unittest.TestCase):
+    @staticmethod
+    def request(*, scopes: tuple[ReviewScope, ...] | None = None,
+                grants: tuple[AuthorizationGrant, ...] = (AuthorizationGrant.REVIEW,),
+                effects: tuple[RequestedEffect, ...] = (), language: str | None = None,
+                versions: tuple[tuple[str, str], ...] = (("a.py", "v1"),)) -> ReviewRequest:
+        actual_scopes = scopes or (ReviewScope("S", "Escopo S", (), ("a.py",)),)
+        artifacts = tuple(sorted({artifact for item in actual_scopes for artifact in item.artifacts}))
+        return ReviewRequest(
+            objective="Revisar o comportamento declarado",
+            scopes=actual_scopes,
+            authorized_artifacts=artifacts,
+            excluded_artifacts=(),
+            expected_outcome="Conclusão limitada ao escopo fornecido",
+            authorization_grants=grants,
+            requested_effects=effects,
+            language=language,
+            source_versions=versions,
+        )
+
+    @staticmethod
+    def evidence(target: str = "a.py", version: str | None = "v1",
+                 reference: str = "run:1", kind: EvidenceKind = EvidenceKind.DIRECT_OBSERVATION
+                 ) -> EvidenceReference:
+        return EvidenceReference(kind, "host", reference, target, version=version)
+
+    @classmethod
+    def claim(cls, target: str = "a.py", version: str | None = "v1",
+              status: VerificationStatus = VerificationStatus.EXECUTED_OBSERVED,
+              reference: str = "run:1", assertion: str = "verificação executada") -> VerificationClaim:
+        evidence = () if status is VerificationStatus.NOT_EXECUTED else (
+            cls.evidence(target, version, reference),
+        )
+        return VerificationClaim(assertion, target, status, evidence, version)
+
+    @staticmethod
+    def response(language: str | None = None) -> ReviewResponse:
+        return ReviewResponse(language, (
+            ReviewResponseBlock(ResponseBlockKey.CRITICAL_ANALYSIS, "Análise Crítica", "Escopo examinado."),
+            ReviewResponseBlock(ResponseBlockKey.REFACTORING, "Refatoração", "Não aplicável."),
+            ReviewResponseBlock(ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
+                                "Justificativa Arquitetural", "Não aplicável."),
+        ))
+
+    @classmethod
+    def conclusion(cls, *, request: ReviewRequest | None = None,
+                   state: ConclusionState = ConclusionState.NO_FINDING_IN_SCOPE,
+                   scopes: tuple[str, ...] = ("S",), artifacts: tuple[str, ...] = ("a.py",),
+                   sources: tuple[str, ...] = ("run:1",), versions: tuple[tuple[str, str], ...] = (("a.py", "v1"),),
+                   evidence: tuple[EvidenceReference, ...] | None = None,
+                   claims: tuple[VerificationClaim, ...] | None = None) -> ReviewConclusion:
+        actual_evidence = (cls.evidence(),) if evidence is None else evidence
+        actual_claims = (cls.claim(),) if claims is None else claims
+        limitation = "Escopo limitado ao material identificado." if state is ConclusionState.BLOCKED else None
+        return ReviewConclusion(state, scopes, artifacts, sources, versions,
+                                actual_evidence, actual_claims, limitation)
+
+    @classmethod
+    def evaluate(cls, *, request: ReviewRequest | None = None,
+                 claims: tuple[VerificationClaim, ...] | list[VerificationClaim] | None = None,
+                 findings: tuple[ReviewFinding, ...] | list[ReviewFinding] = (),
+                 dimensions: tuple[DimensionAssessment, ...] | list[DimensionAssessment] = (),
+                 proposals: tuple[ChangeProposal, ...] | list[ChangeProposal] = (),
+                 conflicts: tuple[tuple[object, ...], ...] = (),
+                 conclusion: ReviewConclusion | None = None,
+                 response: ReviewResponse | None = None,
+                 readiness: dict[str, tuple[bool, bool, bool, bool, bool]] | None = None
+                 ) -> ReviewEvaluationResult:
+        actual_request = request or cls.request()
+        actual_claims = [cls.claim()] if claims is None else claims
+        return evaluate_review(
+            actual_request,
+            authority_context=AuthorityContext(),
+            continuity_readiness_by_scope=(readiness if readiness is not None else {
+                item.scope_id: (True, True, True, True, True) for item in actual_request.scopes
+            }),
+            conclusion=conclusion or cls.conclusion(request=actual_request),
+            response=response or cls.response(actual_request.language),
+            dimension_assessments=dimensions,
+            claims=actual_claims,
+            findings=findings,
+            change_proposals=proposals,
+            source_conflicts=conflicts,  # type: ignore[arg-type]
+        )
+
+    def test_request_valido_produz_resultado_integrado_limitado_em_memoria(self) -> None:
+        result = self.evaluate()
+        self.assertEqual(result, self.evaluate())
+        self.assertIsInstance(result, ReviewEvaluationResult)
+        self.assertIs(result.conclusion.state, ConclusionState.NO_FINDING_IN_SCOPE)
+        self.assertIsNone(result.continuity)
+        self.assertEqual(result.rendered, renderizar_resposta(result.response))
+        self.assertFalse(hasattr(result, "project_approved"))
+        self.assertFalse(any(item.name in {"PASS", "SUCCESS", "APPROVED"}
+                             for item in type(result.conclusion.state)))
+
+    def test_response_language_divergente_e_none_default_sao_validados(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(response=self.response("en"))
+        result = self.evaluate(response=self.response(None))
+        self.assertIsNone(result.response.language)
+
+    def test_effect_externality_e_rejeitado_sem_tentar_executar(self) -> None:
+        request = self.request(effects=(RequestedEffect.EXTERNALITY,))
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(request=request)
+
+    def test_local_persistence_requested_remains_memory_only(self) -> None:
+        request = self.request(effects=(RequestedEffect.LOCAL_PERSISTENCE,))
+        result = self.evaluate(request=request)
+        self.assertEqual(result.request.requested_effects, (RequestedEffect.LOCAL_PERSISTENCE,))
+        self.assertFalse(hasattr(result, "receipt"))
+
+    def test_finding_sem_escopo_do_request_e_rejeitado(self) -> None:
+        finding = ReviewFinding("unknown", TechnicalDimension.SOLID, "condição",
+                                (self.evidence(),), "regra", "conclusão", "impacto")
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(findings=(finding,))
+
+    def test_dimension_assessment_sem_escopo_do_request_e_rejeitado(self) -> None:
+        dimension = DimensionAssessment(TechnicalDimension.SOLID, "unknown",
+                                        DimensionAssessmentState.NOT_APPLICABLE)
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(dimensions=(dimension,))
+
+    def test_finding_e_dimension_nao_podem_ampliar_artifacts_do_scope(self) -> None:
+        finding = ReviewFinding("S", TechnicalDimension.SOLID, "condição",
+                                (self.evidence("outside.py"),), "regra", "conclusão", "impacto")
+        dimension = DimensionAssessment(TechnicalDimension.SOLID, "S",
+                                       DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE,
+                                       (self.evidence("outside.py"),))
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(findings=(finding,))
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(dimensions=(dimension,))
+
+    def test_claim_com_target_fora_da_allowlist_e_rejeitado(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(claims=(self.claim("outside.py"),))
+
+    def test_proposta_fora_da_allowlist_e_rejeitada_pela_integracao(self) -> None:
+        proposal = ChangeProposal(
+            ChangeKind.FUNCTIONAL, "S", ("outside.py",), "proposal:outside", "motivo",
+            BehaviorIntent.CHANGE, "consequência", objective_reference="Revisar o comportamento declarado",
+        )
+        with patch.object(protocol, "assess_change_proposal",
+                           wraps=protocol.assess_change_proposal) as assessor:
+            with self.assertRaises(ReviewInputError):
+                self.evaluate(proposals=(proposal,))
+        assessor.assert_called_once()
+
+    def test_readiness_precisa_cobrir_cada_scope_com_cinco_bools(self) -> None:
+        request = self.request()
+        for readiness in ({}, {"S": (True, True)}, {"S": (True, True, True, True, 1)}):
+            with self.subTest(readiness=readiness), self.assertRaises(ReviewInputError):
+                self.evaluate(request=request, readiness=readiness)  # type: ignore[arg-type]
+
+    def test_conclusao_com_scope_artifact_ou_versao_fora_do_request_e_rejeitada(self) -> None:
+        cases = (
+            self.conclusion(state=ConclusionState.BLOCKED, scopes=("unknown",),
+                            evidence=(), claims=()),
+            self.conclusion(state=ConclusionState.BLOCKED, artifacts=("outside.py",),
+                            versions=(), evidence=(), claims=()),
+            self.conclusion(state=ConclusionState.BLOCKED, versions=(("a.py", "other"),),
+                            evidence=(), claims=()),
+        )
+        for conclusion in cases:
+            with self.subTest(conclusion=conclusion), self.assertRaises(ReviewInputError):
+                self.evaluate(conclusion=conclusion)
+
+    def test_claim_historico_ou_nao_executado_nao_e_promovido(self) -> None:
+        historical_evidence = EvidenceReference(EvidenceKind.PERSISTED_EVIDENCE, "archive",
+                                                "history:1", "a.py", version="v1")
+        historical = VerificationClaim("execução anterior", "a.py",
+                                       VerificationStatus.HISTORICAL_IDENTIFIED,
+                                       (historical_evidence,), "v1")
+        conclusion = self.conclusion(state=ConclusionState.BLOCKED,
+                                     sources=("history:1",), versions=(),
+                                     evidence=(historical_evidence,), claims=(historical,))
+        result = self.evaluate(claims=(historical,), conclusion=conclusion)
+        self.assertIs(result.claims[0].status, VerificationStatus.HISTORICAL_IDENTIFIED)
+        not_run = self.claim(status=VerificationStatus.NOT_EXECUTED)
+        blocked = self.conclusion(state=ConclusionState.BLOCKED, sources=("a.py",),
+                                  evidence=(), claims=())
+        result = self.evaluate(claims=(not_run,), conclusion=blocked)
+        self.assertIs(result.claims[0].status, VerificationStatus.NOT_EXECUTED)
+
+    def test_findings_em_ordens_diferentes_tem_canonicalizacao_igual(self) -> None:
+        first = ReviewFinding("S", TechnicalDimension.SOLID, "A condição",
+                              (self.evidence(reference="evidence:a"),), "rule", "c1", "impact")
+        second = ReviewFinding("S", TechnicalDimension.PATTERNS, "B condição",
+                               (self.evidence(reference="evidence:b"),), "rule", "c2", "impact")
+        blocked = self.conclusion(state=ConclusionState.BLOCKED,
+                                  sources=("evidence:a", "evidence:b"), evidence=(), claims=())
+        a = self.evaluate(findings=(first, second), conclusion=blocked)
+        b = self.evaluate(findings=(second, first), conclusion=blocked)
+        self.assertEqual(a.findings, b.findings)
+        self.assertEqual(a, b)
+
+    def test_proposta_funcional_sem_grant_fica_nao_autorizada_e_bloqueia_scope(self) -> None:
+        proposal = ChangeProposal(
+            ChangeKind.FUNCTIONAL, "S", ("a.py",), "proposal:1", "motivo",
+            BehaviorIntent.CHANGE, "consequência", objective_reference="Revisar o comportamento declarado",
+        )
+        blocked = self.conclusion(state=ConclusionState.BLOCKED, evidence=(), claims=())
+        result = self.evaluate(proposals=(proposal,), conclusion=blocked)
+        self.assertIs(result.behavior_assessments[0].state,
+                      BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED)
+        self.assertIsNotNone(result.continuity)
+        self.assertNotIn("S", result.continuity.continuable_scopes)
+
+    def test_proposta_estrutural_com_preservacao_evidenciada_usa_avaliador_existente(self) -> None:
+        request = self.request(grants=(AuthorizationGrant.REVIEW,
+                                       AuthorizationGrant.STRUCTURAL_CHANGE))
+        base = self.claim(version="v0", reference="run:base")
+        candidate = self.claim(version="v1", reference="run:candidate")
+        proposal = ChangeProposal(
+            ChangeKind.STRUCTURAL, "S", ("a.py",), "proposal:structural", "motivo",
+            BehaviorIntent.PRESERVE, "sem mudança funcional",
+            base_versions=(("a.py", "v0"),), candidate_versions=(("a.py", "v1"),),
+            behavior_contract="contrato explícito", verified_cases=("verificação executada",),
+            claims=(base, candidate), objective_reference=request.objective,
+        )
+        result = self.evaluate(request=request, proposals=(proposal,))
+        self.assertIs(result.behavior_assessments[0].state,
+                      BehaviorAssessmentState.PRESERVATION_EVIDENCED)
+
+    def test_scope_conflitual_bloqueia_sem_impedir_scope_independente(self) -> None:
+        request = self.request(scopes=(
+            ReviewScope("A", "Escopo A", (), ("a.py",)),
+            ReviewScope("B", "Escopo independente", (), ("b.py",)),
+        ), versions=(("a.py", "v1"), ("b.py", "v1")))
+        source_a = gaps.SourceReference("normative", "POL-A", "regra A", "autoridade A")
+        source_b = gaps.SourceReference("normative", "POL-B", "regra B", "autoridade B")
+        conflict = (source_a, source_b, "A", "impacto", "precedência explícita", True, None)
+        conclusion = self.conclusion(state=ConclusionState.BLOCKED, scopes=("A", "B"),
+                                     sources=("POL-A", "POL-B"), artifacts=("a.py",),
+                                     versions=(), evidence=(), claims=())
+        result = self.evaluate(request=request, conflicts=(conflict,), conclusion=conclusion)
+        self.assertIsInstance(result.conflict_results[0], gaps.ConflictAssessment)
+        self.assertIsNone(result.conflict_results[0].authoritative_reference)
+        self.assertTrue(result.conflict_results[0].blocker_required)
+        self.assertEqual(result.continuity.continuable_scopes, ("B",))
+
+    def test_conflicto_propaga_por_dependencia_transitiva_sem_bloquear_independente(self) -> None:
+        request = self.request(scopes=(
+            ReviewScope("A", "A", (), ("a.py",)),
+            ReviewScope("B", "B depende de A", ("A",), ("b.py",)),
+            ReviewScope("C", "C depende de B", ("B",), ("c.py",)),
+            ReviewScope("D", "Independente", (), ("d.py",)),
+        ), versions=())
+        source_a = gaps.SourceReference("normative", "POL-A", "regra A", "authority A")
+        source_b = gaps.SourceReference("normative", "POL-B", "regra B", "authority B")
+        conflict = (source_a, source_b, "A", "impacto", "resolver", True, None)
+        blocked = self.conclusion(state=ConclusionState.BLOCKED, scopes=("A", "B", "C"),
+                                  artifacts=("a.py",), sources=("POL-A", "POL-B"),
+                                  versions=(), evidence=(), claims=())
+        readiness = {key: (True, True, True, True, True) for key in "ABCD"}
+        result = self.evaluate(request=request, conflicts=(conflict,), conclusion=blocked,
+                               readiness=readiness)
+        self.assertEqual(result.continuity.continuable_scopes, ("D",))
+        self.assertFalse(any(item.continuable for item in result.continuity.scopes
+                             if item.scope in {"A", "B", "C"}))
+
+    def test_precedencia_explicita_permanece_resultado_da_fronteira_existente(self) -> None:
+        authority = AuthorityReference("authority:1", "Owner informado", "competência", ("S",))
+        precedence = AuthorizedPrecedence("POL-A", "POL-B", "S", "authority:1", "decision:1")
+        context = AuthorityContext((authority,), (precedence,))
+        source_a = gaps.SourceReference("normative", "POL-A", "regra A", "autoridade A")
+        source_b = gaps.SourceReference("normative", "POL-B", "regra B", "autoridade B")
+        conflict = (source_a, source_b, "S", "impacto", "seguir decisão", True, None)
+        with patch.object(protocol, "evaluate_source_conflict",
+                           wraps=protocol.evaluate_source_conflict) as evaluator:
+            result = evaluate_review(
+                self.request(), authority_context=context,
+                continuity_readiness_by_scope={"S": (True, True, True, True, True)},
+                conclusion=self.conclusion(), response=self.response(), claims=(self.claim(),),
+                source_conflicts=(conflict,),
+            )
+        evaluator.assert_called_once()
+        self.assertEqual(result.conflict_results, (precedence,))
+
+    def test_conflito_nao_material_e_representado_com_none(self) -> None:
+        source_a = gaps.SourceReference("normative", "POL-A", "regra A", "autoridade A")
+        source_b = gaps.SourceReference("workspace", "DOC-1", "registro")
+        conflict = (source_a, source_b, "S", "impacto", "retomar", False, None)
+        result = self.evaluate(conflicts=(conflict,))
+        self.assertEqual(result.conflict_results, (None,))
+
+    def test_dependencia_desconhecida_permanece_bloqueada(self) -> None:
+        request = self.request(scopes=(ReviewScope("S", "Escopo", ("missing",), ("a.py",)),))
+        conclusion = self.conclusion(state=ConclusionState.BLOCKED, sources=("run:1",),
+                                     evidence=(), claims=())
+        result = self.evaluate(request=request, conclusion=conclusion)
+        self.assertIn("S", result.continuity.affected_scopes)
+        self.assertTrue(any("não avaliado: missing" in reason
+                            for item in result.continuity.scopes for reason in item.reasons))
+
+    def test_bases_dos_avaliadores_existentes_sao_reutilizadas(self) -> None:
+        with patch.object(protocol, "assess_change_proposal", wraps=protocol.assess_change_proposal) as change, \
+             patch.object(protocol, "evaluate_source_conflict", wraps=protocol.evaluate_source_conflict) as conflict, \
+             patch.object(protocol, "evaluate_scope_continuity", wraps=protocol.evaluate_scope_continuity) as continuity, \
+             patch.object(protocol, "renderizar_resposta", wraps=protocol.renderizar_resposta) as renderer:
+            proposal = ChangeProposal(
+                ChangeKind.FUNCTIONAL, "S", ("a.py",), "proposal:2", "motivo",
+                BehaviorIntent.CHANGE, "consequência", objective_reference="Revisar o comportamento declarado",
+            )
+            blocked = self.conclusion(state=ConclusionState.BLOCKED, evidence=(), claims=())
+            result = self.evaluate(proposals=(proposal,), conclusion=blocked)
+        change.assert_called_once()
+        conflict.assert_not_called()
+        continuity.assert_called_once()
+        renderer.assert_called_once_with(result.response)
+
+    def test_pipeline_nao_chama_io_rede_processos_ou_persistencia(self) -> None:
+        import builtins
+        import socket
+        import subprocess
+
+        with patch.object(builtins, "open", side_effect=AssertionError("I/O")) as opened, \
+             patch.object(socket, "create_connection", side_effect=AssertionError("rede")) as network, \
+             patch.object(subprocess, "Popen", side_effect=AssertionError("processo")) as process, \
+             patch.object(gaps, "registrar_divergencia", side_effect=AssertionError("persistência")) as divergence, \
+             patch.object(gaps, "registrar_blocker", side_effect=AssertionError("persistência")) as blocker, \
+             patch.object(gaps, "registrar_resultado", side_effect=AssertionError("persistência")) as persisted, \
+             patch.object(gaps, "registrar_decisao_existente", side_effect=AssertionError("persistência")) as decision, \
+             patch.object(gaps, "publicar_documento", side_effect=AssertionError("persistência")) as publish:
+            self.evaluate()
+        for spy in (opened, network, process, divergence, blocker, persisted, decision, publish):
+            spy.assert_not_called()
+
+    def test_pipeline_copia_e_canonicaliza_colecoes_sem_mutar_entradas(self) -> None:
+        findings = [
+            ReviewFinding("S", TechnicalDimension.SOLID, "condição",
+                          (self.evidence(reference="finding:1"),), "rule", "conclusão", "impacto")
+        ]
+        conclusion = self.conclusion(state=ConclusionState.BLOCKED,
+                                     sources=("finding:1",), evidence=(), claims=())
+        result = self.evaluate(findings=findings, conclusion=conclusion)
+        findings.clear()
+        self.assertEqual(len(result.findings), 1)
+        self.assertIsInstance(result.findings, tuple)
+        with self.assertRaises(FrozenInstanceError):
+            result.rendered = "alterado"  # type: ignore[misc]
+
+    def test_conclusao_bloqueada_permanece_fornecida_sem_estado_global(self) -> None:
+        blocked = self.conclusion(state=ConclusionState.BLOCKED, evidence=(), claims=())
+        result = self.evaluate(conclusion=blocked)
+        self.assertIs(result.conclusion, blocked)
+        self.assertIs(result.conclusion.state, ConclusionState.BLOCKED)
+        with self.assertRaises(FrozenInstanceError):
+            result.conclusion.state = ConclusionState.LIMITED  # type: ignore[misc]
+
+    def test_conclusao_nao_pode_introduzir_claim_nao_fornecido(self) -> None:
+        other = self.claim(reference="other:claim")
+        conclusion = self.conclusion(claims=(other,))
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(conclusion=conclusion)
+
+    def test_dimension_especialista_e_authoritative_somente_com_contexto_fornecido(self) -> None:
+        authority = AuthorityReference("authority:1", "Owner", "competência", ("S",))
+        assessment = SpecialistAssessment(
+            TechnicalDimension.SOLID, "S", "avaliação recebida", (self.evidence(),),
+            AssessmentCharacter.AUTHORITATIVE, "Owner", "competência", authority,
+        )
+        dimension = DimensionAssessment(
+            TechnicalDimension.SOLID, "S", DimensionAssessmentState.SPECIALIST_ASSESSMENT_RECEIVED,
+            specialist_assessment=assessment,
+        )
+        with self.assertRaises(ReviewInputError):
+            self.evaluate(dimensions=(dimension,))
+        result = evaluate_review(
+            self.request(), authority_context=AuthorityContext((authority,), ()),
+            continuity_readiness_by_scope={"S": (True, True, True, True, True)},
+            conclusion=self.conclusion(), response=self.response(), claims=(self.claim(),),
+            dimension_assessments=(dimension,),
+        )
+        self.assertIs(result.dimension_assessments[0].specialist_assessment.character,
+                      AssessmentCharacter.AUTHORITATIVE)
 
 
 if __name__ == "__main__":

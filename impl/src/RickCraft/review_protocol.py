@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Mapping, Sequence
 
@@ -1216,3 +1216,424 @@ def renderizar_resposta(response: ReviewResponse) -> str:
         for block in response.blocks
     )
     return "\n\n".join(rendered_blocks)
+
+
+@dataclass(frozen=True)
+class ReviewEvaluationResult:
+    """Resultado integrado em memória; não representa aprovação universal nem persistência."""
+
+    request: ReviewRequest
+    dimension_assessments: tuple[DimensionAssessment, ...]
+    conflict_results: tuple[AuthorizedPrecedence | gap_handling.ConflictAssessment | None, ...]
+    findings: tuple[ReviewFinding, ...]
+    claims: tuple[VerificationClaim, ...]
+    behavior_assessments: tuple[BehaviorAssessment, ...]
+    continuity: gap_handling.ContinuityAssessment | None
+    conclusion: ReviewConclusion
+    response: ReviewResponse
+    rendered: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.request, ReviewRequest):
+            raise ReviewInputError("result.request deve ser ReviewRequest.")
+        for field, expected in (
+            ("dimension_assessments", DimensionAssessment),
+            ("findings", ReviewFinding),
+            ("claims", VerificationClaim),
+            ("behavior_assessments", BehaviorAssessment),
+        ):
+            items = _sequencia(getattr(self, field), f"result.{field}")
+            if any(not isinstance(item, expected) for item in items):
+                raise ReviewInputError(f"result.{field} contém tipo incompatível.")
+            object.__setattr__(self, field, tuple(items))
+        conflicts = _sequencia(self.conflict_results, "result.conflict_results")
+        if any(item is not None and not isinstance(
+            item, (AuthorizedPrecedence, gap_handling.ConflictAssessment)
+        ) for item in conflicts):
+            raise ReviewInputError("result.conflict_results contém tipo incompatível.")
+        object.__setattr__(self, "conflict_results", tuple(conflicts))
+        if self.continuity is not None and not isinstance(
+            self.continuity, gap_handling.ContinuityAssessment
+        ):
+            raise ReviewInputError("result.continuity deve ser ContinuityAssessment ou None.")
+        if not isinstance(self.conclusion, ReviewConclusion):
+            raise ReviewInputError("result.conclusion deve ser ReviewConclusion.")
+        if not isinstance(self.response, ReviewResponse):
+            raise ReviewInputError("result.response deve ser ReviewResponse.")
+        if self.response.language != self.request.language:
+            raise ReviewInputError("result.response deve preservar o idioma do request.")
+        _texto_obrigatorio(self.rendered, "result.rendered")
+
+
+def _evidence_sort_key(item: EvidenceReference) -> tuple[str, ...]:
+    return (item.reference, item.target, item.version or "", item.kind.value,
+            item.origin, item.digest or "", item.limitation or "", item.verifiability or "")
+
+
+def _claim_sort_key(item: VerificationClaim) -> tuple[object, ...]:
+    return (item.target, item.version or "", item.status.value, item.assertion,
+            tuple(_evidence_sort_key(evidence) for evidence in item.evidence))
+
+
+def _finding_sort_key(item: ReviewFinding) -> tuple[object, ...]:
+    specialist = item.specialist_assessment
+    authority = None if specialist is None else specialist.authority_reference
+    specialist_key: tuple[str, ...] = () if specialist is None else (
+        specialist.dimension.value, specialist.scope, specialist.character.value,
+        specialist.owner or "", specialist.competence_reference or "",
+        specialist.conclusion,
+        "" if authority is None else repr((authority.source_reference, authority.owner,
+                                            authority.competence_reference, authority.scopes)),
+        repr(tuple(_evidence_sort_key(evidence) for evidence in specialist.evidence)),
+    )
+    return (item.sort_key, tuple(_evidence_sort_key(evidence) for evidence in item.evidence),
+            item.technical_conclusion, item.impact, item.recommendation or "", specialist_key)
+
+
+def _proposal_sort_key(item: ChangeProposal) -> tuple[object, ...]:
+    finding_key = () if item.finding is None else _finding_sort_key(item.finding)
+    comparisons = tuple(sorted((
+        comparison.target, comparison.case, comparison.base_version,
+        comparison.candidate_version, comparison.comparison_reference,
+        _claim_sort_key(comparison.claim),
+    ) for comparison in item.comparisons))
+    return (
+        item.scope, item.targets, item.proposal_reference, item.kind.value,
+        item.technical_reason, item.behavior_intent.value, item.consequences,
+        item.base_versions, item.candidate_versions, item.behavior_contract or "",
+        item.verified_cases, tuple(_claim_sort_key(claim) for claim in item.claims),
+        comparisons, item.preservation_assertion or "", finding_key,
+        item.objective_reference or "",
+    )
+
+
+def _conflict_input_key(item: tuple[object, ...]) -> tuple[object, ...]:
+    source_a, source_b, scope, impact, resume, incompatible, authority = item
+    source_key = lambda source: (source.category, source.reference, source.statement, source.authority or "")
+    pair = tuple(sorted((source_key(source_a), source_key(source_b))))
+    authority_key = ("", "", "", ()) if authority is None else (
+        authority.source_reference, authority.owner, authority.competence_reference, authority.scopes
+    )
+    return (scope, pair, impact, resume, incompatible, authority_key)
+
+
+def evaluate_review(
+    request: ReviewRequest,
+    *,
+    authority_context: AuthorityContext,
+    continuity_readiness_by_scope: Mapping[str, tuple[bool, bool, bool, bool, bool]],
+    conclusion: ReviewConclusion,
+    response: ReviewResponse,
+    dimension_assessments: Sequence[DimensionAssessment] = (),
+    claims: Sequence[VerificationClaim] = (),
+    findings: Sequence[ReviewFinding] = (),
+    change_proposals: Sequence[ChangeProposal] = (),
+    source_conflicts: Sequence[tuple[
+        gap_handling.SourceReference, gap_handling.SourceReference, str, str, str,
+        bool, AuthorityReference | None
+    ]] = (),
+) -> ReviewEvaluationResult:
+    """Integra entradas explícitas em memória usando os avaliadores já existentes.
+
+    Cada source_conflict é a tupla (source_a, source_b, scope, impact,
+    resume_condition, materially_incompatible, required_authority). Nenhuma
+    origem é observada e nenhuma ação de mudança ou persistência é executada.
+    """
+    if not isinstance(request, ReviewRequest):
+        raise ReviewInputError("request deve ser ReviewRequest explícito.")
+    if not isinstance(authority_context, AuthorityContext):
+        raise ReviewInputError("authority_context deve ser AuthorityContext explícito.")
+    if not isinstance(conclusion, ReviewConclusion):
+        raise ReviewInputError("conclusion deve ser ReviewConclusion explícita.")
+    if not isinstance(response, ReviewResponse):
+        raise ReviewInputError("response deve ser ReviewResponse explícita.")
+    if response.language != request.language:
+        raise ReviewInputError("ReviewResponse.language deve corresponder ao ReviewRequest.language.")
+    if RequestedEffect.EXTERNALITY in request.requested_effects:
+        raise ReviewInputError("EXTERNALITY não é suportada pelo pipeline Core.")
+
+    scopes = {scope.scope_id: scope for scope in request.scopes}
+    scope_ids = set(scopes)
+    artifacts = set(request.authorized_artifacts)
+    if any(not set(scope.artifacts).issubset(artifacts) for scope in request.scopes):
+        raise ReviewInputError("ReviewScope contém artefato fora da allowlist do request.")
+    if any(target not in artifacts for target, _ in request.source_versions):
+        raise ReviewInputError("source_versions contém artefato fora da allowlist do request.")
+    request = replace(
+        request,
+        scopes=tuple(sorted(request.scopes, key=lambda item: item.scope_id)),
+        authorization_grants=tuple(sorted(request.authorization_grants, key=lambda item: item.value)),
+        requested_effects=tuple(sorted(request.requested_effects, key=lambda item: item.value)),
+    )
+    scopes = {scope.scope_id: scope for scope in request.scopes}
+
+    dimensions_input = _sequencia(dimension_assessments, "dimension_assessments")
+    if any(not isinstance(item, DimensionAssessment) for item in dimensions_input):
+        raise ReviewInputError("dimension_assessments deve conter somente DimensionAssessment.")
+    dimensions = tuple(dimensions_input)
+    dimension_keys = tuple((item.dimension, item.scope) for item in dimensions)
+    if len(set(dimension_keys)) != len(dimension_keys):
+        raise ReviewInputError("dimension_assessments não pode duplicar dimensão e scope.")
+    if any(item.scope not in scope_ids for item in dimensions):
+        raise ReviewInputError("DimensionAssessment aponta para scope fora do request.")
+    dimensions = tuple(sorted(dimensions, key=lambda item: (
+        tuple(TechnicalDimension).index(item.dimension), item.scope
+    )))
+
+    claims_input = _sequencia(claims, "claims")
+    if any(not isinstance(item, VerificationClaim) for item in claims_input):
+        raise ReviewInputError("claims deve conter somente VerificationClaim.")
+    claims_list = list(claims_input)
+    explicit_claims = set(claims_input)
+    proposal_versions: dict[str, set[str]] = {}
+    for proposal in _sequencia(change_proposals, "change_proposals"):
+        if not isinstance(proposal, ChangeProposal):
+            raise ReviewInputError("change_proposals deve conter somente ChangeProposal.")
+        claims_list.extend(proposal.claims)
+        claims_list.extend(comparison.claim for comparison in proposal.comparisons)
+        for target, version in proposal.base_versions + proposal.candidate_versions:
+            proposal_versions.setdefault(target, set()).add(version)
+    if len(set(claims_list)) != len(claims_list):
+        raise ReviewInputError("claims integrados não podem conter duplicatas.")
+    canonical_claims = tuple(sorted(claims_list, key=_claim_sort_key))
+    version_map = dict(request.source_versions)
+    for claim in canonical_claims:
+        if claim.target not in artifacts:
+            raise ReviewInputError("VerificationClaim target está fora da allowlist do request.")
+        if (claim in explicit_claims and claim.version is not None and claim.target in version_map
+                and claim.version != version_map[claim.target]):
+            raise ReviewInputError("VerificationClaim version contradiz source_versions.")
+        for evidence in claim.evidence:
+            if evidence.target not in artifacts:
+                raise ReviewInputError("EvidenceReference target está fora da allowlist do request.")
+            if (claim in explicit_claims and evidence.version is not None and evidence.target in version_map
+                    and evidence.version != version_map[evidence.target]):
+                raise ReviewInputError("EvidenceReference version contradiz source_versions.")
+            if (evidence.version is not None and evidence.target in version_map
+                    and evidence.version != version_map[evidence.target]
+                    and evidence.version not in proposal_versions.get(evidence.target, set())):
+                raise ReviewInputError("EvidenceReference version não corresponde a versão fornecida.")
+
+    findings_input = _sequencia(findings, "findings")
+    if any(not isinstance(item, ReviewFinding) for item in findings_input):
+        raise ReviewInputError("findings deve conter somente ReviewFinding.")
+    if len(set(findings_input)) != len(findings_input):
+        raise ReviewInputError("findings não pode conter duplicatas.")
+    for finding in findings_input:
+        if finding.scope not in scope_ids:
+            raise ReviewInputError("ReviewFinding aponta para scope fora do request.")
+        scope_artifacts = set(scopes[finding.scope].artifacts)
+        if any(item.target not in artifacts or item.target not in scope_artifacts
+               for item in finding.evidence):
+            raise ReviewInputError("EvidenceReference do finding excede o artefato autorizado no scope.")
+    canonical_findings = tuple(sorted(
+        sort_review_findings(findings_input), key=_finding_sort_key
+    ))
+
+    for assessment in dimensions:
+        scope_artifacts = set(scopes[assessment.scope].artifacts)
+        if any(item.target not in artifacts or item.target not in scope_artifacts
+               for item in assessment.evidence):
+            raise ReviewInputError("EvidenceReference da dimensão excede o artefato autorizado no scope.")
+        specialist = assessment.specialist_assessment
+        if specialist is not None:
+            specialist.validate_authority(authority_context)
+            if any(item.target not in artifacts or item.target not in scope_artifacts
+                   for item in specialist.evidence):
+                raise ReviewInputError("EvidenceReference especializada excede o artefato autorizado no scope.")
+    for finding in canonical_findings:
+        specialist = finding.specialist_assessment
+        if specialist is not None:
+            specialist.validate_authority(authority_context)
+            scope_artifacts = set(scopes[finding.scope].artifacts)
+            if any(item.target not in artifacts or item.target not in scope_artifacts
+                   for item in specialist.evidence):
+                raise ReviewInputError("EvidenceReference especializada excede o artefato autorizado no scope.")
+
+    proposals_input = _sequencia(change_proposals, "change_proposals")
+    if len(set(proposals_input)) != len(proposals_input):
+        raise ReviewInputError("change_proposals não pode conter duplicatas.")
+    for proposal in proposals_input:
+        if proposal.scope not in scope_ids:
+            raise ReviewInputError("ChangeProposal aponta para scope fora do request.")
+    proposals = tuple(sorted(proposals_input, key=_proposal_sort_key))
+    if any(proposal.finding is not None and proposal.finding not in canonical_findings
+           for proposal in proposals):
+        raise ReviewInputError("ChangeProposal.finding deve integrar findings fornecidos ao review.")
+    behavior_assessments = tuple(
+        assess_change_proposal(proposal, request) for proposal in proposals
+    )
+    for assessment in behavior_assessments:
+        for specialist in (
+            assessment.proposal.finding.specialist_assessment
+            if assessment.proposal.finding is not None else None,
+        ):
+            if specialist is not None:
+                specialist.validate_authority(authority_context)
+
+    conflict_items: list[tuple[object, ...]] = []
+    for raw in _sequencia(source_conflicts, "source_conflicts"):
+        fields = _sequencia(raw, "source_conflicts entry")
+        if len(fields) != 7:
+            raise ReviewInputError("source_conflicts entry requer sete campos explícitos.")
+        source_a, source_b, scope, impact, resume, incompatible, required = fields
+        scope = _gap_text(scope, "conflict scope")
+        if scope not in scope_ids:
+            raise ReviewInputError("Source conflict aponta para scope fora do request.")
+        _validate_gap_source(source_a, "source_a")
+        _validate_gap_source(source_b, "source_b")
+        if type(incompatible) is not bool:
+            raise ReviewInputError("materially_incompatible deve ser booleano explícito.")
+        if required is not None and not isinstance(required, AuthorityReference):
+            raise ReviewInputError("required_authority deve ser AuthorityReference explícita.")
+        conflict_items.append((source_a, source_b, scope,
+                               _gap_text(impact, "conflict impact"),
+                               _gap_text(resume, "conflict resume_condition"),
+                               incompatible, required))
+    conflict_keys = tuple(_conflict_input_key(item) for item in conflict_items)
+    if len(set(conflict_keys)) != len(conflict_keys):
+        raise ReviewInputError("source_conflicts não pode conter entradas duplicadas.")
+    conflict_results_list: list[AuthorizedPrecedence | gap_handling.ConflictAssessment | None] = []
+    for item in sorted(conflict_items, key=_conflict_input_key):
+        source_a, source_b, scope, impact, resume, incompatible, required = item
+        conflict_results_list.append(evaluate_source_conflict(
+            source_a, source_b, scope=scope, impact=impact, resume_condition=resume,
+            materially_incompatible=incompatible, authority_context=authority_context,
+            required_authority=required,
+        ))
+    conflict_results = tuple(conflict_results_list)
+
+    readiness = continuity_readiness_by_scope
+    if not isinstance(readiness, Mapping) or set(readiness) != scope_ids:
+        raise ReviewInputError("continuidade deve fornecer fatos explícitos para cada scope do request.")
+    normalized_readiness: dict[str, tuple[bool, bool, bool, bool, bool]] = {}
+    for scope_id in sorted(scope_ids):
+        facts = readiness[scope_id]
+        if not isinstance(facts, tuple) or len(facts) != 5 or any(type(flag) is not bool for flag in facts):
+            raise ReviewInputError("Cada scope requer cinco booleanos explícitos de continuidade.")
+        normalized_readiness[scope_id] = facts
+
+    unresolved_scopes = {
+        item.divergence.affected_scope for item in conflict_results
+        if isinstance(item, gap_handling.ConflictAssessment) and item.blocker_required
+    }
+    for scope_id in unresolved_scopes:
+        authorized, information, evidence, authority, _ = normalized_readiness[scope_id]
+        normalized_readiness[scope_id] = (authorized, information, evidence, authority, False)
+    for item in dimensions:
+        authorized, information, evidence, authority, conflict_free = normalized_readiness[item.scope]
+        if item.state is DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE:
+            normalized_readiness[item.scope] = (authorized, information, False, authority, conflict_free)
+        elif item.state is DimensionAssessmentState.SPECIALIST_REQUIRED:
+            normalized_readiness[item.scope] = (authorized, information, evidence, False, conflict_free)
+    for item in behavior_assessments:
+        if item.state is BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED:
+            authorized, information, evidence, authority, conflict_free = normalized_readiness[item.proposal.scope]
+            normalized_readiness[item.proposal.scope] = (
+                False, information, evidence, authority, conflict_free
+            )
+        elif item.state in (
+            BehaviorAssessmentState.NOT_VERIFIED,
+            BehaviorAssessmentState.PRESERVATION_ASSERTED,
+        ):
+            authorized, information, _, authority, conflict_free = normalized_readiness[item.proposal.scope]
+            normalized_readiness[item.proposal.scope] = (
+                authorized, information, False, authority, conflict_free
+            )
+    affected_scopes = set(unresolved_scopes)
+    affected_scopes.update(
+        item.scope for item in dimensions
+        if item.state in (DimensionAssessmentState.SPECIALIST_REQUIRED,
+                          DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE)
+    )
+    affected_scopes.update(
+        item.proposal.scope for item in behavior_assessments
+        if item.state is BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED
+    )
+    affected_scopes.update(
+        scope_id for scope_id, facts in normalized_readiness.items() if not all(facts)
+    )
+    affected_scopes.update(
+        scope.scope_id for scope in request.scopes
+        if any(dependency not in scope_ids for dependency in scope.depends_on)
+    )
+    continuity = None
+    if affected_scopes:
+        continuity = evaluate_scope_continuity(
+            tuple(sorted(affected_scopes)),
+            tuple(sorted(request.scopes, key=lambda item: item.scope_id)),
+            normalized_readiness,
+        )
+
+    if any(scope not in scope_ids for scope in conclusion.scopes):
+        raise ReviewInputError("ReviewConclusion cita scope fora do request.")
+    if (conclusion.state is not ConclusionState.BLOCKED and continuity is not None
+            and any(scope not in continuity.continuable_scopes for scope in conclusion.scopes)):
+        raise ReviewInputError("Conclusão não bloqueada excede escopo sem continuidade apta.")
+    if any(artifact not in artifacts for artifact in conclusion.artifacts):
+        raise ReviewInputError("ReviewConclusion cita artefato fora da allowlist.")
+    known_evidence = set()
+    for claim in canonical_claims:
+        known_evidence.update(claim.evidence)
+    for assessment in dimensions:
+        known_evidence.update(assessment.evidence)
+        if assessment.specialist_assessment is not None:
+            known_evidence.update(assessment.specialist_assessment.evidence)
+    for finding in canonical_findings:
+        known_evidence.update(finding.evidence)
+        if finding.specialist_assessment is not None:
+            known_evidence.update(finding.specialist_assessment.evidence)
+    known_sources = artifacts | {item.reference for item in known_evidence} | {
+        item.origin for item in known_evidence
+    }
+    known_sources.update(finding.normative_reference for finding in canonical_findings)
+    for item in conflict_items:
+        known_sources.update((item[0].reference, item[1].reference))
+    if any(source not in known_sources for source in conclusion.sources):
+        raise ReviewInputError("ReviewConclusion cita fonte que não foi fornecida ao pipeline.")
+    if any(evidence not in known_evidence for evidence in conclusion.evidence):
+        raise ReviewInputError("ReviewConclusion inclui evidência não fornecida ao pipeline.")
+    if any(claim not in set(canonical_claims) for claim in conclusion.claims):
+        raise ReviewInputError("ReviewConclusion inclui claim não fornecido ao pipeline.")
+    known_versions: dict[str, set[str]] = {}
+    for target, version in request.source_versions:
+        known_versions.setdefault(target, set()).add(version)
+    for claim in canonical_claims:
+        if claim.version is not None:
+            known_versions.setdefault(claim.target, set()).add(claim.version)
+        for evidence in claim.evidence:
+            if evidence.version is not None:
+                known_versions.setdefault(evidence.target, set()).add(evidence.version)
+    for evidence in known_evidence:
+        if evidence.version is not None:
+            known_versions.setdefault(evidence.target, set()).add(evidence.version)
+        if (evidence.version is not None and evidence.target in version_map
+                and evidence.version != version_map[evidence.target]
+                and evidence.version not in proposal_versions.get(evidence.target, set())):
+            raise ReviewInputError("EvidenceReference version contradiz source_versions.")
+    for proposal in proposals:
+        for target, version in proposal.base_versions + proposal.candidate_versions:
+            known_versions.setdefault(target, set()).add(version)
+    if any(
+        (target in version_map and version_map[target] != version)
+        or version not in known_versions.get(target, set())
+        for target, version in conclusion.versions
+    ):
+        raise ReviewInputError("ReviewConclusion cita versão não fornecida ao pipeline.")
+    if (conclusion.state is ConclusionState.NO_FINDING_IN_SCOPE and canonical_findings):
+        raise ReviewInputError("NO_FINDING_IN_SCOPE contradiz findings explícitos do pipeline.")
+    if response.language != request.language:
+        raise ReviewInputError("ReviewResponse.language deve corresponder ao ReviewRequest.language.")
+    rendered = renderizar_resposta(response)
+    return ReviewEvaluationResult(
+        request=request,
+        dimension_assessments=dimensions,
+        conflict_results=conflict_results,
+        findings=canonical_findings,
+        claims=canonical_claims,
+        behavior_assessments=behavior_assessments,
+        continuity=continuity,
+        conclusion=conclusion,
+        response=response,
+        rendered=rendered,
+    )

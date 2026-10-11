@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS - TASK-008 concluida, aguardando nova revisao
+- **IMPLEMENT:** IN_PROGRESS - TASK-009 concluida, aguardando revisao
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -991,3 +991,129 @@ Nao iniciar TASK-009. Nao executar CONVERGE. Nao gerar Release. Nao fazer push p
 **Pendencia:** revisao read-only da nova publicacao.
 **Proximo passo proposto:** apos publicacao manual pelo usuario, revisar exclusivamente esta correcao.
 **Autorizacao necessaria:** revisao externa antes de qualquer TASK-009.
+
+## IMPLEMENT - TASK-009 - Pipeline Core de avaliacao - 2026-10-11
+
+A TASK-008, incluindo a correcao pontual de escaping Setext, foi confirmada como aprovada externamente antes desta execucao. A unica TASK autorizada foi TASK-009. Baseline validada antes da edicao: HEAD `4761102b81580b7790137e9d2ba45ea8646711c1`; arvore limpa; blobs e hashes locais de runtime/testes, SPEC/PLAN/TASKS e SPEC1 conferiram com os valores autorizados. O estado normativo permaneceu imutavel.
+
+### Implementacao
+
+Foi adicionado o entrypoint puro `evaluate_review(...)` e o unico aggregate frozen `ReviewEvaluationResult`. O pipeline valida request, grants/efeitos suportados, universo de scopes/artifacts/versoes, assessments e evidencias; preserva claims e proveniencia; valida SpecialistAssessment contra AuthorityContext explicito; delega conflitos a `evaluate_source_conflict`, propostas a `assess_change_proposal`, findings a `sort_review_findings`, propagacao a `evaluate_scope_continuity` e render a `renderizar_resposta`.
+
+Os dados ficam em memoria. `EXTERNALITY` e rejeitada sem tentativa externa; `LOCAL_PERSISTENCE` nao executa persistencia nesta TASK. Nenhum finding, claim, authority, precedence, assessment ou texto de resposta e fabricado. Conclusao precisa estar contida no universo fornecido e nao pode afirmar escopo bloqueado. Resposta precisa manter o idioma do request. Colecoes de resultados seguem ordenacao explicita; dados de entrada nao sao mutados.
+
+`source_conflicts` recebe sequencias de tuplas explicitas com `(source_a, source_b, scope, impact, resume_condition, materially_incompatible, required_authority)`. Conflito nao material fica representado por `None`; precedencia explicita e resultado de conflito da SPEC1 permanecem distintos. Readiness exige cinco bools por scope, e bloqueios de conflito/proposta/dimensao sao propagados pela API SPEC1.
+
+### Testes e tentativas reais
+
+- Primeira execucao `python -B -m unittest -v impl.tests.test_review_protocol`: 209 testes, 4 erros de fixture/associacao; as fixtures foram ajustadas para fornecer as fontes/claims que as conclusoes citavam e usar conclusao BLOCKED quando os inputs eram bloqueados.
+- Reexecucao focal apos esses ajustes: 209 testes, `OK`.
+- Execucao sandboxada `python -B -m unittest -v impl.tests.test_gap_handling`: 89 testes, `FAILED (errors=178)`, com `WinError 5` na criacao/limpeza de fixtures em `%TEMP%
+ickcraft-gap-*`, sem evidencias de erro funcional SPEC1.
+- Repeticao pelo mecanismo elevado autorizado pelo pedido: `python -B -m unittest -v impl.tests.test_gap_handling` - `Ran 89 tests`; `OK`; 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- Execucao focal final apos a implementacao/testes finais: `python -B -m unittest -v impl.tests.test_review_protocol` - `Ran 212 tests`; `OK`; 212 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- A full suite nao foi executada.
+
+### Hashes e fronteiras
+
+Hashes finais SHA-256, lidos como UTF-8 estrito e calculados duas vezes: `review_protocol.py` = `E7E6C3BE51CE0FCA073EFD10B3906ACB20CF51501AB162FB695C32C387823954`; `test_review_protocol.py` = `5C552684C846C19D905A2B0B5E27B822E0E6AA57B331E311C174C410DF476691`.
+
+SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`, TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`, `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A` e `test_gap_handling.py` `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858` continuam exatos. Nenhum modulo/teste SPEC1 foi alterado.
+
+`git diff --check` passou. `git status --short` lista somente os tres arquivos autorizados. A inspecao estatica confirmou ausencia de IO, rede, subprocesso, Git, publisher, workspace, Agents e Release no pipeline. Nenhum push/publicacao ocorreu.
+
+### CHECKPOINT RICKCRAFT - TASK-009
+
+## Fase executada
+IMPLEMENT - TASK-009 - SPEC-0000000002
+
+## Objetivo da execucao
+Integrar capacidades puras ja implementadas em fluxo deterministico de avaliacao, sem persistencia, edicao ou externalidade.
+
+## Estado
+CONCLUIDO / AGUARDANDO_APROVACAO.
+
+## O que foi realizado
+Adicionados `evaluate_review` e `ReviewEvaluationResult`; validacoes integradas preservam limites de request/conclusao e delegam conflito, mudanca, continuidade, ordenacao e render as APIs existentes.
+
+## Arquivos criados
+Nenhum.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Decisoes formalizadas
+Somente integracao de pipeline prevista em TASK-009. Nenhum estado global PASS ou aprovacao de projeto foi criado.
+
+## Decisoes pendentes
+Revisao externa da TASK-009.
+
+## Questoes em aberto
+Nenhuma identificada.
+
+## Bloqueios
+Nenhum. A execucao sandboxada SPEC1 falhou por WinError 5 em fixtures temporarias; a mesma regressao passou na repeticao elevada autorizada.
+
+## Riscos identificados
+Revisao externa pendente. O aggregate reporta continuidade como None quando nao ha lacuna/escopo afetado a avaliar, sem declarar escopos continuaveis por inferencia.
+
+## Testes e verificacoes executados
+- `python -B -m unittest -v impl.tests.test_review_protocol`: final 212 PASS, 0 FAIL, 0 ERROR, 0 SKIP; primeira execucao de 209 teve 4 erros de fixture, preservados acima.
+- `python -B -m unittest -v impl.tests.test_gap_handling`: sandbox 89 testes/178 erros WinError 5; repeticao elevada 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- `git diff --check`: passou.
+- `git status --short`: somente os tres arquivos autorizados.
+
+## Hashes finais
+- `review_protocol.py`: `E7E6C3BE51CE0FCA073EFD10B3906ACB20CF51501AB162FB695C32C387823954`
+- `test_review_protocol.py`: `5C552684C846C19D905A2B0B5E27B822E0E6AA57B331E311C174C410DF476691`
+
+## Proximo passo recomendado
+O usuario publicar manualmente no GitHub somente os tres arquivos autorizados e informar exatamente: `Atualizei o GitHub do RickCraft.`
+
+## Motivo do proximo passo
+TASK-009 so pode ser aprovada apos revisao read-only da publicacao.
+
+## O que NAO deve ser feito ainda
+Nao iniciar TASK-010. Nao executar CONVERGE. Nao gerar Release. Nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT
+
+## Fase
+IMPLEMENT - TASK-009 - SPEC-0000000002
+
+## Estado
+AGUARDANDO_APROVACAO
+
+## Objetivo que foi executado
+Integrar avaliacao, conflitos, propostas, continuidade, conclusao e resposta em fluxo puro e deterministico.
+
+## Fonte interna utilizada
+SPEC, PLAN, TASKS, status, implementacao SPEC2 TASK-001 a TASK-008 e `gap_handling.py`/`test_gap_handling.py` read-only.
+
+## Documentacao externa relevante consultada
+Nenhuma.
+
+## Artefatos produzidos
+Nenhum arquivo novo; entrypoint e aggregate adicionados ao modulo existente.
+
+## Principais decisoes
+Somente um aggregate frozen. As APIs existentes `evaluate_source_conflict`, `assess_change_proposal`, `evaluate_scope_continuity`, `sort_review_findings` e `renderizar_resposta` permanecem fronteiras de seus comportamentos.
+
+## Pendencias que exigem validacao
+Revisao read-only da TASK-009 publicada.
+
+## Bloqueios
+Nenhum; limitacao ambiental sandboxada SPEC1 foi superada pela repeticao autorizada.
+
+## Proximo passo proposto
+Revisao publicada da TASK-009 apos `Atualizei o GitHub do RickCraft.`
+
+## Autorizacao necessaria
+Aprovacao explicita da TASK-009 antes de qualquer TASK-010.
+
+## Arquivos que o revisor deve analisar
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`

@@ -27,10 +27,35 @@ class RequestedEffect(Enum):
     EXTERNALITY = "EXTERNALITY"
 
 
+class EvidenceKind(Enum):
+    """Classe declarada da evidência recebida pelo Core."""
+
+    DIRECT_OBSERVATION = "DIRECT_OBSERVATION"
+    PERSISTED_EVIDENCE = "PERSISTED_EVIDENCE"
+    REPORTED = "REPORTED"
+    INFERENCE = "INFERENCE"
+
+
+class VerificationStatus(Enum):
+    """Estado declarado de um claim, distinto da proveniência da evidência."""
+
+    EXECUTED_OBSERVED = "EXECUTED_OBSERVED"
+    HISTORICAL_IDENTIFIED = "HISTORICAL_IDENTIFIED"
+    NOT_EXECUTED = "NOT_EXECUTED"
+    UNAVAILABLE = "UNAVAILABLE"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
 def _texto_obrigatorio(value: object, field: str) -> str:
     if type(value) is not str or not value.strip():
         raise ReviewInputError(f"{field} deve ser texto explícito não vazio.")
     return value
+
+
+def _texto_opcional(value: object, field: str) -> str | None:
+    if value is None:
+        return None
+    return _texto_obrigatorio(value, field)
 
 
 def _sequencia(value: object, field: str) -> tuple[object, ...]:
@@ -279,3 +304,104 @@ class AuthorityContext:
             }:
                 return relation
         return None
+
+
+@dataclass(frozen=True)
+class EvidenceReference:
+    """Referência explícita a evidência já fornecida; não acessa sua origem."""
+
+    kind: EvidenceKind
+    origin: str
+    reference: str
+    target: str
+    version: str | None = None
+    digest: str | None = None
+    limitation: str | None = None
+    verifiability: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kind, EvidenceKind):
+            raise ReviewInputError("kind deve ser um EvidenceKind explícito.")
+        _texto_obrigatorio(self.origin, "origin")
+        _texto_obrigatorio(self.reference, "reference")
+        _texto_obrigatorio(self.target, "target")
+        _texto_opcional(self.version, "version")
+        _texto_opcional(self.digest, "digest")
+        _texto_opcional(self.limitation, "limitation")
+        _texto_opcional(self.verifiability, "verifiability")
+
+
+@dataclass(frozen=True)
+class VerificationClaim:
+    """Claim tipado associado apenas às referências fornecidas pelo chamador."""
+
+    assertion: str
+    target: str
+    status: VerificationStatus
+    evidence: tuple[EvidenceReference, ...] = ()
+    version: str | None = None
+
+    def __post_init__(self) -> None:
+        _texto_obrigatorio(self.assertion, "assertion")
+        _texto_obrigatorio(self.target, "target")
+        if not isinstance(self.status, VerificationStatus):
+            raise ReviewInputError("status deve ser um VerificationStatus explícito.")
+        _texto_opcional(self.version, "claim version")
+
+        references = _sequencia(self.evidence, "evidence")
+        if any(not isinstance(item, EvidenceReference) for item in references):
+            raise ReviewInputError(
+                "evidence deve conter somente EvidenceReference."
+            )
+        if len(set(references)) != len(references):
+            raise ReviewInputError("evidence não pode conter referências duplicadas.")
+
+        for reference in references:
+            if reference.target != self.target:
+                raise ReviewInputError(
+                    "A evidência deve pertencer ao mesmo target do claim."
+                )
+            if (
+                self.version is not None
+                and reference.version is not None
+                and reference.version != self.version
+            ):
+                raise ReviewInputError(
+                    "A versão da evidência não corresponde à versão do claim."
+                )
+
+        if self.status is VerificationStatus.EXECUTED_OBSERVED:
+            if not references:
+                raise ReviewInputError(
+                    "EXECUTED_OBSERVED requer evidência de observação direta."
+                )
+            if not any(
+                item.kind is EvidenceKind.DIRECT_OBSERVATION
+                for item in references
+            ):
+                raise ReviewInputError(
+                    "EXECUTED_OBSERVED exige DIRECT_OBSERVATION; relato, inferência ou histórico não bastam."
+                )
+        elif self.status is VerificationStatus.HISTORICAL_IDENTIFIED:
+            if not any(
+                item.kind is EvidenceKind.PERSISTED_EVIDENCE
+                for item in references
+            ):
+                raise ReviewInputError(
+                    "HISTORICAL_IDENTIFIED requer referência PERSISTED_EVIDENCE compatível."
+                )
+
+        ordered = tuple(sorted(
+            references,
+            key=lambda item: (
+                item.kind.value,
+                item.origin,
+                item.reference,
+                item.target,
+                item.version or "",
+                item.digest or "",
+                item.limitation or "",
+                item.verifiability or "",
+            ),
+        ))
+        object.__setattr__(self, "evidence", ordered)

@@ -13,10 +13,14 @@ from review_protocol import (  # noqa: E402
     AuthorityContext,
     AuthorityReference,
     AuthorizedPrecedence,
+    EvidenceKind,
+    EvidenceReference,
     RequestedEffect,
     ReviewInputError,
     ReviewRequest,
     ReviewScope,
+    VerificationClaim,
+    VerificationStatus,
 )
 
 
@@ -394,6 +398,191 @@ class AuthorityContextTests(unittest.TestCase):
         a = AuthorityContext([first, second], ())
         b = AuthorityContext([second, first], ())
         self.assertEqual(a, b)
+
+
+class EvidenceAndClaimTests(unittest.TestCase):
+    @staticmethod
+    def evidence(
+        kind: EvidenceKind = EvidenceKind.DIRECT_OBSERVATION,
+        **overrides: object,
+    ) -> EvidenceReference:
+        values: dict[str, object] = {
+            "kind": kind,
+            "origin": "unittest",
+            "reference": "test://case-1",
+            "target": "module.py",
+            "version": "revision-1",
+            "digest": "SHA256:explicit-value",
+        }
+        values.update(overrides)
+        return EvidenceReference(**values)  # type: ignore[arg-type]
+
+    @staticmethod
+    def claim(
+        status: VerificationStatus = VerificationStatus.EXECUTED_OBSERVED,
+        evidence: object = (),
+        **overrides: object,
+    ) -> VerificationClaim:
+        values: dict[str, object] = {
+            "assertion": "O teste foi executado com resultado observado.",
+            "target": "module.py",
+            "version": "revision-1",
+            "status": status,
+            "evidence": evidence,
+        }
+        values.update(overrides)
+        return VerificationClaim(**values)  # type: ignore[arg-type]
+
+    def test_quatro_evidence_kinds_sao_distintos(self) -> None:
+        self.assertEqual(
+            {kind.value for kind in EvidenceKind},
+            {"DIRECT_OBSERVATION", "PERSISTED_EVIDENCE", "REPORTED", "INFERENCE"},
+        )
+        self.assertEqual(len(set(EvidenceKind)), 4)
+
+    def test_evidence_reference_valida_preserva_campos_fornecidos(self) -> None:
+        item = self.evidence(
+            EvidenceKind.PERSISTED_EVIDENCE,
+            verifiability="MATCHED",
+            limitation="observação histórica",
+        )
+        self.assertEqual(item.digest, "SHA256:explicit-value")
+        self.assertEqual(item.verifiability, "MATCHED")
+        self.assertEqual(item.limitation, "observação histórica")
+        self.assertEqual(item.version, "revision-1")
+
+    def test_campos_obrigatorios_vazios_sao_rejeitados(self) -> None:
+        for field in ("origin", "reference", "target"):
+            with self.subTest(field=field), self.assertRaises(ReviewInputError):
+                self.evidence(**{field: " \t"})
+
+    def test_campos_opcionais_vazios_sao_rejeitados(self) -> None:
+        for field in ("version", "digest", "limitation", "verifiability"):
+            with self.subTest(field=field), self.assertRaises(ReviewInputError):
+                self.evidence(**{field: " "})
+
+    def test_evidence_kind_arbitrario_nao_e_coagido(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "EvidenceKind explícito"):
+            self.evidence("DIRECT_OBSERVATION")  # type: ignore[arg-type]
+
+    def test_evidence_reference_e_imutavel(self) -> None:
+        item = self.evidence()
+        with self.assertRaises(FrozenInstanceError):
+            item.target = "other.py"  # type: ignore[misc]
+
+    def test_executed_observed_requer_evidence_direta_alvo_versao_compativeis(self) -> None:
+        item = self.evidence()
+        claim = self.claim(evidence=[item])
+        self.assertEqual(claim.status, VerificationStatus.EXECUTED_OBSERVED)
+        self.assertEqual(claim.evidence, (item,))
+
+    def test_executed_observed_sem_evidence_e_rejeitado(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "requer evidência"):
+            self.claim(evidence=())
+
+    def test_reported_sozinho_nao_sustenta_executed_observed(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "DIRECT_OBSERVATION"):
+            self.claim(evidence=[self.evidence(EvidenceKind.REPORTED)])
+
+    def test_inference_sozinha_nao_sustenta_executed_observed(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "DIRECT_OBSERVATION"):
+            self.claim(evidence=[self.evidence(EvidenceKind.INFERENCE)])
+
+    def test_historical_evidence_nao_sustenta_executed_observed(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "DIRECT_OBSERVATION"):
+            self.claim(evidence=[self.evidence(EvidenceKind.PERSISTED_EVIDENCE)])
+
+    def test_evidence_de_outro_target_e_rejeitada(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "mesmo target"):
+            self.claim(evidence=[self.evidence(target="other.py")])
+
+    def test_versoes_explicitamente_diferentes_sao_rejeitadas(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "não corresponde"):
+            self.claim(evidence=[self.evidence(version="revision-2")])
+
+    def test_versao_ausente_na_evidence_nao_e_inferida(self) -> None:
+        item = self.evidence(version=None)
+        claim = self.claim(evidence=[item])
+        self.assertIsNone(claim.evidence[0].version)
+
+    def test_historical_identified_permanece_distinto_de_executed_observed(self) -> None:
+        item = self.evidence(EvidenceKind.PERSISTED_EVIDENCE)
+        claim = self.claim(
+            status=VerificationStatus.HISTORICAL_IDENTIFIED, evidence=[item]
+        )
+        self.assertIs(claim.status, VerificationStatus.HISTORICAL_IDENTIFIED)
+        self.assertIsNot(claim.status, VerificationStatus.EXECUTED_OBSERVED)
+
+    def test_historical_identified_sem_evidencia_historica_e_rejeitado(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "PERSISTED_EVIDENCE"):
+            self.claim(
+                status=VerificationStatus.HISTORICAL_IDENTIFIED,
+                evidence=[self.evidence(EvidenceKind.DIRECT_OBSERVATION)],
+            )
+
+    def test_not_executed_pode_ser_registrado_sem_evidence_e_nao_e_positivo(self) -> None:
+        claim = self.claim(status=VerificationStatus.NOT_EXECUTED)
+        self.assertEqual(claim.evidence, ())
+        self.assertIs(claim.status, VerificationStatus.NOT_EXECUTED)
+
+    def test_unavailable_e_inconclusive_permanecem_distintos(self) -> None:
+        unavailable = self.claim(status=VerificationStatus.UNAVAILABLE)
+        inconclusive = self.claim(status=VerificationStatus.INCONCLUSIVE)
+        self.assertIs(unavailable.status, VerificationStatus.UNAVAILABLE)
+        self.assertIs(inconclusive.status, VerificationStatus.INCONCLUSIVE)
+        self.assertNotEqual(unavailable.status, inconclusive.status)
+
+    def test_unavailable_pode_preservar_limitacao_fornecida(self) -> None:
+        item = self.evidence(
+            EvidenceKind.REPORTED,
+            limitation="ambiente indisponível",
+            verifiability="UNAVAILABLE",
+        )
+        claim = self.claim(
+            status=VerificationStatus.UNAVAILABLE,
+            evidence=[item],
+        )
+        self.assertEqual(claim.evidence[0].limitation, "ambiente indisponível")
+        self.assertEqual(claim.evidence[0].verifiability, "UNAVAILABLE")
+
+    def test_estado_arbitrario_nao_e_coagido(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "VerificationStatus explícito"):
+            self.claim(status="PASS")  # type: ignore[arg-type]
+
+    def test_claim_nao_e_criado_positivamente_por_ausencia_de_erro(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.claim(evidence=())
+
+    def test_mutacao_da_lista_original_nao_altera_claim(self) -> None:
+        first = self.evidence(reference="test://first")
+        second = self.evidence(reference="test://second")
+        references = [second, first]
+        claim = self.claim(evidence=references)
+        references.clear()
+        self.assertEqual(len(claim.evidence), 2)
+        self.assertEqual(
+            tuple(item.reference for item in claim.evidence),
+            ("test://first", "test://second"),
+        )
+
+    def test_claim_rejeita_tipo_de_evidence_incorreto(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "somente EvidenceReference"):
+            self.claim(evidence=["test passou"])
+
+    def test_referencia_de_evidence_duplicada_e_rejeitada(self) -> None:
+        item = self.evidence()
+        with self.assertRaisesRegex(ReviewInputError, "duplicadas"):
+            self.claim(evidence=[item, item])
+
+    def test_provenance_states_sao_preservados_sem_se_tornarem_claim_states(self) -> None:
+        item = self.evidence(
+            EvidenceKind.PERSISTED_EVIDENCE, verifiability="CHANGED_REASSESS"
+        )
+        claim = self.claim(
+            status=VerificationStatus.HISTORICAL_IDENTIFIED, evidence=[item]
+        )
+        self.assertEqual(claim.evidence[0].verifiability, "CHANGED_REASSESS")
+        self.assertIs(claim.status, VerificationStatus.HISTORICAL_IDENTIFIED)
 
 
 if __name__ == "__main__":

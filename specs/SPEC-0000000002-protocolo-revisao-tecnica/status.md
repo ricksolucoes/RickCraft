@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-002 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS — TASK-003 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -19,6 +19,58 @@ O responsável autorizou exclusivamente TASK-001 nas versões SPEC `F43B54ACBC1C
 ## Início de IMPLEMENT — TASK-002 — 2026-10-11
 
 O responsável confirmou a aprovação externa da TASK-001. Seus hashes aceitos são `review_protocol.py` `D5A77D092E293FF5E60F07C55A7A751B1BCAEBC382DD5C92FCC4BF50876063C7` (blob Git `77d1fca0d49e5fba99801a40eabc7bbe64e3f033`) e `test_review_protocol.py` `1E2B01EFB17972608BC8F5AC719950D6011465F9D7EDF5530B5D32E49196B1F8` (blob Git `f46e9595cd2a9bc4138dedb1e150118d75593235`). Os hashes de SPEC/PLAN/TASKS foram recalculados e conferem com as versões aprovadas; ANALYZE-01 permanece PASS. A autorização recebida é somente para TASK-002. Etapa atual = IMPLEMENT; TASK-001 = COMPLETE — aprovada após revisão externa; TASK-002 = IN_PROGRESS; TASK-003–TASK-013 não executadas; CONVERGE = NOT_STARTED.
+
+## Início de IMPLEMENT — TASK-003 — 2026-10-11
+
+O responsável confirmou a aprovação externa da TASK-002. Seus hashes aceitos são `review_protocol.py` `3F16B432A421DEE448A9635711DCEEA78D4065404C1B84BB4C5480D21F88C1F2` (blob Git `473ff66c6bec6fecec26d2be288b05e22b6ef37f`) e `test_review_protocol.py` `8129136DEAAADC405CD91A137FBA8F732189FD5CB213C113BA297A2288C08DB2` (blob Git `69251531146b4d87f50099331482cd7cc98c15ba`). Os hashes de SPEC/PLAN/TASKS foram recalculados e conferem com as versões aprovadas; ANALYZE-01 permanece PASS. A autorização recebida é somente para TASK-003. Etapa atual = IMPLEMENT; TASK-001 e TASK-002 = COMPLETE e aprovadas; TASK-003 = IN_PROGRESS; TASK-004–TASK-013 não executadas; CONVERGE = NOT_STARTED.
+
+## IMPLEMENT — TASK-003 — Evidências e verification claims
+
+- **Estado:** TASK-001 e TASK-002 = COMPLETE — aprovadas após revisão externa; TASK-003 = COMPLETE — aguardando revisão; TASK-004–TASK-013 não executadas. IMPLEMENT permanece IN_PROGRESS; ANALYZE permanece PASS; CONVERGE permanece NOT_STARTED.
+- **Versões usadas:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; gate `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`.
+- **TASK-002 preservada:** hashes aceitos `review_protocol.py` `3F16B432A421DEE448A9635711DCEEA78D4065404C1B84BB4C5480D21F88C1F2` e `test_review_protocol.py` `8129136DEAAADC405CD91A137FBA8F732189FD5CB213C113BA297A2288C08DB2`.
+- **Contratos:** adicionados `EvidenceKind`, `VerificationStatus`, `EvidenceReference` e `VerificationClaim`. EvidenceReference preserva kind/origin/reference/target e campos opcionais version/digest/limitation/verifiability, todos explicitamente fornecidos, sem abrir origem, calcular hash ou inferir campo ausente. As quatro classes de evidência e cinco estados de claim são enums distintos. Status de verificabilidade como `MATCHED`, `CHANGED_REASSESS`, `UNAVAILABLE` e `UNVERIFIABLE` permanecem valores opacos separados do estado de VerificationClaim.
+- **Validação:** `EXECUTED_OBSERVED` requer ao menos uma `DIRECT_OBSERVATION`; `REPORTED`, `INFERENCE` ou `PERSISTED_EVIDENCE` sozinhos não demonstram execução atual. `HISTORICAL_IDENTIFIED` requer referência `PERSISTED_EVIDENCE` e permanece distinto de execução observada. Claims validam target e versões quando ambas explícitas; coleções são copiadas, referências duplicadas rejeitadas e ordenação canonizada. `NOT_EXECUTED` admite zero referências; `UNAVAILABLE` e `INCONCLUSIVE` permanecem estados distintos. Nenhum booleano ou ausência de erro gera claim positivo.
+- **Testes executados:** `python -B -m unittest -v impl.tests.test_review_protocol` — `Ran 70 tests`; `OK`; 70 PASS, 0 FAIL, 0 SKIP. Inclui integralmente os testes regressivos de TASK-001 e TASK-002, além das classes, estados, campos, compatibilidade alvo/versão, imutabilidade e não promoção de histórico/relato/inferência.
+- **Hashes SHA-256 finais, calculados duas vezes após a última alteração e leitura UTF-8 estrita:** `review_protocol.py` = `2F9F2AE2512E78572A7561666122967CAF11DBF4253B3846F15B1D1731852C96`; `test_review_protocol.py` = `93981E2A1E04068597900723B188685B8A59FF87925DF0D79616B05DEDC30FC9`.
+- **Fronteiras:** runtime importa somente `dataclasses`, `enum`, `typing` e `__future__` da biblioteca padrão; inspeção não encontrou import/chamada de provenance, filesystem/workspace, gap_handling, rede, subprocesso ou Git. Nenhuma observação automática, publicação, persistência, cálculo de hash, efeito externo, Release ou push ocorreu. Nenhum módulo/teste SPEC1 foi alterado.
+- **Validação normativa:** hashes SPEC/PLAN/TASKS continuam nas versões aprovadas; ANALYZE-01 permanece PASS e último gate válido. `git diff --check` foi executado ao final.
+
+### CHECKPOINT RICKCRAFT — TASK-003
+
+## Fase executada
+IMPLEMENT — TASK-003 — SPEC-0000000002
+
+## Objetivo da execução
+Representar evidências e verification claims sem duplicar proveniência SPEC1 nem observar fontes automaticamente.
+
+## Estado
+AGUARDANDO_APROVAÇÃO — TASK-003 concluída.
+
+## Gate utilizado
+ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS.
+
+## Testes executados
+`python -B -m unittest -v impl.tests.test_review_protocol` — 70/70 PASS; 0 FAIL; 0 SKIP.
+
+## Evidências
+`review_protocol.py`: `2F9F2AE2512E78572A7561666122967CAF11DBF4253B3846F15B1D1731852C96`.
+`test_review_protocol.py`: `93981E2A1E04068597900723B188685B8A59FF87925DF0D79616B05DEDC30FC9`.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Próximo passo recomendado
+Revisar exclusivamente TASK-003 antes de autorizar TASK-004.
+
+## O que NÃO deve ser feito ainda
+Não executar TASK-004, integrar `gap_handling`, executar CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-003
+
+Revisar `review_protocol.py`, `test_review_protocol.py` e este registro. TASK-003 está COMPLETE após 70 testes focais aprovados, incluindo a regressão de TASK-001/002. TASK-004–TASK-013 não foram iniciadas. IMPLEMENT continua IN_PROGRESS; CONVERGE NOT_STARTED. É necessária autorização explícita separada antes de TASK-004.
 
 ## IMPLEMENT — TASK-002 — Contexto de autoridade e precedência explícita
 

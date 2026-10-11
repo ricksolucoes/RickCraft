@@ -659,3 +659,37 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - TASK-004 continua restrita à identidade e ao diretório ANL. Nenhum diretório de TipoDocumento, `DOC-*.md`, documento, Release ou conteúdo de TASK-005 foi produzido.
 - IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisão desta correção antes de autorizar TASK-005.
+
+
+## IMPLEMENT TASK-005 - evid?ncia
+
+### Estado, gate e escopo
+
+- Executada somente TASK-005: cat?logo documental V1, valida??o fechada de tipo e IDs, deriva??o segura de caminho e cria??o idempotente apenas da pasta de tipo solicitada.
+- SPEC, PLAN e TASKS mantiveram os hashes do ANALYZE-03: `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece PASS para essas entradas; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED; ?ltimo gate v?lido: `ANALYZE-2026-10-10-SPEC-0000000001-03`.
+- TASK-001 a TASK-005 executadas; TASK-006 a TASK-013 pendentes. TASK-001 a TASK-004 e suas evid?ncias foram preservadas. Nenhuma depend?ncia externa foi instalada ou adicionada.
+- Ambiente: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`).
+
+### Cat?logo, caminhos e artefatos
+
+- `type_catalog_version = 1`; os oito tokens exatos s?o `context`, `analysis`, `evidence`, `decision`, `divergence`, `blocker`, `result` e `handoff`. O cat?logo ? fechado e imut?vel nesta vers?o; cada entrada registra sua finalidade em pt-BR.
+- O caminho ? derivado como `<workspace>/<analysis_id>/<document_type>/<document_id>.md`. `analysis_id` reutiliza a valida??o ANL-UUIDv4 de TASK-004; `document_id` exige DOC-UUIDv4 can?nico min?sculo. Tipos desconhecidos, altera??es de caixa/espa?o, caminhos absolutos, separadores e traversal s?o rejeitados.
+- A deriva??o n?o escreve. A fun??o expl?cita de cria??o materializa somente a pasta de tipo solicitada, de modo idempotente e sem remover conte?do. An?lise redirecionada, junction/reparse reconhec?vel pela stdlib, pasta de tipo redirecionada ou resolu??o fora da an?lise s?o rejeitadas.
+- Criado `impl/src/RickCraft/document_catalog.py`, SHA-256 `7FE3206000E542DEBD4FEA7C369528C1795C50BBAF3A5FDCD4EF891E2CF3D687`.
+- Criado `impl/tests/test_document_catalog.py`, SHA-256 `3BDAE4F09CFFCFFDD85ADF4B5AC91A54D6BCEEE3FD364DDCD6DD1D3022496FAF`.
+- Nenhum componente de TASK-001 a TASK-004 foi alterado. SPEC/PLAN/TASKS, policies, registries e README permaneceram inalterados.
+
+### Testes
+
+- Su?te espec?fica: `python -B -m unittest discover -s impl/tests -p test_document_catalog.py -v` - 15/15 passaram.
+- Regress?o completa: `python -B -m unittest discover -s impl/tests -v` - 94/94 passaram.
+- Os testes cobrem a vers?o e os oito tokens, rejei??es de token/IDs/caminhos, layout/filename, aus?ncia de escrita durante deriva??o, cria??o idempotente, preserva??o de conte?do, cria??o somente do tipo solicitado, conten??o f?sica e detector de junction da stdlib. Os fixtures s?o tempor?rios e controlados.
+- As tentativas iniciais no sandbox falharam com WinError 5 ao criar/limpar fixtures tempor?rios. Os dois comandos acima foram executados novamente com permiss?o elevada e passaram. A eleva??o foi limita??o ambiental, n?o requisito do produto.
+- Quatorze diret?rios tempor?rios deixados pelas tentativas sandboxadas em `impl/tests/tmp*` foram removidos ap?s validar que cada um era filho direto de `impl/tests`. N?o eram diret?rios ANL/workspace nem continham sa?das operacionais.
+
+### Limites e estado operacional
+
+- Nenhum documento operacional foi criado ou publicado; nenhum `DOC-*.md` foi criado. Nenhuma pasta de tipo foi criada fora dos fixtures tempor?rios de teste.
+- Os diret?rios ANL hist?ricos em `impl/.workspace/` foram preservados e n?o foram acessados ou preenchidos nesta tarefa. Nenhuma D-02 foi executada.
+- TASK-006 n?o foi iniciada. Nenhuma serializa??o documental, publica??o, CONVERGE ou Release foi executado.
+- Estado final: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. Pr?ximo passo: revisar exclusivamente TASK-005 antes de autorizar TASK-006.

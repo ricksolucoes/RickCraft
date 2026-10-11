@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -55,6 +56,37 @@ class ClassificacaoFalhaTests(unittest.TestCase):
             classificar_falha(erro, "reler arquivo de sonda"),
             ResultadoCapacidade.ERRO_DESCONHECIDO,
         )
+
+
+    def test_oserror_sem_errno_e_erro_desconhecido(self) -> None:
+        erro = OSError("falha sem código")
+        self.assertIsNone(erro.errno)
+        self.assertIs(
+            classificar_falha(erro, "sondar raiz"),
+            ResultadoCapacidade.ERRO_DESCONHECIDO,
+        )
+
+    def test_errno_e_winerror_ausentes_nunca_sao_causa_concreta(self) -> None:
+        erro = OSError("falha sem código")
+        erro.winerror = None
+        self.assertIsNone(erro.errno)
+        self.assertIsNone(erro.winerror)
+        self.assertIs(
+            classificar_falha(erro, "sondar raiz"),
+            ResultadoCapacidade.ERRO_DESCONHECIDO,
+        )
+
+    def test_simbolo_errno_opcional_ausente_nao_corresponde_a_none(self) -> None:
+        errno_sem_simbolos_opcionais = SimpleNamespace(
+            EACCES=errno.EACCES,
+            EPERM=errno.EPERM,
+            EEXIST=errno.EEXIST,
+        )
+        with patch("workspace_probe.errno", errno_sem_simbolos_opcionais):
+            resultado = classificar_falha(OSError("sem código"), "sondar raiz")
+
+        self.assertFalse(hasattr(errno_sem_simbolos_opcionais, "EROFS"))
+        self.assertIs(resultado, ResultadoCapacidade.ERRO_DESCONHECIDO)
 
 
 class SondaWorkspaceTests(unittest.TestCase):
@@ -222,6 +254,25 @@ class IntegracaoResolvedorTests(unittest.TestCase):
                 avaliador.evidencias[0].resultado,
                 ResultadoCapacidade.ERRO_DESCONHECIDO,
             )
+
+    def test_errno_ausente_no_preferencial_bloqueia_sem_sondar_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temporario:
+            raiz = self.criar_raiz_rickcraft(Path(temporario))
+            caminhos = derivar_caminhos_workspace(raiz)
+            avaliadas: list[Path] = []
+
+            def avaliar(candidata: Path) -> ResultadoCapacidade:
+                avaliadas.append(candidata)
+                if candidata == caminhos.preferencial:
+                    return classificar_falha(
+                        OSError("falha sem código"), "criar raiz candidata"
+                    )
+                return ResultadoCapacidade.UTILIZAVEL
+
+            with self.assertRaises(ResultadoDesconhecidoError):
+                resolver_workspace(raiz, avaliar)
+
+            self.assertEqual(avaliadas, [caminhos.preferencial])
 
     def test_duas_raizes_concretamente_indisponiveis_nao_selecionam(self) -> None:
         with tempfile.TemporaryDirectory() as temporario:

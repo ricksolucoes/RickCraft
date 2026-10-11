@@ -28,8 +28,8 @@
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
 | `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001, TASK-002 e TASK-003 executadas; TASK-004 a TASK-013 pendentes. |
-| `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `3A3298C0B0C982F3D126593012C89231E529D8D9FBF95512608A8A93D86EC3C4` | Avaliador callable concreto de D-02/D-03 integrado ao callback existente do resolvedor; não decide precedência ou fallback. |
-| `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `BC8DAF114890D11AFF28863CD0E5D3E45BE1D9D1E71C18C3AE13F6F3CD12C206` | 13 testes específicos controlados; fixtures não substituem a sonda real Debug. |
+| `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
+| `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600` | 17 testes específicos, incluindo ausência de errno/símbolo opcional e bloqueio do resolvedor sem sonda de fallback. |
 
 ## Histórico de estado
 
@@ -69,6 +69,7 @@
 | 2026-10-10 | ANALYZE | PASS | Gate documental integral concluído para as três versões exatas registradas. TASK-002/TASK-003 são executáveis sem circularidade semântica; CA-003 está coerente; não foram encontrados achados bloqueantes. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. IMPLEMENT permanece IN_PROGRESS, sem retomada nesta execução; CONVERGE permanece NOT_STARTED. Último gate válido: ANALYZE PASS somente para esses hashes. |
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | Corrigido o isolamento da suíte de testes de TASK-002: removida a dependência da inexistência global de `.workspace/`; os testes verificam ausência de operações mutáveis do resolvedor nos fluxos preferencial, fallback e erro desconhecido. Hash atual de `test_workspace_resolver.py`: `58C9CF9CD1A26D3BC80D878B13A94B3D81200DCDDCDC4DD6726B5BB79F4B5334`. Suíte específica: 20/20; regressão completa: 33/33 na execução final elevada. `workspace_resolver.py` e arquivos da TASK-001 permaneceram inalterados. TASK-003 não foi iniciada; D-02 não foi executada; CONVERGE permanece NOT_STARTED. |
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-003 implementada e testada sem alterar TASK-001/TASK-002. `workspace_probe.py` SHA-256 `3A3298C0B0C982F3D126593012C89231E529D8D9FBF95512608A8A93D86EC3C4`; `test_workspace_probe.py` SHA-256 `BC8DAF114890D11AFF28863CD0E5D3E45BE1D9D1E71C18C3AE13F6F3CD12C206`. Python 3.12.9 em Windows 11 (`win32`). Testes finais: TASK-003 13/13; TASK-002 20/20; suíte completa 46/46. As suítes precisaram de execução elevada porque o sandbox negou criação/limpeza de fixtures em TEMP; a sonda real foi executada sem elevação no contexto desta sessão. D-02 real: `impl/.workspace/` UTILIZÁVEL e selecionado como `preferred`; criação exclusiva, escrita, flush, fsync, releitura, `os.link` para destino ausente e rejeição de destino existente com bytes sentinela preservados foram observados. Nenhum erro D-03, resíduo ou aviso de limpeza; fallback `impl/src/RickCraft/.workspace/` não sondado porque o preferencial passou. A raiz operacional foi criada e permaneceu vazia; nenhum ANL/DOC nem documento operacional foi criado. TASK-004 a TASK-013 pendentes; CONVERGE NOT_STARTED. |
+| 2026-10-10 | IMPLEMENT | IN_PROGRESS | Correção final D-03 em TASK-003: `errno=None` podia coincidir com símbolos opcionais ausentes tratados como `None`. A classificação agora só considera códigos errno presentes; `OSError` sem código é ERRO_DESCONHECIDO e bloqueia o fallback. TASK-001/TASK-002 e contratos normativos preservados. Novos hashes: `workspace_probe.py` `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0`; `test_workspace_probe.py` `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600`. Testes finais: TASK-003 17/17; TASK-002 20/20; suíte completa 50/50 antes e depois da sonda real. A execução sandboxada de testes encontrou WinError 5 nos fixtures TEMP; as repetições elevadas passaram. D-02 real repetida no código final: `impl/.workspace/` UTILIZÁVEL e selecionado como `preferred`; fallback não sondado; nenhum resíduo ou aviso. TASK-004 não iniciada; nenhum ANL/DOC ou Release produzido; CONVERGE permanece NOT_STARTED. |
 
 ## Pendências e invalidações
 
@@ -539,3 +540,42 @@ Foram encontradas exatamente 13 tarefas, TASK-001 a TASK-013. O grafo é acícli
 - `workspace_resolver.py`, `test_workspace_resolver.py`, `rickcraft_root.py` e `test_rickcraft_root.py` permaneceram inalterados. Nenhuma TASK-004 foi iniciada.
 - A sonda real comprova somente `impl/.workspace/` no contexto observado; qualquer outra raiz exige sua própria avaliação antes do uso.
 - TASK-003 está concluída para seu escopo, sem nova decisão arquitetural. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED.
+
+## Correção final de D-03 — IMPLEMENT TASK-003 — evidência
+
+### Escopo e estado preservado
+
+- Corrigida somente a classificação D-03 em `workspace_probe.py` e adicionados testes em `test_workspace_probe.py`; o resolvedor e a política dos três resultados semânticos não mudaram.
+- SPEC, PLAN e TASKS mantêm os SHA-256 do ANALYZE-03: `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`.
+- ANALYZE permanece PASS para essas entradas; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. TASK-001 e TASK-002, seus arquivos e evidências, foram preservados. TASK-003 corrigida; TASK-004–TASK-013 pendentes. Nenhum gate foi invalidado.
+- Ambiente observado: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa instalada ou adicionada.
+
+### Correção e arquivos
+
+- Defeito: `getattr(errno, símbolo, None)` podia inserir `None` em comparações/conjuntos e promover `OSError.errno is None` a impossibilidade concreta.
+- Correção: códigos opcionais são reunidos somente quando existentes e não nulos; todas as comparações errno exigem código não nulo. Ausência de código retorna `ERRO_DESCONHECIDO`. Códigos Windows concretos e as famílias D-03 existentes foram preservados. `EEXIST` continua desconhecido e não habilita fallback.
+- `workspace_probe.py`: hash anterior `3A3298C0B0C982F3D126593012C89231E529D8D9FBF95512608A8A93D86EC3C4`; novo SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0`.
+- `test_workspace_probe.py`: hash anterior `BC8DAF114890D11AFF28863CD0E5D3E45BE1D9D1E71C18C3AE13F6F3CD12C206`; novo SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600`.
+- Únicos arquivos alterados nesta correção: os dois acima e este `status.md`.
+
+### Testes executados
+
+- `python -m unittest discover -s impl/tests -p test_workspace_probe.py -v` — 17/17 passaram.
+- `python -m unittest discover -s impl/tests -p test_workspace_resolver.py -v` — 20/20 passaram.
+- `python -m unittest discover -s impl/tests -v` — 50/50 passaram antes da sonda real e 50/50 novamente depois dela.
+- A primeira execução sandboxada de testes falhou por WinError 5 ao criar/limpar fixtures em TEMP. As execuções acima foram repetidas com permissão elevada e passaram; elevação é limitação ambiental, não requisito do produto.
+- Os novos testes cobrem `OSError("falha sem código")`, `errno=None` com `winerror=None`, símbolo opcional `EROFS` ausente, preservação de causas concretas, `EEXIST` desconhecido e integração em que o erro sem código do preferencial bloqueia sem avaliar o fallback.
+
+### Sonda real D-02 após a correção
+
+- Comando executado: `python -c "import json,sys; from pathlib import Path; sys.path.insert(0,str(Path('impl/src/RickCraft').resolve())); from workspace_probe import AvaliadorWorkspace; from workspace_resolver import resolver_workspace; raiz=Path('impl/src/RickCraft').resolve(); avaliador=AvaliadorWorkspace(); selecionada=resolver_workspace(raiz,avaliador); print(json.dumps({'rickcraft_root':str(raiz),'selecionada':selecionada.tipo.value,'raiz_selecionada':str(selecionada.caminho),'avaliacoes':[{'raiz':str(e.raiz),'resultado':e.resultado.value,'capacidades':e.capacidades,'operacao_falha':e.operacao_falha,'errno':e.errno,'winerror':e.winerror,'residuos':[str(p) for p in e.residuos],'avisos':e.avisos} for e in avaliador.evidencias]},ensure_ascii=True,indent=2))"`.
+- Resultado observado: preferencial `C:\Projects\Language\Skills\RickCraft\impl\.workspace\` retornou `UTILIZAVEL` e foi selecionado como `preferred`. O fallback `impl/src/RickCraft/.workspace/` não foi sondado.
+- A raiz preferencial já existente foi verificada como diretório. Também foram observados diretório temporário exclusivo, `open("xb")`, escrita, `flush`, `fsync`, releitura, `os.link` ao destino ausente, verificação do destino e rejeição de destino preexistente sem substituição.
+- Resíduos: nenhum. Avisos de limpeza: nenhum. A raiz preferencial operacional existe e permaneceu vazia após a sonda; nenhum conteúdo documental foi criado. Nenhum `ANL-*`, `DOC-*.md` ou Release foi produzido.
+
+### Documentação externa consultada
+
+- [Documentação Python 3.12 — errno](https://docs.python.org/3.12/library/errno.html): símbolos não usados na plataforma corrente não são definidos.
+- [Documentação Python 3.12 — exceções embutidas / OSError](https://docs.python.org/3.12/library/exceptions.html#OSError): `errno` e `winerror` podem ser `None`; `winerror` é específico do Windows.
+
+TASK-004 não foi iniciada. Não foram criados `ANL-*` nem `DOC-*.md`; nenhum Release foi gerado. CONVERGE permanece NOT_STARTED.

@@ -52,36 +52,36 @@ def classificar_falha(exc: OSError, operacao: str) -> ResultadoCapacidade:
     codigo = exc.errno
     winerror = getattr(exc, "winerror", None)
 
-    if codigo in {errno.EACCES, errno.EPERM} or winerror == 5:
+    if (codigo is not None and codigo in _codigos_errno("EACCES", "EPERM")) or winerror == 5:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
-    if codigo == getattr(errno, "EROFS", None) or winerror == 19:
+    if (codigo is not None and codigo in _codigos_errno("EROFS")) or winerror == 19:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
-    if codigo == getattr(errno, "ENOTDIR", None) or winerror in {267}:
+    if (codigo is not None and codigo in _codigos_errno("ENOTDIR")) or winerror == 267:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
-    if codigo in {
-        getattr(errno, "ENOTSUP", None),
-        getattr(errno, "EOPNOTSUPP", None),
-        getattr(errno, "ENOSYS", None),
-    } or winerror in {1, 50, 120}:
+    if (
+        codigo is not None
+        and codigo in _codigos_errno("ENOTSUP", "EOPNOTSUPP", "ENOSYS")
+    ) or winerror in {1, 50, 120}:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
-    if codigo in {
-        getattr(errno, "ENOSPC", None),
-        getattr(errno, "EDQUOT", None),
-        getattr(errno, "EFBIG", None),
-    } or winerror in {39, 112, 1816}:
+    if (
+        codigo is not None
+        and codigo in _codigos_errno("ENOSPC", "EDQUOT", "EFBIG")
+    ) or winerror in {39, 112, 1816}:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
-    if codigo == getattr(errno, "ENAMETOOLONG", None) or winerror == 206:
+    if (codigo is not None and codigo in _codigos_errno("ENAMETOOLONG")) or winerror == 206:
         return ResultadoCapacidade.IMPOSSIBILIDADE_CONCRETA
 
-    # EEXIST só é tratado localmente como colisão aleatória nas operações
-    # exclusivas; fora delas, continua desconhecido e não habilita fallback.
-    if codigo == errno.EEXIST and operacao in {
-        "criar diretório exclusivo da sonda",
-        "criar, escrever e sincronizar arquivo exclusivo",
-        "publicar por os.link para destino ausente",
-    }:
-        return ResultadoCapacidade.ERRO_DESCONHECIDO
+    # EEXIST continua desconhecido nesta classificação e não habilita fallback.
     return ResultadoCapacidade.ERRO_DESCONHECIDO
+
+
+def _codigos_errno(*simbolos: str) -> set[int]:
+    """Retorna somente códigos errno inteiros realmente disponíveis."""
+    return {
+        codigo
+        for simbolo in simbolos
+        if (codigo := getattr(errno, simbolo, None)) is not None
+    }
 
 
 def _evidencia_falha(

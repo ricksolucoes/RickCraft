@@ -136,17 +136,19 @@ class ReleaseBoundariesTests(unittest.TestCase):
             (self.preferred / ANALYSIS_ID / "evidence" / f"{id_documento}.md"),
             (self.fallback / ANALYSIS_ID / "evidence" / f"{id_documento}.md"),
         )
+        preferred_document, fallback_document = para_workspace
         for documento in para_workspace:
             documento.parent.mkdir(parents=True, exist_ok=True)
             documento.write_text("estado operacional\n", encoding="utf-8")
+
+        fallback_relative = fallback_document.relative_to(self.rickcraft_root).as_posix()
 
         allowlist = frozenset(
             {
                 "engine.py",
                 "meu.workspace.txt",
                 # Mesmo presente na allowlist, o estado operacional fica excluído.
-                ".workspace/ANL-bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/evidence/"
-                f"{id_documento}.md",
+                fallback_relative,
             }
         )
         candidatos = (
@@ -158,6 +160,13 @@ class ReleaseBoundariesTests(unittest.TestCase):
             self.rickcraft_root / "tools/debug.ps1",
             *para_workspace,
         )
+
+        with self.assertRaises(ValueError):
+            preferred_document.resolve().relative_to(self.rickcraft_root.resolve())
+        self.assertIn(preferred_document, candidatos)
+        self.assertIn(".workspace", Path(fallback_relative).parts)
+        self.assertIn(fallback_relative, allowlist)
+        self.assertIn(fallback_document, candidatos)
 
         inventario = _inventariar_fixture(self.rickcraft_root, candidatos, allowlist)
 

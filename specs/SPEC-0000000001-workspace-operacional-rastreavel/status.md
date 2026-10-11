@@ -46,7 +46,7 @@
 | `test_document_search.py` | IMPLEMENT TASK-010 | SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70` | 73 testes unitários controlados de filtros, exclusões, ordenação, proveniência recuperada e ausência de mutação persistente. |
 | `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A` | Registra divergence, blocker, decision existente e result; preserva autoridade informada, propaga bloqueios transitivos e rejeita declarações positivas de gate SDD; publica exclusivamente via API TASK-008. |
 | `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858` | 89 testes controlados incluindo autoridade não inferida, dependências transitivas/não avaliadas e variações canônicas de gates. |
-| `test_release_boundaries.py` | IMPLEMENT TASK-012 | SHA-256 `811026537E3B41D238D7EF2F656ADFAA9990B1D54552474655995F2210FB97B4` | Cinco testes de inventário allowlist, exclusão dos workspaces, publicação local em fixture, idioma e ausência de integração externa. |
+| `test_release_boundaries.py` | IMPLEMENT TASK-012 | SHA-256 `4E10856DFCA14EFFDC1FBF8BA19A8D48CDDA03DEC2522D519F5246C14749E7DE` | Cinco testes de inventário allowlist, exclusão dos workspaces, publicação local em fixture, idioma e ausência de integração externa; allowlist do fallback deriva do mesmo arquivo candidato. |
 
 ## Histórico de estado
 
@@ -1018,3 +1018,12 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - TASK-013 não foi iniciada. Nenhum Release foi gerado; o eventual conteúdo em inglês permanece condicionado a autorização explícita de Release conforme POL-0000000003.
 - Nenhum bloqueio material para TASK-012. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisar exclusivamente TASK-012 antes de autorizar TASK-013.
+
+### Correção final da evidência de allowlist — TASK-012
+
+- Data: 2026-10-11. Defeito de evidência: o caminho `.workspace` allowlisted usava uma segunda identidade de análise e não correspondia ao documento fallback efetivamente criado. O teste passava sem provar a exclusão defensiva quando o mesmo arquivo estava na allowlist.
+- Correção: `fallback_relative` agora é derivado de `fallback_document.relative_to(RickCraftRoot).as_posix()` e esse mesmo `fallback_document` é candidato ao inventário. Assertivas de guarda confirmam que o caminho relativo está na allowlist e que o arquivo fallback exato está entre os candidatos. O inventário continua excluindo o componente exato `.workspace`; `meu.workspace.txt` continua permitido. O preferred segue candidato fora da árvore canônica e excluído por contenção.
+- SHA-256 anterior de `test_release_boundaries.py`: `811026537E3B41D238D7EF2F656ADFAA9990B1D54552474655995F2210FB97B4`. Novo SHA-256: `4E10856DFCA14EFFDC1FBF8BA19A8D48CDDA03DEC2522D519F5246C14749E7DE`.
+- TASK-012: `python -B -m unittest discover -s impl/tests -p test_release_boundaries.py -v` — 5/5 PASS. TASK-011: `python -B -m unittest discover -s impl/tests -p test_gap_handling.py -v` — 89/89 PASS. Suíte completa: `python -B -m unittest discover -s impl/tests -v` — 430 executados, 429 PASS, 1 SKIP histórico de symlink real no Windows; resultado OK.
+- A tentativa sandboxada da suíte TASK-012 voltou a receber WinError 5 ao criar/limpar fixtures próprias em `%TEMP%`; a repetição elevada autorizada passou. Nenhuma regra de produto depende de elevação.
+- Nenhum runtime ou SPEC/PLAN/TASKS foi alterado. Nenhum workspace Debug, ANL/DOC real, Release ou pacote foi criado/alterado. TASK-013 não foi iniciada; IMPLEMENT permanece IN_PROGRESS e CONVERGE NOT_STARTED.

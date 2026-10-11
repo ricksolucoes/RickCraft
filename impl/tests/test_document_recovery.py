@@ -370,6 +370,53 @@ class DocumentRecoveryTests(unittest.TestCase):
         self.assertIn("INCONSISTENT_RELATION", {finding.code for finding in result.findings})
         self.assertFalse(result.document(DOCUMENT_ID).relations[0].resolved)
 
+    def test_relacao_sem_analysis_id_para_mesma_analise_e_resolvida_sem_inventar_campo(self) -> None:
+        self.preferred.mkdir()
+        self.write_document(self.preferred, ANALYSIS_ID, DOCUMENT_ID, relations=[
+            {"relation_type": "supports", "document_id": OTHER_DOCUMENT_ID}
+        ])
+        self.write_document(self.preferred, ANALYSIS_ID, OTHER_DOCUMENT_ID)
+        relation = self.recover().document(DOCUMENT_ID).relations[0]
+        self.assertTrue(relation.resolved)
+        self.assertIsNone(relation.analysis_id)
+
+    def test_relacao_sem_analysis_id_nao_resolve_alvo_existente_de_outra_analise(self) -> None:
+        self.preferred.mkdir()
+        source_path, source_bytes = self.write_document(
+            self.preferred, ANALYSIS_ID, DOCUMENT_ID, relations=[
+                {"relation_type": "supports", "document_id": OTHER_DOCUMENT_ID}
+            ]
+        )
+        target_path, target_bytes = self.write_document(
+            self.preferred, OTHER_ANALYSIS_ID, OTHER_DOCUMENT_ID
+        )
+        relation = self.recover().document(DOCUMENT_ID).relations[0]
+        self.assertFalse(relation.resolved)
+        self.assertIsNone(relation.analysis_id)
+        self.assertEqual(source_path.read_bytes(), source_bytes)
+        self.assertEqual(target_path.read_bytes(), target_bytes)
+        self.assertIn("INCONSISTENT_RELATION", {
+            finding.code for finding in self.recover().findings
+        })
+        findings = self.recover().findings
+        diagnostic = next(item for item in findings if item.code == "INCONSISTENT_RELATION")
+        self.assertIn("analysis_id_fonte", " ".join(diagnostic.details))
+        self.assertIn("analysis_id_real_alvo", " ".join(diagnostic.details))
+
+    def test_relacao_cross_analysis_com_analysis_id_correto_e_resolvida(self) -> None:
+        self.preferred.mkdir()
+        self.write_document(self.preferred, ANALYSIS_ID, DOCUMENT_ID, relations=[
+            {
+                "relation_type": "supports",
+                "document_id": OTHER_DOCUMENT_ID,
+                "analysis_id": OTHER_ANALYSIS_ID,
+            }
+        ])
+        self.write_document(self.preferred, OTHER_ANALYSIS_ID, OTHER_DOCUMENT_ID)
+        relation = self.recover().document(DOCUMENT_ID).relations[0]
+        self.assertTrue(relation.resolved)
+        self.assertEqual(relation.analysis_id, OTHER_ANALYSIS_ID)
+
     def test_ciclo_em_relacoes_e_reportado_sem_recursao_infinita(self) -> None:
         self.preferred.mkdir()
         self.write_document(self.preferred, ANALYSIS_ID, DOCUMENT_ID, relations=[

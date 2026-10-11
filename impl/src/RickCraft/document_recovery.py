@@ -552,6 +552,7 @@ def _resolver_relacoes(
     findings: list[RecoveryFinding],
 ) -> tuple[RecoveredRelation, ...]:
     source_id = metadata["document_id"]
+    source_analysis = metadata["analysis_id"]
     result: list[RecoveredRelation] = []
     for relation in metadata["relations"]:
         target_id = relation["document_id"]
@@ -571,6 +572,24 @@ def _resolver_relacoes(
             )
             continue
         actual_analysis = target[0].parsed.metadata["analysis_id"]
+        if expected_analysis is None and actual_analysis != source_analysis:
+            findings.append(
+                RecoveryFinding(
+                    "INCONSISTENT_RELATION",
+                    "Relação entre análises exige analysis_id explícito.",
+                    document_id=source_id,
+                    analysis_id=actual_analysis,
+                    details=(
+                        f"fonte={source_id}; analysis_id_fonte={source_analysis}; "
+                        f"alvo={target_id}; analysis_id_real_alvo={actual_analysis}; "
+                        "analysis_id_declarado=ausente; relação entre análises exige analysis_id explícito",
+                    ),
+                )
+            )
+            result.append(
+                RecoveredRelation(relation["relation_type"], target_id, None, False)
+            )
+            continue
         if expected_analysis is not None and expected_analysis != actual_analysis:
             findings.append(
                 RecoveryFinding(
@@ -578,7 +597,7 @@ def _resolver_relacoes(
                     "analysis_id da relação não corresponde ao documento alvo.",
                     document_id=source_id,
                     analysis_id=actual_analysis,
-                    details=(f"esperado={expected_analysis}; real={actual_analysis}; alvo={target_id}",),
+                    details=(f"declarado={expected_analysis}; real={actual_analysis}; alvo={target_id}",),
                 )
             )
             result.append(
@@ -586,7 +605,7 @@ def _resolver_relacoes(
             )
             continue
         result.append(
-            RecoveredRelation(relation["relation_type"], target_id, actual_analysis, True)
+            RecoveredRelation(relation["relation_type"], target_id, expected_analysis, True)
         )
     return tuple(result)
 

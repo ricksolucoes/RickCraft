@@ -40,8 +40,8 @@
 | `test_provenance.py` | IMPLEMENT TASK-007 | SHA-256 `5C8A4499D9E92D33DC19E8FA1704C7CCBC213798CF9ACBC8694F5A7707EF8064` | 45 testes de hashing, observação, comparação, estados e integração com `inputs` v1. |
 | `document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `56E4F43040890875953F44310C8318B226C69EF22AB39F7127CBBE26F30775FA` | Publicação append-only por `os.link`, reavaliação D-04, colisões, verificação final, diagnóstico D-03 e resíduos preservados também em falhas combinadas com cleanup. |
 | `test_document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `FCC8F4194078E7427168A9A51F1E1E28BB6E58B84DAA99453808DF7DDB60E974` | 47 testes de publicação, concorrência, colisões, reavaliação, verificação e propagação de resíduos. |
-| `document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `89E3C361698FFE14B724DB4587BEEA02BE000980437BA8F44E0C5B4A1675FD7D` | Recuperação somente leitura por IDs, união permitida de raízes, validação física de caminhos, divergências, relações e revalidação de inputs. |
-| `test_document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `A504D0FCB4C2014F66616C9BF0779500FEA81415168B95A9371EBCE18934A12A` | 25 testes específicos, incluindo fallback histórico, divergência, ciclo de relações e integração entre processos. |
+| `document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `22FC472830DC934392D08D22D23DA1654ADD1E61835D95BADC0B221CC3203FC4` | Recuperação somente leitura por IDs, união permitida de raízes, validação física de caminhos, divergências, relações e revalidação de inputs. |
+| `test_document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `7B1A226E2479EAD1D303366DF98DAE5E11E7072CF6DCEE88C8D4E86510BD883C` | 28 testes específicos; 27 aprovados e 1 skip por privilégio de symlink real no Windows. |
 
 ## Histórico de estado
 
@@ -878,3 +878,15 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - Nenhum índice, cache persistente, banco, migração, cópia, exclusão, publicação adicional, pesquisa genérica, rede, Git externo, CONVERGE ou Release foi executado.
 - TASK-010 não foi iniciada. IMPLEMENT continua IN_PROGRESS; CONVERGE continua NOT_STARTED. Próximo passo: revisar exclusivamente TASK-009 antes de autorizar TASK-010.
+
+### Correção final de escopo de relações — TASK-009
+
+- Defeito: relação sem `analysis_id` podia resolver um documento existente de outra análise. O PLAN §7.2 exige `analysis_id` para uma relação entre análises; sem esse campo, a relação é intra-análise.
+- Impacto: a recuperação podia reconstruir silenciosamente uma ligação cross-analysis implícita.
+- Correção: relações sem `analysis_id` só resolvem quando o `analysis_id` real do alvo coincide com o da fonte. Relações cross-analysis exigem o campo explícito e seu valor deve coincidir com a análise real do alvo. Divergências geram `INCONSISTENT_RELATION`; o resultado conserva o valor declarado, inclusive `None`, sem modificar metadata histórica.
+- SHA-256 anterior: `document_recovery.py` `89E3C361698FFE14B724DB4587BEEA02BE000980437BA8F44E0C5B4A1675FD7D`; `test_document_recovery.py` `A504D0FCB4C2014F66616C9BF0779500FEA81415168B95A9371EBCE18934A12A`.
+- SHA-256 atualizado: `document_recovery.py` `22FC472830DC934392D08D22D23DA1654ADD1E61835D95BADC0B221CC3203FC4`; `test_document_recovery.py` `7B1A226E2479EAD1D303366DF98DAE5E11E7072CF6DCEE88C8D4E86510BD883C`.
+- Cobertura nova: intra-análise sem `analysis_id`; cross-analysis sem campo não resolvida com finding e sem alteração dos bytes de origem/alvo; cross-analysis com `analysis_id` correto resolvida. Os casos de campo explícito incorreto, alvo ausente, divergência e ciclo permanecem cobertos.
+- Regressões: `python -B -m unittest discover -s impl/tests -p test_document_recovery.py -v` — 28 executados, 27 aprovados, 1 skip; TASK-008 `test_document_publisher.py` — 47/47 aprovados; TASK-007 `test_provenance.py` — 45/45 aprovados; TASK-006 `test_document_format.py` — 49/49 aprovados; suíte completa `python -B -m unittest discover -s impl/tests -v` — 263 executados, 262 aprovados, 1 skip. O skip permaneceu porque o usuário Windows não pode criar symlink real; a proteção correspondente segue coberta deterministicamente. A tentativa inicial sob sandbox falhou com WinError 5 ao criar/limpar fixtures; as execuções elevadas passaram.
+- A integração real Debug anterior foi preservada e não repetida. Esta correção não criou ANL/DOC, não publicou documentos, não executou D-02, não usou rede/Git e não alterou SPEC/PLAN/TASKS. TASK-010 não foi iniciada.
+- Estado corrente: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS em `ANALYZE-2026-10-10-SPEC-0000000001-03`; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED; TASK-001 a TASK-009 executadas; TASK-010 a TASK-013 pendentes. Próximo passo: revisão da correção de TASK-009 antes de autorizar TASK-010.

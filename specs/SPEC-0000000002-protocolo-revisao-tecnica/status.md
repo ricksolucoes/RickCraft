@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-004 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS — TASK-005 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -596,3 +596,41 @@ Estado corrente: Etapa = IMPLEMENT; SPEC/PLAN/TASKS = COMPLETE e aprovadas; ANAL
 ### HANDOFF PARA REVISÃO — TASK-004
 
 Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro. TASK-004 está COMPLETE, aguardando revisão; TASK-005 permanece não executada. É necessária autorização explícita separada antes de TASK-005.
+
+## IMPLEMENT — TASK-005 — Findings rastreáveis e conclusão limitada — 2026-10-11
+
+O responsável confirmou a aprovação externa de TASK-004. Baseline aceita: `review_protocol.py` SHA-256 `9EF7B449ACA7F65E586196E95AF49784C386BDA9C3577B34EB0A4A4B90EBC3B6` (blob Git `018aa1cc3e5d2777b001157b44a3751bad287c98`) e `test_review_protocol.py` SHA-256 `8B2F026B22A91E614C616181BDC56B79702A300F7ABA3D4FC3D22AFD7D19396E` (blob Git `76ff9362d606dbbd7f899598b8254f426f0ec0b0`). SPEC/PLAN/TASKS recalculadas antes da implementação conferem com `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`. O gate `ANALYZE-2026-10-11-SPEC-0000000002-01` permanece PASS. A autorização abrangeu somente TASK-005.
+
+Etapa atual = IMPLEMENT; IMPLEMENT permanece IN_PROGRESS. TASK-005 passou a IN_PROGRESS durante esta execução e retornou a COMPLETE após implementação e testes. Não houve alteração das entradas normativas nem invalidação do ANALYZE.
+
+Foram adicionados `ReviewFinding`, `ConclusionState`, `ReviewConclusion` e `sort_review_findings`. Finding mantém separados escopo, dimensão, condição, referências de evidência, referência normativa/contratual, conclusão técnica, impacto, recomendação opcional e assessment especializado recebido. EvidenceReference é obrigatória, tipada, sem duplicatas e ordenada deterministicamente. Assessment associado deve coincidir em dimensão e escopo e sua conclusão é preservada; seu caráter CONSULTATIVE/AUTHORITATIVE não é alterado. Não se infere owner.
+
+`ReviewConclusion` permite exatamente LIMITED, BLOCKED e NO_FINDING_IN_SCOPE. Todas as conclusões exigem scopes explícitos, sem wildcard. Bases, versões, evidências e claims são tipados/validados, sem inferir artefato, fonte ou versão. Conclusões não bloqueadas exigem artifact/source e evidência/claim; NO_FINDING_IN_SCOPE requer EvidenceReference observada ou persistida diretamente relacionada às bases. BLOCKED permite ausência de evidência, mas exige scope, artifact/source explícito e limitation. Claims fora das bases e versões contraditórias são rejeitados quando a incompatibilidade é diretamente verificável. A estrutura não possui estado universal de aprovação ou conformidade.
+
+A ordenação de findings segue `(scope, rank canônico de TechnicalDimension, normative_reference, condition.casefold(), condition)`. A recomendação fica associada no mesmo objeto ao finding, à condição, ao contrato, à conclusão e ao impacto. Nenhum ChangeProposal/BehaviorAssessment, renderer, engine de blocker/continuidade, pipeline, persistência, gap_handling, provenance, workspace ou integração externa foi introduzido.
+
+Teste focal executado: `python -B -m unittest -v impl.tests.test_review_protocol`. A primeira execução registrou 99 testes, 2 FAIL e 1 ERROR; os casos apontaram somente ajuste na aceitação do iterável do teste e na ordem de validação das mensagens. Esses pontos foram ajustados dentro de TASK-005. A repetição final executou 99 testes: 99 PASS, 0 FAIL, 0 SKIP. A execução inclui regressão integral dos testes existentes das TASK-001–004. Nenhuma full suite foi executada.
+
+Hashes SHA-256 finais, após releitura UTF-8 estrita e cálculo repetido:
+
+- `impl/src/RickCraft/review_protocol.py`: `3F882DA171C425891A8DA55FAFC95F2F168C8F7255A72B5EBE6430CC0185DB9D`
+- `impl/tests/test_review_protocol.py`: `A31F69B04A6D3BD9FF2943FDACB7AAF181EA09F82478111DC5F246DF4D7DEE8C`
+
+Nenhum arquivo SPEC1 foi alterado. Nenhuma rede, Git como efeito de produto, subprocesso, workspace, persistência, Release ou outra externalidade foi usada.
+
+Estado corrente: Etapa = IMPLEMENT; SPEC/PLAN/TASKS = COMPLETE e aprovadas; ANALYZE = PASS; IMPLEMENT = IN_PROGRESS; CONVERGE = NOT_STARTED. TASK-001–TASK-004 = COMPLETE e aprovadas após revisão externa; TASK-005 = COMPLETE, aguardando revisão; TASK-006–TASK-013 não executadas. Último gate válido: `ANALYZE-2026-10-11-SPEC-0000000002-01`. Nenhum bloqueio identificado.
+
+### CHECKPOINT RICKCRAFT — TASK-005
+
+- **Fase:** IMPLEMENT — TASK-005 — SPEC-0000000002.
+- **Objetivo:** implementar findings rastreáveis, ordenação determinística e conclusão limitada.
+- **Estado:** AGUARDANDO_APROVAÇÃO; TASK-005 COMPLETE, aguardando revisão.
+- **Arquivos criados:** nenhum.
+- **Arquivos alterados:** `review_protocol.py`, `test_review_protocol.py` e este `status.md`.
+- **Testes:** execução final do comando focal; 99 executados, 99 PASS, 0 FAIL, 0 SKIP. Primeira tentativa e correções estão registradas acima.
+- **Próximo passo:** revisar exclusivamente TASK-005 antes de qualquer autorização de TASK-006.
+- **Não fazer ainda:** não executar TASK-006, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-005
+
+Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro. TASK-005 está COMPLETE e aguarda revisão; TASK-006–TASK-013 não foram iniciadas. É necessária autorização explícita separada antes da TASK-006.

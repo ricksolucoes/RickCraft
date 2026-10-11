@@ -555,3 +555,173 @@ class DimensionAssessment:
             raise ReviewInputError(
                 "CORE_SCOPE_ASSESSMENT não pode atribuir competência especializada ao Core."
             )
+
+
+class ConclusionState(Enum):
+    """Estados de conclusão limitados às bases explicitamente fornecidas."""
+
+    LIMITED = "LIMITED"
+    BLOCKED = "BLOCKED"
+    NO_FINDING_IN_SCOPE = "NO_FINDING_IN_SCOPE"
+
+
+def _versoes_explicitas(value: object) -> tuple[tuple[str, str], ...]:
+    entries = _sequencia(value, "versions")
+    pairs: list[tuple[str, str]] = []
+    for entry in entries:
+        pair = _sequencia(entry, "versions entry")
+        if len(pair) != 2:
+            raise ReviewInputError("Cada versions entry deve conter alvo e versão.")
+        pairs.append((
+            _texto_obrigatorio(pair[0], "version target"),
+            _texto_obrigatorio(pair[1], "version"),
+        ))
+    if len({target for target, _ in pairs}) != len(pairs):
+        raise ReviewInputError("versions não pode repetir alvos.")
+    return tuple(sorted(pairs))
+
+
+@dataclass(frozen=True)
+class ReviewFinding:
+    """Achado rastreável com fato, regra, conclusão e impacto separados."""
+
+    scope: str
+    dimension: TechnicalDimension
+    condition: str
+    evidence: tuple[EvidenceReference, ...]
+    normative_reference: str
+    technical_conclusion: str
+    impact: str
+    recommendation: str | None = None
+    specialist_assessment: SpecialistAssessment | None = None
+
+    def __post_init__(self) -> None:
+        _texto_obrigatorio(self.scope, "finding scope")
+        if not isinstance(self.dimension, TechnicalDimension):
+            raise ReviewInputError("dimension deve ser TechnicalDimension explícita.")
+        _texto_obrigatorio(self.condition, "condition")
+        object.__setattr__(self, "evidence", _evidencias_unicas(self.evidence, "finding evidence"))
+        if not self.evidence:
+            raise ReviewInputError("ReviewFinding requer ao menos uma EvidenceReference.")
+        _texto_obrigatorio(self.normative_reference, "normative_reference")
+        _texto_obrigatorio(self.technical_conclusion, "technical_conclusion")
+        _texto_obrigatorio(self.impact, "impact")
+        _texto_opcional(self.recommendation, "recommendation")
+        specialist = self.specialist_assessment
+        if specialist is not None:
+            if not isinstance(specialist, SpecialistAssessment):
+                raise ReviewInputError("specialist_assessment deve ser SpecialistAssessment.")
+            if specialist.dimension is not self.dimension or specialist.scope != self.scope:
+                raise ReviewInputError(
+                    "SpecialistAssessment do finding deve corresponder à dimensão e ao escopo."
+                )
+            if specialist.conclusion != self.technical_conclusion:
+                raise ReviewInputError(
+                    "Com assessment especializado, technical_conclusion deve preservar a conclusão recebida."
+                )
+
+    @property
+    def sort_key(self) -> tuple[str, int, str, str, str]:
+        """Chave D-14; rank segue a ordem canônica declarada no enum."""
+        rank = tuple(TechnicalDimension).index(self.dimension)
+        return (
+            self.scope,
+            rank,
+            self.normative_reference,
+            self.condition.casefold(),
+            self.condition,
+        )
+
+
+def sort_review_findings(findings: Sequence[ReviewFinding]) -> tuple[ReviewFinding, ...]:
+    """Ordena findings de forma pura e determinística pela chave do PLAN."""
+    items = _sequencia(findings, "findings")
+    if any(not isinstance(item, ReviewFinding) for item in items):
+        raise ReviewInputError("findings deve conter somente ReviewFinding.")
+    return tuple(sorted(items, key=lambda item: item.sort_key))
+
+
+@dataclass(frozen=True)
+class ReviewConclusion:
+    """Conclusão estruturalmente delimitada às bases efetivamente declaradas."""
+
+    state: ConclusionState
+    scopes: tuple[str, ...]
+    artifacts: tuple[str, ...] = ()
+    sources: tuple[str, ...] = ()
+    versions: tuple[tuple[str, str], ...] = ()
+    evidence: tuple[EvidenceReference, ...] = ()
+    claims: tuple[VerificationClaim, ...] = ()
+    limitation: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.state, ConclusionState):
+            raise ReviewInputError("state deve ser ConclusionState explícito.")
+        scopes = _textos_unicos(self.scopes, "conclusion scopes", ordenar=True)
+        if not scopes:
+            raise ReviewInputError("ReviewConclusion requer ao menos um scope explícito.")
+        if "*" in scopes:
+            raise ReviewInputError("conclusion scopes não aceita scope global '*'.")
+        artifacts = _textos_unicos(self.artifacts, "artifacts", ordenar=True)
+        sources = _textos_unicos(self.sources, "sources", ordenar=True)
+        versions = _versoes_explicitas(self.versions)
+        evidence = _evidencias_unicas(self.evidence, "conclusion evidence")
+        claims = _sequencia(self.claims, "claims")
+        if any(not isinstance(item, VerificationClaim) for item in claims):
+            raise ReviewInputError("claims deve conter somente VerificationClaim.")
+        if len(set(claims)) != len(claims):
+            raise ReviewInputError("claims não pode conter duplicatas.")
+        claims = tuple(sorted(claims, key=lambda item: (
+            item.target,
+            item.status.value,
+            item.assertion,
+            item.version or "",
+        )))
+        limitation = _texto_opcional(self.limitation, "limitation")
+        bases = set(artifacts) | set(sources)
+        if self.state is ConclusionState.BLOCKED:
+            if not bases:
+                raise ReviewInputError(
+                    "BLOCKED requer artifact ou source explícitos além do scope."
+                )
+            if limitation is None:
+                raise ReviewInputError("BLOCKED requer limitation explícita.")
+        else:
+            if not bases:
+                raise ReviewInputError(
+                    "Conclusão não bloqueada requer artifacts ou sources explícitos."
+                )
+            if self.state is ConclusionState.NO_FINDING_IN_SCOPE and not evidence:
+                raise ReviewInputError(
+                    "NO_FINDING_IN_SCOPE requer EvidenceReference do escopo examinado."
+                )
+            if not evidence and not claims:
+                raise ReviewInputError(
+                    "Conclusão não bloqueada requer evidence ou claims rastreáveis."
+                )
+        if self.state is ConclusionState.NO_FINDING_IN_SCOPE and not any(
+            item.kind in (EvidenceKind.DIRECT_OBSERVATION, EvidenceKind.PERSISTED_EVIDENCE)
+            for item in evidence
+        ):
+            raise ReviewInputError(
+                "NO_FINDING_IN_SCOPE requer evidência observada ou persistida."
+            )
+        if bases and any(target not in bases for target, _ in versions):
+            raise ReviewInputError("Version target está fora das bases declaradas.")
+        version_map = dict(versions)
+        for item in evidence:
+            if bases and item.target not in bases:
+                raise ReviewInputError("EvidenceReference target está fora das bases declaradas.")
+            if item.target in version_map and item.version is not None and item.version != version_map[item.target]:
+                raise ReviewInputError("EvidenceReference version contradiz a versão declarada.")
+        for claim in claims:
+            if bases and claim.target not in bases:
+                raise ReviewInputError("VerificationClaim target está fora das bases declaradas.")
+            if claim.target in version_map and claim.version is not None and claim.version != version_map[claim.target]:
+                raise ReviewInputError("VerificationClaim version contradiz a versão declarada.")
+        object.__setattr__(self, "scopes", scopes)
+        object.__setattr__(self, "artifacts", artifacts)
+        object.__setattr__(self, "sources", sources)
+        object.__setattr__(self, "versions", versions)
+        object.__setattr__(self, "evidence", evidence)
+        object.__setattr__(self, "claims", claims)

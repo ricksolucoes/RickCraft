@@ -14,11 +14,14 @@ from review_protocol import (  # noqa: E402
     AuthorityContext,
     AuthorityReference,
     AuthorizedPrecedence,
-    EvidenceKind,
-    EvidenceReference,
+    ConclusionState,
     DimensionAssessment,
     DimensionAssessmentState,
+    EvidenceKind,
+    EvidenceReference,
     RequestedEffect,
+    ReviewConclusion,
+    ReviewFinding,
     ReviewInputError,
     ReviewRequest,
     ReviewScope,
@@ -26,6 +29,7 @@ from review_protocol import (  # noqa: E402
     TechnicalDimension,
     VerificationClaim,
     VerificationStatus,
+    sort_review_findings,
 )
 
 
@@ -755,6 +759,265 @@ class TechnicalDimensionTests(unittest.TestCase):
         )
         self.assertEqual(tuple(item.dimension for item in assessments),
                          (TechnicalDimension.PATTERNS, TechnicalDimension.SOLID))
+
+
+class ReviewFindingTests(unittest.TestCase):
+    @staticmethod
+    def evidence(target: str = "Cliente.pas", reference: str = "test://evidence") -> EvidenceReference:
+        return EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "fixture", reference, target, "v1")
+
+    @staticmethod
+    def finding(**overrides: object) -> ReviewFinding:
+        values: dict[str, object] = {
+            "scope": "ClasseCliente",
+            "dimension": TechnicalDimension.DELPHI_OBJECT_PASCAL,
+            "condition": "A classe não possui teste de contrato",
+            "evidence": (ReviewFindingTests.evidence(),),
+            "normative_reference": "contract:cliente",
+            "technical_conclusion": "A evidência indica lacuna no contrato informado.",
+            "impact": "A regressão nesse comportamento pode passar despercebida.",
+        }
+        values.update(overrides)
+        return ReviewFinding(**values)  # type: ignore[arg-type]
+
+    def test_finding_e_recomendacao_opcional_preservam_rastreabilidade(self) -> None:
+        finding = self.finding(recommendation=None)
+        self.assertEqual(finding.scope, "ClasseCliente")
+        self.assertEqual(finding.evidence[0].target, "Cliente.pas")
+        self.assertEqual(finding.normative_reference, "contract:cliente")
+        self.assertIn("lacuna", finding.technical_conclusion)
+        self.assertIn("regressão", finding.impact)
+        self.assertIsNone(finding.recommendation)
+        recommended = self.finding(recommendation="Adicionar teste de contrato.")
+        self.assertEqual(recommended.recommendation, "Adicionar teste de contrato.")
+
+    def test_campos_obrigatorios_e_recomendacao_vazia_sao_rejeitados(self) -> None:
+        for field in ("scope", "condition", "normative_reference", "technical_conclusion", "impact"):
+            with self.subTest(field=field), self.assertRaises(ReviewInputError):
+                self.finding(**{field: " "})
+        with self.assertRaisesRegex(ReviewInputError, "recommendation"):
+            self.finding(recommendation=" ")
+
+    def test_tipo_e_dimension_especifica_sao_obrigatorios(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "TechnicalDimension explícita"):
+            self.finding(dimension="DELPHI_OBJECT_PASCAL")
+        with self.assertRaisesRegex(ReviewInputError, "ao menos uma EvidenceReference"):
+            self.finding(evidence=())
+        with self.assertRaisesRegex(ReviewInputError, "somente EvidenceReference"):
+            self.finding(evidence=["teste observado"])
+        item = self.evidence()
+        with self.assertRaisesRegex(ReviewInputError, "duplicadas"):
+            self.finding(evidence=[item, item])
+
+    def test_specialist_assessment_preserva_carater_e_requer_correspondencia(self) -> None:
+        authority = AuthorityReference("owner-ref", "owner informado", "competência", ("ClasseCliente",))
+        specialist = SpecialistAssessment(
+            TechnicalDimension.DELPHI_OBJECT_PASCAL,
+            "ClasseCliente",
+            "Avaliação consultiva recebida.",
+            (self.evidence(reference="test://specialist"),),
+            AssessmentCharacter.CONSULTATIVE,
+            owner="owner informado",
+            competence_reference="competência",
+        )
+        finding = self.finding(
+            technical_conclusion=specialist.conclusion,
+            specialist_assessment=specialist,
+        )
+        self.assertIs(finding.specialist_assessment.character, AssessmentCharacter.CONSULTATIVE)
+        self.assertIsNot(finding.specialist_assessment.character, AssessmentCharacter.AUTHORITATIVE)
+        self.assertEqual(finding.evidence[0].reference, "test://evidence")
+        with self.assertRaisesRegex(ReviewInputError, "dimensão e ao escopo"):
+            self.finding(specialist_assessment=SpecialistAssessment(
+                TechnicalDimension.SOLID, "ClasseCliente", specialist.conclusion,
+                (self.evidence(reference="test://other"),), AssessmentCharacter.CONSULTATIVE,
+            ))
+        with self.assertRaisesRegex(ReviewInputError, "technical_conclusion deve preservar"):
+            self.finding(specialist_assessment=specialist)
+        self.assertEqual(authority.scopes, ("ClasseCliente",))
+
+    def test_owner_nao_e_inferido_por_dimension(self) -> None:
+        finding = self.finding()
+        self.assertFalse(hasattr(finding, "owner"))
+        self.assertIsNone(finding.specialist_assessment)
+
+    def test_finding_e_imutavel_e_copia_evidence(self) -> None:
+        item = self.evidence()
+        entries = [item]
+        finding = self.finding(evidence=entries)
+        entries.clear()
+        self.assertEqual(finding.evidence, (item,))
+        with self.assertRaises(FrozenInstanceError):
+            finding.scope = "projeto"  # type: ignore[misc]
+
+    def test_sort_key_aplica_scope_rank_referencia_casefold_e_desempate(self) -> None:
+        def item(scope: str, dimension: TechnicalDimension, normative: str, condition: str) -> ReviewFinding:
+            return self.finding(scope=scope, dimension=dimension,
+                                normative_reference=normative, condition=condition)
+        findings = [
+            item("b", TechnicalDimension.PATTERNS, "a", "z"),
+            item("a", TechnicalDimension.SOLID, "a", "x"),
+            item("a", TechnicalDimension.PATTERNS, "b", "x"),
+            item("a", TechnicalDimension.PATTERNS, "a", "beta"),
+            item("a", TechnicalDimension.PATTERNS, "a", "Alpha"),
+            item("a", TechnicalDimension.PATTERNS, "a", "alpha"),
+        ]
+        ordered = sort_review_findings(findings)
+        self.assertEqual(
+            [(f.scope, f.dimension, f.normative_reference, f.condition) for f in ordered],
+            [
+                ("a", TechnicalDimension.PATTERNS, "a", "Alpha"),
+                ("a", TechnicalDimension.PATTERNS, "a", "alpha"),
+                ("a", TechnicalDimension.PATTERNS, "a", "beta"),
+                ("a", TechnicalDimension.PATTERNS, "b", "x"),
+                ("a", TechnicalDimension.SOLID, "a", "x"),
+                ("b", TechnicalDimension.PATTERNS, "a", "z"),
+            ],
+        )
+        self.assertEqual(sort_review_findings(findings), sort_review_findings(tuple(reversed(findings))))
+        self.assertLess(
+            item("a", TechnicalDimension.PATTERNS, "a", "x").sort_key[1],
+            item("a", TechnicalDimension.SOLID, "a", "x").sort_key[1],
+        )
+
+
+class ReviewConclusionTests(unittest.TestCase):
+    @staticmethod
+    def evidence(target: str = "Cliente.pas", *, kind: EvidenceKind = EvidenceKind.DIRECT_OBSERVATION,
+                 version: str | None = "v1", reference: str = "test://inspection") -> EvidenceReference:
+        return EvidenceReference(kind, "fixture", reference, target, version)
+
+    @classmethod
+    def claim(cls, target: str = "Cliente.pas", *, status: VerificationStatus = VerificationStatus.EXECUTED_OBSERVED,
+              version: str | None = "v1") -> VerificationClaim:
+        evidence = cls.evidence(target, version=version)
+        return VerificationClaim("inspeção executada", target, status, (evidence,), version)
+
+    @classmethod
+    def conclusion(cls, **overrides: object) -> ReviewConclusion:
+        values: dict[str, object] = {
+            "state": ConclusionState.LIMITED,
+            "scopes": ("ClasseCliente",),
+            "artifacts": ("Cliente.pas",),
+            "sources": ("Cliente.pas",),
+            "versions": (("Cliente.pas", "v1"),),
+            "evidence": (cls.evidence(),),
+            "claims": (cls.claim(),),
+            "limitation": "Conclusão limitada à classe examinada.",
+        }
+        values.update(overrides)
+        return ReviewConclusion(**values)  # type: ignore[arg-type]
+
+    def test_enum_tem_exatamente_os_tres_estados_permitidos(self) -> None:
+        self.assertEqual(tuple(item.name for item in ConclusionState),
+                         ("LIMITED", "BLOCKED", "NO_FINDING_IN_SCOPE"))
+
+    def test_limited_valida_com_bases_explicitas(self) -> None:
+        result = self.conclusion()
+        self.assertIs(result.state, ConclusionState.LIMITED)
+        self.assertEqual(result.scopes, ("ClasseCliente",))
+        self.assertEqual(result.artifacts, ("Cliente.pas",))
+        self.assertEqual(result.sources, ("Cliente.pas",))
+
+    def test_blocked_nao_exige_evidencia_ausente_mas_exige_limite_e_escopo(self) -> None:
+        result = self.conclusion(
+            state=ConclusionState.BLOCKED,
+            artifacts=(), sources=("Cliente.pas",), versions=(), evidence=(), claims=(),
+            limitation="A fonte necessária não estava disponível.",
+        )
+        self.assertEqual(result.evidence, ())
+        self.assertEqual(result.limitation, "A fonte necessária não estava disponível.")
+        with self.assertRaisesRegex(ReviewInputError, "limitation explícita"):
+            self.conclusion(state=ConclusionState.BLOCKED, limitation=None)
+        with self.assertRaisesRegex(ReviewInputError, "artifact ou source explícitos"):
+            self.conclusion(state=ConclusionState.BLOCKED, artifacts=(), sources=(),
+                            versions=(), evidence=(), claims=())
+
+    def test_no_finding_requer_bases_e_evidencia_rastreavel(self) -> None:
+        result = self.conclusion(
+            state=ConclusionState.NO_FINDING_IN_SCOPE,
+            claims=(),
+        )
+        self.assertIs(result.state, ConclusionState.NO_FINDING_IN_SCOPE)
+        with self.assertRaisesRegex(ReviewInputError, "observada ou persistida"):
+            self.conclusion(
+                state=ConclusionState.NO_FINDING_IN_SCOPE,
+                evidence=(self.evidence(kind=EvidenceKind.REPORTED),),
+                claims=(),
+            )
+        with self.assertRaisesRegex(ReviewInputError, "EvidenceReference do escopo"):
+            self.conclusion(state=ConclusionState.NO_FINDING_IN_SCOPE, evidence=(), claims=())
+
+    def test_scope_ausente_vazio_ou_duplicado_e_rejeitado(self) -> None:
+        for scopes in ((), (" ",), ("one", "one")):
+            with self.subTest(scopes=scopes), self.assertRaises(ReviewInputError):
+                self.conclusion(scopes=scopes)
+        with self.assertRaisesRegex(ReviewInputError, "scope global"):
+            self.conclusion(scopes=("*",))
+
+    def test_artifacts_sources_e_versions_validam_duplicatas_e_forma(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "duplicados"):
+            self.conclusion(artifacts=("Cliente.pas", "Cliente.pas"))
+        with self.assertRaisesRegex(ReviewInputError, "duplicados"):
+            self.conclusion(sources=("source", "source"))
+        with self.assertRaisesRegex(ReviewInputError, "repetir alvos"):
+            self.conclusion(versions=(("Cliente.pas", "v1"), ("Cliente.pas", "v2")))
+        with self.assertRaisesRegex(ReviewInputError, "alvo e versão"):
+            self.conclusion(versions=(("Cliente.pas",),))
+
+    def test_evidence_e_claims_validam_tipos_duplicatas_e_targets(self) -> None:
+        item = self.evidence()
+        with self.assertRaisesRegex(ReviewInputError, "somente EvidenceReference"):
+            self.conclusion(evidence=("texto",))
+        with self.assertRaisesRegex(ReviewInputError, "duplicadas"):
+            self.conclusion(evidence=(item, item))
+        claim = self.claim()
+        with self.assertRaisesRegex(ReviewInputError, "somente VerificationClaim"):
+            self.conclusion(claims=("passou",))
+        with self.assertRaisesRegex(ReviewInputError, "claims não pode conter duplicatas"):
+            self.conclusion(claims=(claim, claim))
+        with self.assertRaisesRegex(ReviewInputError, "EvidenceReference target está fora"):
+            self.conclusion(artifacts=("Outro.pas",), sources=(), versions=(),
+                            evidence=(item,), claims=())
+        other_claim = self.claim("Outro.pas")
+        with self.assertRaisesRegex(ReviewInputError, "VerificationClaim target está fora"):
+            self.conclusion(claims=(other_claim,))
+
+    def test_versoes_contraditorias_sao_rejeitadas_sem_resolver_versoes(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "version contradiz"):
+            self.conclusion(versions=(("Cliente.pas", "v2"),))
+        with self.assertRaisesRegex(ReviewInputError, "version contradiz"):
+            self.conclusion(claims=(self.claim(version="v2"),))
+
+    def test_conclusao_de_classe_permanece_limitada_a_classe(self) -> None:
+        result = self.conclusion(
+            state=ConclusionState.NO_FINDING_IN_SCOPE,
+            scopes=("ClasseCliente",),
+            artifacts=("Cliente.pas",),
+            sources=("Cliente.pas",),
+            evidence=(self.evidence(),), claims=(),
+        )
+        self.assertEqual(result.scopes, ("ClasseCliente",))
+        self.assertEqual(result.artifacts, ("Cliente.pas",))
+        self.assertFalse(any("projeto" in scope.casefold() for scope in result.scopes))
+        self.assertFalse(hasattr(result, "project_approved"))
+
+    def test_nao_existem_estados_universais_e_objeto_e_imutavel(self) -> None:
+        self.assertEqual(set(ConclusionState.__members__),
+                         {"LIMITED", "BLOCKED", "NO_FINDING_IN_SCOPE"})
+        scopes = ["ClasseCliente"]
+        artifacts = ["Cliente.pas"]
+        evidence = [self.evidence()]
+        claims = [self.claim()]
+        result = self.conclusion(scopes=scopes, artifacts=artifacts,
+                                 evidence=evidence, claims=claims)
+        scopes.clear(); artifacts.clear(); evidence.clear(); claims.clear()
+        self.assertEqual(result.scopes, ("ClasseCliente",))
+        self.assertEqual(result.artifacts, ("Cliente.pas",))
+        self.assertEqual(len(result.evidence), 1)
+        self.assertEqual(len(result.claims), 1)
+        with self.assertRaises(FrozenInstanceError):
+            result.state = ConclusionState.BLOCKED  # type: ignore[misc]
 
 
 if __name__ == "__main__":

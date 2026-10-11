@@ -27,13 +27,15 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-005 executadas; TASK-006 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-006 executadas; TASK-007 a TASK-013 pendentes. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
 | `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600` | 17 testes específicos, incluindo ausência de errno/símbolo opcional e bloqueio do resolvedor sem sonda de fallback. |
 | `document_catalog.py` | IMPLEMENT TASK-005 | SHA-256 `7FE3206000E542DEBD4FEA7C369528C1795C50BBAF3A5FDCD4EF891E2CF3D687` | Catálogo fechado V1, validação de tipos/IDs e derivação segura do caminho documental. |
 | `test_document_catalog.py` | IMPLEMENT TASK-005 | SHA-256 `3BDAE4F09CFFCFFDD85ADF4B5AC91A54D6BCEEE3FD364DDCD6DD1D3022496FAF` | 15 testes específicos para catálogo, caminhos, contenção e criação idempotente. |
+| `document_format.py` | IMPLEMENT TASK-006 | SHA-256 `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7` | Serialização/parsing determinísticos de Markdown + JSON v1; validação estrutural, relações e UTF-8 estrito. |
+| `test_document_format.py` | IMPLEMENT TASK-006 | SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA` | 49 testes unitários de serialização, parsing, validação e rejeições. |
 
 ## Histórico de estado
 
@@ -79,11 +81,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-005 executadas com evidências registradas; TASK-006 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nas operações registradas; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
+- **Mudanças pendentes:** TASK-001 a TASK-006 executadas com evidências registradas; TASK-007 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nas operações registradas; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-005. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-005 antes de autorizar TASK-006.
+- **Bloqueios:** Nenhum bloqueio material para TASK-006. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-006 antes de autorizar TASK-007.
 
 ## Validade do ANALYZE anterior
 
@@ -695,3 +697,35 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - Os diretórios ANL históricos em `impl/.workspace/` foram preservados e não foram acessados ou preenchidos nesta tarefa. Nenhuma D-02 foi executada.
 - TASK-006 não foi iniciada. Nenhuma serialização documental, publicação, CONVERGE ou Release foi executado.
 - Estado final: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. Próximo passo: revisar exclusivamente TASK-005 antes de autorizar TASK-006.
+
+## IMPLEMENT TASK-006 — evidência
+
+### Escopo, gate e estado
+
+- Data: 2026-10-10.
+- Executada somente TASK-006: serialização e validação estrutural de documentos Markdown com metadados JSON v1, UTF-8 estrito e corpo Markdown preservado. Não houve publicação de documento.
+- Gate preservado: `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS exclusivamente para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. Os artefatos normativos não foram alterados.
+- Estado: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED; último gate válido permanece ANALYZE-03. TASK-001 a TASK-006 executadas; TASK-007 a TASK-013 pendentes.
+- Ambiente observado: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa foi instalada ou adicionada.
+
+### Implementação e artefatos
+
+- Criado `impl/src/RickCraft/document_format.py`, SHA-256 `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7`.
+- Criado `impl/tests/test_document_format.py`, SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA`.
+- O serializador produz bytes UTF-8 determinísticos com título Markdown, um bloco cercado `json` e corpo preservado. O parser valida o envelope, rejeita bloco ausente/duplicado/aberto, JSON não estrito, chaves duplicadas inclusive aninhadas, constantes não JSON, campos comuns ausentes/inválidos, IDs/tipos inválidos, data sem UTC, propósito/origem sem informação explícita e relations inválidas.
+- Foram reutilizados os validadores de IDs e TipoDocumento de TASK-004/TASK-005. `inputs` e relações são validados estruturalmente; não há cálculo/verificação de proveniência, consulta a filesystem ou publicação. Metadados adicionais JSON explícitos são preservados.
+- O PLAN define que cada relation contém um token D-09 e um `document_id` alvo, sem nomear a propriedade do token. A implementação usa a propriedade local explícita `relation_type`; isso não altera arquitetura nem introduz nova capacidade.
+- A serialização retorna bytes em memória e não cria arquivos. Não foram alterados runtime/testes de TASK-001–TASK-005; hashes-base de `document_catalog.py` e `test_document_catalog.py` continuam os registrados acima, e os hashes de TASK-004 também permaneceram inalterados.
+
+### Testes executados
+
+- Suíte específica: `python -B -m unittest discover -s impl/tests -p test_document_format.py -v` — 49 testes executados, 49 aprovados.
+- Regressão completa final: `python -B -m unittest discover -s impl/tests -v` — 143 testes executados, 143 aprovados (`OK`). Os 94 testes anteriores e os 49 testes de TASK-006 foram incluídos.
+- Limitação ambiental: uma execução específica inicial tentou criar um diretório temporário e recebeu `WinError 5` na enumeração/limpeza; o teste foi refeito para verificar ausência de escrita por mocks, sem criar fixture. A primeira regressão completa sandboxada terminou com 117 erros de acesso a fixtures Windows entre 140 testes. As execuções finais foram repetidas fora do sandbox e passaram; elevação foi limitação ambiental, não requisito do produto. Fixtures temporárias deixadas pela tentativa sandboxada em `impl/tests` foram removidas após confirmar que eram filhas diretas dessa pasta.
+- Nenhum teste afirma capacidade da raiz real. Não houve execução de D-02 nesta tarefa.
+
+### Limites e estado operacional
+
+- Nenhum documento Markdown operacional foi criado ou publicado; nenhum `DOC-*.md`, JSON documental ou temporário de publicação foi produzido. Os quatro diretórios ANL históricos em `impl/.workspace/` foram preservados e permanecem sem arquivos; o fallback `impl/src/RickCraft/.workspace/` não existe.
+- TASK-007 não foi iniciada; nenhum SHA-256 de proveniência, recuperação, pesquisa, publicação por `os.link`, CONVERGE ou Release foi implementado/executado.
+- Estado final: IMPLEMENT permanece IN_PROGRESS e CONVERGE permanece NOT_STARTED. Próximo passo: revisar exclusivamente TASK-006 e suas evidências antes de autorizar TASK-007.

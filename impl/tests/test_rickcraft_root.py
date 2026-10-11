@@ -122,6 +122,55 @@ class RickCraftRootTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, 2)
         self.assertIn("Parâmetro obrigatório ausente: --rickcraft-root", stderr.getvalue())
+        self.assertIn("Uso:", stderr.getvalue())
+        self.assertNotIn("usage:", stderr.getvalue().lower())
+        self.assertNotIn("error:", stderr.getvalue().lower())
+        self.assert_no_workspace_artifacts()
+
+    def test_cli_help_is_controlled_in_portuguese(self) -> None:
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            result = main(["--help"])
+
+        output = stdout.getvalue()
+        self.assertEqual(result, 0)
+        self.assertIn("Valida a raiz canônica", output)
+        self.assertIn("Uso:", output)
+        self.assertIn("Opções:", output)
+        self.assertIn("--rickcraft-root <caminho>", output)
+        self.assertIn("Exibe esta ajuda e encerra.", output)
+        self.assertNotIn("usage:", output.lower())
+        self.assertNotIn("show this help message and exit", output.lower())
+        self.assert_no_workspace_artifacts()
+
+    def test_cli_reports_invalid_root_in_portuguese(self) -> None:
+        invalid_root = self.base / "ProdutoInvalido"
+        invalid_root.mkdir()
+        stderr = io.StringIO()
+
+        with contextlib.redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--rickcraft-root", str(invalid_root)])
+
+        output = stderr.getvalue()
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("Falha ao validar RickCraftRoot", output)
+        self.assertIn("raiz lógica RickCraft", output)
+        self.assertNotIn("usage:", output.lower())
+        self.assertNotIn("error:", output.lower())
+        self.assert_no_workspace_artifacts()
+
+    def test_cli_reports_unknown_argument_in_portuguese(self) -> None:
+        stderr = io.StringIO()
+
+        with contextlib.redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--opcao-inexistente"])
+
+        output = stderr.getvalue()
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("Argumento não reconhecido", output)
+        self.assertNotIn("unrecognized arguments", output.lower())
         self.assert_no_workspace_artifacts()
 
 

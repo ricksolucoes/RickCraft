@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 import sys
 from typing import Sequence
@@ -49,26 +48,47 @@ def validate_rickcraft_root(value: str | Path | None) -> Path:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Binding CLI mínimo: recebe --rickcraft-root sem descoberta implícita."""
-    parser = argparse.ArgumentParser(
-        description="Valida a raiz canônica explicitamente fornecida do RickCraft."
-    )
-    parser.add_argument(
-        "--rickcraft-root",
-        dest="rickcraft_root",
-        help="caminho absoluto da pasta canônica RickCraft",
-    )
-    args = parser.parse_args(argv)
+    argumentos = list(sys.argv[1:] if argv is None else argv)
 
-    if args.rickcraft_root is None:
-        parser.error("Parâmetro obrigatório ausente: --rickcraft-root")
+    if argumentos in (["--help"], ["-h"]):
+        print(
+            "Valida a raiz canônica explicitamente fornecida do RickCraft.\n\n"
+            "Uso:\n"
+            "  rickcraft_root.py --rickcraft-root <caminho>\n\n"
+            "Opções:\n"
+            "  --rickcraft-root <caminho>  Caminho absoluto da pasta canônica RickCraft.\n"
+            "  -h, --help                  Exibe esta ajuda e encerra."
+        )
+        return 0
+
+    if not argumentos:
+        _erro_cli("Parâmetro obrigatório ausente: --rickcraft-root")
+
+    if argumentos[0] != "--rickcraft-root":
+        _erro_cli(f"Argumento não reconhecido: {argumentos[0]}")
+
+    if len(argumentos) < 2 or argumentos[1].startswith("-"):
+        _erro_cli("Valor obrigatório ausente para --rickcraft-root.")
+
+    if len(argumentos) > 2:
+        _erro_cli(f"Argumento não reconhecido: {argumentos[2]}")
 
     try:
-        root = validate_rickcraft_root(args.rickcraft_root)
+        root = validate_rickcraft_root(argumentos[1])
     except RickCraftRootError as exc:
-        parser.exit(2, f"Erro ao validar RickCraftRoot: {exc}\n")
+        _erro_cli(f"Falha ao validar RickCraftRoot: {exc}")
 
     print(f"RickCraftRoot validado: {root}")
     return 0
+
+
+def _erro_cli(mensagem: str) -> None:
+    """Encerra o binding com diagnóstico e uso integralmente em pt-BR."""
+    sys.stderr.write(
+        "Uso: rickcraft_root.py --rickcraft-root <caminho>\n"
+        f"Erro: {mensagem}\n"
+    )
+    raise SystemExit(2)
 
 
 if __name__ == "__main__":

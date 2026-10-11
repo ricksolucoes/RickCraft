@@ -10,14 +10,14 @@
 
 ## Estado atual
 
-- **Etapa atual:** TASKS
+- **Etapa atual:** ANALYZE
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
-- **ANALYZE:** INVALIDATED
+- **ANALYZE:** PASS
 - **IMPLEMENT:** IN_PROGRESS
 - **CONVERGE:** NOT_STARTED
-- **Último gate válido:** Nenhum. O ANALYZE PASS `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico para as versões que avaliou e foi invalidado pela alteração material de TASKS.
+- **Último gate válido:** `ANALYZE PASS` da execução `ANALYZE-2026-10-10-SPEC-0000000001-03`, exclusivamente para os hashes de SPEC, PLAN e TASKS registrados na evidência dessa execução. Os resultados -01 e -02 permanecem históricos; -02 foi invalidado pela alteração material de TASKS.
 - **Aprovação da SPEC:** Aprovada explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
 - **Aprovação do PLAN:** Aprovado explicitamente pelo responsável pelo projeto em 2026-10-10; versão aprovada: SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`. A aprovação não constitui ANALYZE PASS nem autoriza IMPLEMENT ou TASKS.
 
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. A matriz CA-003 agora atribui a classificação a TASK-003 e a avaliação/seleção do fallback a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. ANALYZE continua INVALIDATED. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. A matriz CA-003 atribui classificação a TASK-003 e avaliação/seleção do fallback a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. ANALYZE-03 passou para esta versão; TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. |
 
 ## Histórico de estado
 
@@ -63,18 +63,20 @@
 | 2026-10-10 | ANALYZE | INVALIDATED | A alteração material de TASKS invalida o PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02`, que permanece no histórico vinculado ao SHA-256 anterior `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. Último gate válido: Nenhum. Novo ANALYZE será necessário antes de qualquer novo trabalho de IMPLEMENT. |
 | 2026-10-10 | TASKS | IN_PROGRESS | Início da sincronização residual da matriz CA-003 com a fronteira TASK-002/TASK-003 já formalizada. Hash de entrada de `tasks.md`: `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`. Nenhuma tarefa, teste ou sonda foi executada. |
 | 2026-10-10 | TASKS | COMPLETE | CA-003 agora aponta para TASK-002 e TASK-003: TASK-003 classifica e fornece o resultado; TASK-002 consome-o e decide sobre precedência/fallback. Fronteiras existentes preservadas. Novo SHA-256 de `tasks.md`: `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece INVALIDATED; último gate válido: Nenhum. |
+| 2026-10-10 | ANALYZE | IN_PROGRESS | Início da reexecução integral autorizada `ANALYZE-2026-10-10-SPEC-0000000001-03`, sobre SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. IMPLEMENT permanece IN_PROGRESS apenas como estágio previamente iniciado; nenhuma TASK, implementação, teste ou sonda foi executada nesta análise. |
+| 2026-10-10 | ANALYZE | PASS | Gate documental integral concluído para as três versões exatas registradas. TASK-002/TASK-003 são executáveis sem circularidade semântica; CA-003 está coerente; não foram encontrados achados bloqueantes. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. IMPLEMENT permanece IN_PROGRESS, sem retomada nesta execução; CONVERGE permanece NOT_STARTED. Último gate válido: ANALYZE PASS somente para esses hashes. |
 
 ## Pendências e invalidações
 
 - **Mudanças pendentes:** TASK-001 foi executada com evidência satisfatória e preservada; TASK-002–TASK-013 não foram executadas. A sonda D-02 segue obrigatória antes do uso de cada raiz e não foi executada.
-- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece histórico e INVALIDATED para seu hash original. O PASS da execução `ANALYZE-2026-10-10-SPEC-0000000001-02` também permanece histórico, mas foi invalidado pela nova versão de TASKS. Último gate válido: Nenhum. IMPLEMENT segue IN_PROGRESS como estágio já iniciado, mas nenhum novo trabalho pode continuar até novo ANALYZE PASS válido; CONVERGE permanece NOT_STARTED.
+- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece como resultado histórico de sua versão. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` é o gate válido para os três hashes registrados abaixo. IMPLEMENT segue IN_PROGRESS como estágio já iniciado; nenhum novo trabalho de IMPLEMENT ocorreu ou está autorizado por esta execução. CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. A sonda D-02 continua sendo critério operacional obrigatório antes de usar cada raiz; a prova auxiliar em TEMP foi inconclusiva por restrição de acesso do ambiente desta sessão.
-- **Bloqueios:** Nenhum novo bloqueio material foi identificado na correção documental. A ausência de gate válido impede novo trabalho de IMPLEMENT até novo ANALYZE PASS. D-02 não foi executada e permanece pré-condição operacional antes do uso de cada raiz.
-- **Próxima autorização necessária:** Revisar a correção de TASKS e então autorizar explicitamente novo ANALYZE sobre as versões atuais. Nenhum trabalho de IMPLEMENT pode continuar enquanto o gate estiver invalidado.
+- **Bloqueios:** Nenhum achado bloqueante no ANALYZE-03. D-02 não foi executada e permanece pré-condição operacional antes do uso de cada raiz.
+- **Próxima autorização necessária:** Revisar o gate ANALYZE-03 publicado; qualquer início posterior de TASK-002 depende de autorização explícita separada. O PASS não retoma IMPLEMENT nem inicia TASK-002 nesta execução.
 
 ## Validade do ANALYZE anterior
 
-O resultado FAIL de `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece legítimo como histórico da versão analisada, mas INVALIDATED após a mudança material para TASKS SHA-256 `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. A execução `ANALYZE-2026-10-10-SPEC-0000000001-02`, detalhada na seção seguinte, reavaliou o conjunto integral e confirmou `ANALYZE-001` resolvido para a nova versão; o resultado antigo não foi apagado nem reinterpretado.
+O FAIL de `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece histórico para suas entradas. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico, mas foi invalidado pela mudança material de TASKS. Nenhum dos dois resultados foi apagado ou reinterpretado. O novo resultado aplicável às entradas atuais está registrado em “Evidência do ANALYZE-03”.
 
 ## Evidência do ANALYZE
 
@@ -337,3 +339,122 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 - **Correção:** CA-003 cobre TASK-002 e TASK-003; TASK-003 classifica impossibilidade concreta ou erro desconhecido e entrega o resultado, enquanto TASK-002 só considera fallback após impossibilidade classificada e bloqueia erro desconhecido sem fallback. Matriz D-03 permanece dividida entre classificação (TASK-003) e consumo/seleção (TASK-002); D-04 segue em TASK-002/TASK-008/TASK-009.
 - **Estado preservado:** TASKS = COMPLETE; ANALYZE = INVALIDATED; IMPLEMENT = IN_PROGRESS apenas como estágio já iniciado, sem novo trabalho autorizado até novo ANALYZE PASS; CONVERGE = NOT_STARTED; último gate válido = Nenhum. O ANALYZE-02 continua apenas histórico.
 - **TASK-001 preservada:** SPEC, PLAN, runtime e testes de TASK-001 não foram alterados; evidência técnica permanece registrada. TASK-002 e TASK-003 não foram executadas; nenhum teste ou D-02 foi executado; `.workspace/` não foi criada.
+
+## Evidência do ANALYZE-03
+
+### Identificação, versões e escopo
+
+- **Execução:** `ANALYZE-2026-10-10-SPEC-0000000001-03`.
+- **Data:** 2026-10-10.
+- **SPEC COMPLETE e aprovada:** SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`.
+- **PLAN COMPLETE e aprovado:** SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB`.
+- **TASKS COMPLETE:** SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`.
+- **Pré-condições:** hashes conferidos; estados COMPLETE confirmados; ANALYZE estava INVALIDATED; IMPLEMENT estava IN_PROGRESS somente por já ter sido iniciado com TASK-001; CONVERGE estava NOT_STARTED; último gate válido era Nenhum. As execuções -01 e -02 foram preservadas como histórico, e -02 permaneceu invalidada para o hash atual de TASKS.
+- **Escopo executado:** análise documental integral SPEC → PLAN → TASKS: RF-001–RF-014, CA-001–CA-015, D-01–D-14, origem e conteúdo de TASK-001–TASK-013, dependências, rastreabilidade, lifecycle, autoridade, evidências planejadas, D-02/D-03/D-04, publicação, concorrência, proveniência, continuidade, pesquisa, Debug/Release/idioma e escopo negativo. Nenhuma entrada foi alterada. Nenhuma documentação externa foi necessária.
+
+### Resultado RF-001–RF-014
+
+| RF | Resultado | Base verificada |
+|---|---|---|
+| RF-001 | Coberto | D-01–D-04; TASK-001–003; entrada explícita, caminhos, resolução e precedência. |
+| RF-002 | Coberto | D-02–D-04; TASK-002/003; criação da raiz candidata, sonda e fallback condicionado. |
+| RF-003 | Coberto | D-05–D-07; TASK-004/005; identidade de análise, catálogo e estrutura. |
+| RF-004 | Coberto | D-07–D-09/D-13; TASK-005/006/008; documento Markdown, metadados e publicação. |
+| RF-005 | Coberto | D-09/D-10/D-13; TASK-008/009; imutabilidade, relações e histórico append-only. |
+| RF-006 | Coberto | D-04–D-10/D-12; TASK-004/009/010/013; retomada e recuperação entre contextos. |
+| RF-007 | Coberto | D-09–D-11; TASK-006/007/009; identidade verificável e estados de proveniência. |
+| RF-008 | Coberto | D-04/D-10–D-12; TASK-007/009/010; comparação e consulta histórica. |
+| RF-009 | Coberto | Regras de lacunas; TASK-011; autonomia limitada a autoridade e evidência suficientes. |
+| RF-010 | Coberto | D-03/D-07–D-10; TASK-003/011; causa, divergência, blocker e interrupção da parte afetada. |
+| RF-011 | Coberto | Hierarquia normativa; TASK-006/009/011; conflito registrado sem autoridade do workspace. |
+| RF-012 | Coberto | D-14; TASK-012; exclusão de `.workspace/`, inclusive fallback, do inventário de Release. |
+| RF-013 | Coberto | D-14; TASK-012; ausência planejada de Git, rede, upload e sincronização externos. |
+| RF-014 | Coberto | D-07–D-09/D-12; TASK-005/006/010; pesquisa por tipo, metadados, relações e texto. |
+
+### Resultado CA-001–CA-015
+
+| CA | Resultado | Tarefa e evidência/verificação planejada |
+|---|---|---|
+| CA-001 | Suficiente | TASK-002/003/013; TASK-002 orquestra a candidata e TASK-003 comprova criação/capacidades D-02 em fixture e, quando autorizada, na raiz real. |
+| CA-002 | Suficiente | TASK-002/003; resolução instrumentada comprova preferencial primeiro; sonda avalia a candidata solicitada. |
+| CA-003 | Suficiente | TASK-003 classifica causa e entrega resultado semântico; TASK-002 consome-o, só avalia fallback após impossibilidade concreta classificada e bloqueia erro desconhecido sem fallback. |
+| CA-004 | Suficiente | TASK-004; forma UUIDv4, criação exclusiva, correlação e colisões/limite. |
+| CA-005 | Suficiente | TASK-005/006; árvore por tipo e documento `.md` estruturado validado. |
+| CA-006 | Suficiente | TASK-009/010/013; recuperação em novo processo/contexto sem conversa original. |
+| CA-007 | Suficiente | TASK-008/009; hash/bytes históricos imutáveis, relação para documento novo e destino não substituído. |
+| CA-008 | Suficiente | TASK-007/009; igualdade, mudança, inacessibilidade e não verificabilidade sem inferência. |
+| CA-009 | Suficiente | TASK-009/013; recuperação de evidência anterior e nova comparação relacionada. |
+| CA-010 | Suficiente | TASK-011; lacuna registrada com motivo, impacto, autoridade e condição de retomada. |
+| CA-011 | Suficiente | TASK-011/013; cenários de autonomia permitida e bloqueio por falta/ambiguidade/conflito. |
+| CA-012 | Suficiente | TASK-006/009/011; fonte normativa prevalece, conflito do workspace gera divergência. |
+| CA-013 | Suficiente | TASK-012; inventário-fixture exclui workspace preferencial e fallback. |
+| CA-014 | Suficiente | TASK-012; doubles/spies verificam ausência de chamadas externas e Git. |
+| CA-015 | Suficiente | TASK-012/013; documentação Debug em pt-BR, sem conversão/duplicação prematura; inglês operacional condicionado a Release explicitamente autorizado. |
+
+As estratégias são técnicas e revisáveis; não exigem validação humana artificial. São trabalho futuro de IMPLEMENT/CONVERGE, não resultados alegados nesta análise.
+
+### Resultado D-01–D-14
+
+| Decisão | Resultado | Cobertura verificada |
+|---|---|---|
+| D-01 | Coberta | TASK-001/002; RickCraftRoot explícito, validado e sem descoberta heurística. |
+| D-02 | Coberta | TASK-003; sonda concreta antes de cada raiz real; fixture não substitui a sonda real, que não foi executada. |
+| D-03 | Coberta | TASK-003 classifica causas concretas; TASK-002 consome resultados para precedência/seleção; erro desconhecido bloqueia. |
+| D-04 | Coberta | TASK-002/008/009; reavaliação por operação e publicação, raiz corrente, metadado coerente e união histórica. |
+| D-05 | Coberta | TASK-004; ANL-UUIDv4 e retomada pelo ID fornecido. |
+| D-06 | Coberta | TASK-004/008; criação exclusiva, colisão, regeneração integral e limite de oito. |
+| D-07 | Coberta | TASK-005; oito tipos e catálogo versionado. |
+| D-08 | Coberta | TASK-006; JSON v1, UTF-8 estrito, duplicatas e constantes inválidas rejeitadas. |
+| D-09 | Coberta | TASK-006/008/009; identidade, filename, metadados e relações tipadas. |
+| D-10 | Coberta | TASK-008/009; publicação imutável e histórico append-only. |
+| D-11 | Coberta | TASK-007/009; SHA-256 dos bytes exatos, forma canônica, vetor e estados de verificação. |
+| D-12 | Coberta | TASK-010; pesquisa sob demanda sem índice persistente. |
+| D-13 | Coberta | TASK-003/008; temporário exclusivo, `os.link`, não substituição, hash final e colisão/concorrência. |
+| D-14 | Coberta | TASK-012; privacidade, ausência de publicação externa e exclusão do Release. |
+
+### Revisão TASK-002/TASK-003, CA-003 e ANALYZE-001
+
+- **TASK-002 isolada:** depende apenas de TASK-001; deriva os caminhos normativos, testa a resolução com resultados semânticos controlados, avalia sempre o preferencial primeiro, reavalia por operação e antes de cada publicação, seleciona fallback somente após impossibilidade classificada e bloqueia resultado desconhecido. Não implementa a sonda, operações concretas de filesystem ou classificação de exceções brutas; não mantém seleção em cache permanente. Os doubles controlados testam a lógica sem impor arquitetura adicional.
+- **TASK-003:** depende de TASK-001/002; implementa a sonda D-02 para a candidata solicitada, as operações concretas de filesystem e classificação D-03, entregando resultado utilizável/impossibilidade concreta/erro desconhecido ao resolvedor. Não deriva caminhos, define precedência, seleciona fallback ou reavalia D-04. Testes planejados cobrem cada resultado, limpeza isolada, `os.link` sem substituição e integração com TASK-002.
+- **Grafo/ausência de circularidade:** TASK-002 pode ser implementada e testada antes de TASK-003 por resultados semânticos controlados. TASK-003 depende do resolvedor de TASK-002 e depois fornece seu resultado concreto; nenhuma depende semanticamente de resultado futuro impossível. Não há ciclo.
+- **CA-001/CA-002/CA-003:** criação/capacidades concretas da candidata pertencem a TASK-003; orquestração e precedência a TASK-002. CA-003 aponta para ambas, com classificação em TASK-003 e consumo/seleção em TASK-002.
+- **D-02/D-03/D-04:** a divisão é coerente no corpo das tarefas e nas matrizes. D-02 = TASK-003; D-03 = classificação TASK-003 e consumo/seleção TASK-002; D-04 = TASK-002/TASK-008/TASK-009. TASK-008 reavalia antes de cada tentativa, usa temporário/destino na raiz atual, alinha `workspace_root_kind`, e reavalia/reconstrói em colisão ou troca de raiz.
+- **ANALYZE-001:** resolvido nesta reexecução documental: a responsabilidade de reavaliar a raiz antes da publicação, ausente na tarefa anterior, está explícita agora. Isso avalia suficiência do planejamento; não comprova sonda ou execução operacional.
+
+### Revisão das 13 tarefas, dependências e limites
+
+| TASK | Dependências declaradas | Resultado da revisão documental |
+|---|---|---|
+| TASK-001 | Nenhuma | Origem D-01 e contrato de raiz explícita delimitados; definição não foi alterada pelas correções posteriores e sua evidência técnica permanece preservada. Não declarada CONVERGED. |
+| TASK-002 | TASK-001 | Resolução e precedência testáveis isoladamente com resultados controlados. |
+| TASK-003 | TASK-001, TASK-002 | Sonda/classificação concretas e integração posterior sem circularidade. |
+| TASK-004 | TASK-001–003 | Identidade/retomada depende de raiz resolvida e utilizável. |
+| TASK-005 | TASK-004 | Catálogo/layout depende do contexto de análise. |
+| TASK-006 | TASK-005 | Serialização valida os tipos/layout definidos. |
+| TASK-007 | TASK-006 | Proveniência usa entradas/documentos estruturados. |
+| TASK-008 | TASK-004–007 | Publicação depende de identidade, caminho/tipo, formato e hash. |
+| TASK-009 | TASK-003, TASK-004, TASK-006–008 | Recuperação usa sonda/resolução, documentos, proveniência e publicação existentes. |
+| TASK-010 | TASK-005, TASK-006, TASK-008, TASK-009 | Pesquisa consulta formatos e documentos recuperáveis. |
+| TASK-011 | TASK-006, TASK-008, TASK-009 | Registro de lacunas usa documento validado e persistência/recuperação. |
+| TASK-012 | TASK-001, TASK-003, TASK-008, TASK-010, TASK-011 | Fronteiras de inventário e ausência de publicação dependem dos componentes pertinentes. |
+| TASK-013 | TASK-001–012 | Integração/regressão somente após as tarefas precedentes. |
+
+Foram encontradas exatamente 13 tarefas, TASK-001 a TASK-013. O grafo é acíclico, as dependências apontam para pré-requisitos anteriores, não há componente usado antes da dependência declarada, e TASK-013 depende das tarefas aplicáveis. Todas possuem origem SPEC/PLAN, trabalho delimitado, verificação/evidência e limites. Não foi identificada decisão arquitetural nova nem tarefa fora de escopo.
+
+- **Lifecycle:** ANALYZE avalia SPEC/PLAN/TASKS e a estratégia planejada; IMPLEMENT executará código/testes/sondas e produzirá evidências; CONVERGE avaliará resultados reais. TASK-013 não confunde essas etapas nem produz evidência retroativa para ANALYZE.
+- **TASK-001 já executada:** a definição da tarefa não mudou materialmente com as correções de TASK-002/TASK-003/CA-003; não surgiu precondição retroativa incompatível. A implementação e evidência registrada permanecem preservadas; esta análise não avaliou código/testes como CONVERGE.
+- **D-02 e publicação:** D-02 permanece planejada e não executada; a tentativa em TEMP continua inconclusiva. TASK-003/TASK-008 planejam criação exclusiva, escrita/flush, leitura, `os.link`, não substituição, hash, colisão, concorrência, cleanup best-effort e exclusão de `.tmp` da descoberta documental. Erro desconhecido não permite fallback.
+- **Rastreabilidade/histórico/proveniência:** ANL/DOC UUIDv4, oito tipos, seis relações, append-only, imutabilidade, recuperação por análise/documento/tipo, `resume_analysis_id`, união histórica, divergência por mesmo ID com bytes diferentes, pesquisa, continuidade e estados `MATCHED`, `CHANGED_REASSESS`, `UNAVAILABLE`, `UNVERIFIABLE` estão cobertos.
+- **Autoridade/lacunas:** TASK-011 trata informação ausente, ambiguidade, conflito, evidência insuficiente, autoridade ausente, divergência e blocker; permite continuidade independente somente dentro de autorização e suficiência. Workspace não recebe autoridade normativa.
+- **Debug/Release/idioma e escopo negativo:** Debug permanece pt-BR; não há produção antecipada de conteúdo inglês, duplicação automática, Release real, Git/rede/upload/sync. `.workspace/` fica fora do inventário. Nenhuma tarefa introduz banco/SQLite, embeddings, índice persistente, MCP, Plugin, Orchestrator, Agents SDK, Guards, Evals globais, Git automático, dependência externa ou linguagem distinta da aprovada.
+
+### Achados e conclusão
+
+| ID | Resultado | Artefato/referência | Severidade | Impacto/correção |
+|---|---|---|---|---|
+| ANALYZE-001 | Resolvido nesta execução | TASK-002/TASK-008; D-04; PLAN §§4.2 e 9.1 | Sem bloqueante remanescente | Reavaliação antes de cada publicação está especificada e verificável. |
+
+- **Novos achados:** Nenhum.
+- **Achados bloqueantes:** Nenhum.
+- **Conclusão fundamentada:** hashes exatos confirmados; SPEC, PLAN e TASKS estão COMPLETE e suas entradas atuais não estão invalidadas; RF-001–RF-014, CA-001–CA-015 e D-01–D-14 possuem cobertura e estratégia verificável; TASK-001–TASK-013 têm origem e dependências coerentes; TASK-002/TASK-003 são executáveis sem circularidade e CA-003 está corretamente atribuída; não há contradição material, violação de autoridade ou insuficiência de estratégia que impeça IMPLEMENT. Resultado: **ANALYZE = PASS**, válido exclusivamente para os três hashes acima.
+- **Limites desta execução:** IMPLEMENT continua IN_PROGRESS apenas como estágio previamente iniciado; TASK-001 permanece executada com evidência preservada; TASK-002–TASK-013 não foram executadas; nenhum trabalho de IMPLEMENT foi retomado. Nenhum código foi alterado, nenhum teste foi executado, D-02 não foi executada, `.workspace/` não foi criada e nenhum Release foi produzido. CONVERGE permanece NOT_STARTED. O PASS não inicia TASK-002; autorização separada será necessária após revisão deste gate.

@@ -3,8 +3,8 @@
 ## Estado corrente
 
 - **Etapa atual:** SPEC
-- **SPEC:** COMPLETE — pronta para revisão, não aprovada
-- **PLAN:** NOT_STARTED
+- **SPEC:** COMPLETE — aprovada pelo responsável pelo projeto
+- **PLAN:** COMPLETE — pronta para revisão, não aprovada
 - **TASKS:** NOT_STARTED
 - **ANALYZE:** NOT_STARTED
 - **IMPLEMENT:** NOT_STARTED
@@ -30,6 +30,18 @@ Uma revisão externa identificou quatro lacunas comportamentais — dimensões t
 
 A correção preservou RF-001–RF-017 e CA-001–CA-017, adicionou RF-018–RF-021 e CA-018–CA-021, esclareceu a aplicação de precedência somente quando expressamente autorizada e acrescentou cenários de revisão pertinentes. Após a correção, SPEC retornou a COMPLETE, pronta para revisão e ainda não aprovada.
 
+## Aprovação da SPEC e início de PLAN
+
+Em 2026-10-11, o responsável pelo projeto aprovou SPEC-0000000002, SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, referência adicional blob Git `97f1a98c4f3b25bf52c0fa71c29502a39e9ca556`. A aprovação autoriza somente PLAN; não autoriza TASKS, ANALYZE, IMPLEMENT, CONVERGE ou Release.
+
+PLAN passou de NOT_STARTED para IN_PROGRESS nesta execução. SPEC permanece COMPLETE e aprovada. TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece nenhum.
+
+## PLAN — execução de 2026-10-11
+
+O PLAN foi elaborado contra SPEC-0000000002 aprovada no SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`. O documento define fronteira Core/especialistas, request e grants conservadores, autoridade explícita, evidências/claims, findings, dimensões, uso dos avaliadores de `gap_handling.py`, change proposal sem editor, preservação comportamental baseada em evidência, conclusão limitada, resposta em três seções, persistência optativa SPEC1, falhas, determinismo, riscos e matrizes RF/CA/cenários.
+
+PLAN passou de IN_PROGRESS para COMPLETE, pronto para revisão e não aprovado. Nenhum runtime/teste foi alterado ou executado; nenhum `tasks.md`, ANALYZE, IMPLEMENT, CONVERGE ou Release foi iniciado.
+
 ## Fontes internas consultadas
 
 - `README_PTBr.md` e `README.md`, integralmente;
@@ -48,15 +60,16 @@ Nenhuma documentação externa foi necessária.
 
 | Artefato | Estado |
 |---|---|
-| `spec.md` | COMPLETE; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; pronta para revisão/aprovação, ainda não aprovada |
+| `spec.md` | COMPLETE e aprovada; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` |
+| `plan.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `D0F50D366524246AFDAD9D0DF68490C6BAB882022A1444100BBBA392A07D5C93` |
 | `status.md` | Estado corrente desta unidade; UTF-8 |
 
 O registro autoritativo da alocação permanece em `registries/specifications.md`.
 
 ## Decisões pendentes
 
-- Revisão/aprovação da SPEC pelo responsável pelo projeto.
-- Autorização separada para iniciar PLAN, se aprovada.
+- Revisão/aprovação explícita do PLAN.
+- Autorização separada antes de criar TASKS.
 
 ## CHECKPOINT RICKCRAFT
 
@@ -115,3 +128,71 @@ Não iniciar PLAN/TASKS/ANALYZE/IMPLEMENT/CONVERGE, não implementar runtime/tes
 - **Próximo passo proposto:** revisar exclusivamente SPEC-0000000002 corrigida.
 - **Autorização necessária:** aprovação explícita antes de PLAN.
 - **Não executar:** PLAN ou qualquer gate/tarefa posterior antes dessa autorização.
+
+## CHECKPOINT RICKCRAFT — PLAN
+
+### Fase executada
+
+PLAN — SPEC-0000000002.
+
+### Objetivo
+
+Definir arquitetura, contratos, fluxo, persistência opcional e estratégia de validação para o Protocolo de Revisão Técnica, Escopo e Resposta.
+
+### Estado
+
+AGUARDANDO_APROVAÇÃO. PLAN COMPLETE, pronta para revisão e não aprovada.
+
+### Versão da SPEC usada
+
+`F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`.
+
+### Arquivos criados
+
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/plan.md`
+
+### Arquivos alterados
+
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+### Decisões arquiteturais
+
+D-01–D-15, registradas em `plan.md`.
+
+### Componentes planejados
+
+Um módulo runtime `review_protocol.py` e um teste `test_review_protocol.py`; reuso das APIs existentes SPEC1 e dos avaliadores puros SPEC1 de conflito/continuidade. Sem especialistas, Agents, Orchestrator, editor universal ou dependências externas.
+
+### Estratégia de validação
+
+Grupos A–P, matrizes CA-001–CA-021 e cenários A–O estão mapeados em `plan.md`. Nenhum teste foi criado ou executado nesta fase.
+
+### Decisões pendentes
+
+Aprovação explícita do PLAN; TASKS permanece dependente dessa aprovação.
+
+### Bloqueios
+
+Nenhum bloqueio arquitetural identificado para revisão do PLAN.
+
+### Próximo passo recomendado
+
+Revisar exclusivamente o PLAN da SPEC-0000000002 antes de autorizar TASKS.
+
+### O que não deve ser feito ainda
+
+Não criar TASKS, não executar ANALYZE/IMPLEMENT/CONVERGE e não gerar Release.
+
+## HANDOFF PARA REVISÃO — PLAN
+
+- **Fase:** PLAN — SPEC-0000000002.
+- **Estado:** AGUARDANDO_APROVAÇÃO.
+- **SPEC aprovada usada:** SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`.
+- **PLAN:** `D0F50D366524246AFDAD9D0DF68490C6BAB882022A1444100BBBA392A07D5C93`.
+- **Fontes internas:** READMEs, Policies, Registries, SPEC-0000000002 e dependência SPEC-0000000001 listados no início do status; runtime e testes relevantes inspecionados nesta execução.
+- **Artefatos:** `plan.md` e `status.md` atualizado.
+- **Cobertura:** RF-001–RF-021, CA-001–CA-021 e cenários A–O mapeados no PLAN.
+- **Pendência:** aprovação explícita do PLAN.
+- **Próximo passo:** revisar exclusivamente PLAN.
+- **Autorização necessária:** aprovação antes de criar `tasks.md`.
+- **Não executar:** TASKS, ANALYZE, IMPLEMENT, CONVERGE ou Release antes da autorização.

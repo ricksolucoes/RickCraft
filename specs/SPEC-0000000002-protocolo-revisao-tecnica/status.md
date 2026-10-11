@@ -634,3 +634,27 @@ Estado corrente: Etapa = IMPLEMENT; SPEC/PLAN/TASKS = COMPLETE e aprovadas; ANAL
 ### HANDOFF PARA REVISÃO — TASK-005
 
 Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro. TASK-005 está COMPLETE e aguarda revisão; TASK-006–TASK-013 não foram iniciadas. É necessária autorização explícita separada antes da TASK-006.
+
+## Correção pontual de cobertura — TASK-005 — scope incompatível — 2026-10-11
+
+Uma revisão externa identificou lacuna de cobertura, não defeito funcional demonstrado: os testes de TASK-005 cobriam dimensão incompatível, mas não isolavam o caso de dimensão igual com scope diferente. TASK-005 foi mantida como a tarefa em correção; TASK-006 não foi iniciada.
+
+Foi acrescentado `test_scope_incompativel_no_specialist_assessment_e_rejeitado`. O caso fixa `ReviewFinding.scope = "ClasseCliente"` e `SpecialistAssessment.scope = "OutroEscopo"`, usando `TechnicalDimension.DELPHI_OBJECT_PASCAL` em ambos. O teste confirma as dimensões iguais, os scopes diferentes e espera `ReviewInputError` pela incompatibilidade de dimensão/escopo no finding.
+
+Comando executado: `python -B -m unittest -v impl.tests.test_review_protocol` — 100 testes executados, 100 PASS, 0 FAIL, 0 SKIP. A implementação/runtime permaneceu inalterada e seu SHA-256 foi confirmado como `3F882DA171C425891A8DA55FAFC95F2F168C8F7255A72B5EBE6430CC0185DB9D`. Novo SHA-256 de `test_review_protocol.py`, recalculado duas vezes após releitura UTF-8 estrita: `A52D03DE2DF9A84A34DF91D34D51BE567A947F73EA6B91459F16F8B7E9B1E0D7`.
+
+SPEC/PLAN/TASKS permanecem nos hashes aprovados `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; ANALYZE permanece PASS. IMPLEMENT = IN_PROGRESS; TASK-005 = COMPLETE, aguardando revisão; TASK-006–TASK-013 não executadas; CONVERGE = NOT_STARTED. Nenhum módulo SPEC1, runtime ou outro arquivo foi alterado nesta correção. Não houve Release ou push.
+
+### CHECKPOINT RICKCRAFT — correção pontual TASK-005
+
+- **Objetivo:** demonstrar a rejeição de SpecialistAssessment com scope incompatível e dimensão igual.
+- **Estado:** AGUARDANDO_APROVAÇÃO; TASK-005 COMPLETE, aguardando revisão.
+- **Arquivos alterados nesta correção:** `test_review_protocol.py` e `status.md`.
+- **Runtime:** inalterado; SHA-256 confirmado acima.
+- **Teste:** comando focal; 100/100 PASS, 0 FAIL, 0 SKIP.
+- **Próximo passo:** revisar exclusivamente a correção de cobertura de TASK-005.
+- **Não fazer ainda:** não iniciar TASK-006, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — correção pontual TASK-005
+
+Revisar o teste explícito de scope incompatível em `impl/tests/test_review_protocol.py` e este registro. A revisão não autoriza TASK-006; autorização explícita separada continua necessária.

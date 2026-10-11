@@ -836,6 +836,22 @@ class ReviewFindingTests(unittest.TestCase):
             self.finding(specialist_assessment=specialist)
         self.assertEqual(authority.scopes, ("ClasseCliente",))
 
+    def test_scope_incompativel_no_specialist_assessment_e_rejeitado(self) -> None:
+        finding_dimension = TechnicalDimension.DELPHI_OBJECT_PASCAL
+        finding_scope = "ClasseCliente"
+        specialist = SpecialistAssessment(
+            dimension=TechnicalDimension.DELPHI_OBJECT_PASCAL,
+            scope="OutroEscopo",
+            conclusion="Conclusão recebida para outro escopo.",
+            evidence=(self.evidence(reference="test://other-scope"),),
+            character=AssessmentCharacter.CONSULTATIVE,
+        )
+        self.assertIs(specialist.dimension, finding_dimension)
+        self.assertNotEqual(specialist.scope, finding_scope)
+        with self.assertRaisesRegex(ReviewInputError, "dimensão e ao escopo"):
+            self.finding(scope=finding_scope, dimension=finding_dimension,
+                         specialist_assessment=specialist)
+
     def test_owner_nao_e_inferido_por_dimension(self) -> None:
         finding = self.finding()
         self.assertFalse(hasattr(finding, "owner"))

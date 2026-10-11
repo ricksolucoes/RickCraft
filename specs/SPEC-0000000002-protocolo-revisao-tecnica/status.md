@@ -2,15 +2,70 @@
 
 ## Estado corrente
 
-- **Etapa atual:** ANALYZE
+- **Etapa atual:** IMPLEMENT
 - **SPEC:** COMPLETE — aprovada pelo responsável pelo projeto
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** NOT_STARTED
+- **IMPLEMENT:** IN_PROGRESS — TASK-001
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
+
+## Início de IMPLEMENT — TASK-001 — 2026-10-11
+
+O responsável autorizou exclusivamente TASK-001 nas versões SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`, usando o gate válido `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`. Os três hashes foram recalculados e conferem; ANALYZE permanece válido porque suas entradas normativas não mudaram. Etapa atual = IMPLEMENT; IMPLEMENT = IN_PROGRESS; TASK-001 = IN_PROGRESS; TASK-002–TASK-013 não iniciadas; CONVERGE = NOT_STARTED.
+
+## IMPLEMENT — TASK-001 — Pedido, escopo, idioma e autorização
+
+- **Estado:** TASK-001 = COMPLETE, aguardando revisão; TASK-002–TASK-013 não executadas. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED.
+- **Versões usadas:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; gate `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`.
+- **Arquivos criados:** `impl/src/RickCraft/review_protocol.py`; `impl/tests/test_review_protocol.py`.
+- **Modelos:** `ReviewInputError`, `AuthorizationGrant` (exatamente REVIEW, STRUCTURAL_CHANGE, FUNCTIONAL_CHANGE, LOCAL_PERSISTENCE), `RequestedEffect` (LOCAL_PERSISTENCE, EXTERNALITY), `ReviewScope` e `ReviewRequest`. Classes são dataclasses congeladas; coleções de entrada são copiadas para tuplas, entradas não ordenadas são canonicalizadas, e IDs/artefatos/versões são validados sem inferir escopo.
+- **Validações:** textos obrigatórios; escopo e IDs explícitos/únicos; dependências e artefatos sem duplicatas; allowlist/exclusions não se sobrepõem; source_versions possui pares não vazios sem identidade duplicada; grants/effects exigem os enums corretos; REVIEW é obrigatório; FUNCTIONAL_CHANGE requer STRUCTURAL_CHANGE; LOCAL_PERSISTENCE solicitado sem grant continua sem autorização; EXTERNALITY é reconhecida, mas não há grant/capacidade externa; `language=None` mantém o default semântico pt-BR e idioma explícito é preservado sem normalização.
+- **Classes futuras:** não foram criados modelos de autoridade, precedência, evidência, claims, dimensões, findings, conclusão, mudança, resposta, renderer, pipeline ou persistência.
+- **Teste executado:** `python -B -m unittest -v impl.tests.test_review_protocol` — `Ran 27 tests`; `OK`; 27 PASS, 0 FAIL, 0 SKIP. Cobertura inclui escopo/request válidos e inválidos, duplicidade, fronteiras de grants/effects, idioma, imutabilidade e isolamento contra mutação das coleções originais.
+- **Hashes SHA-256:** `review_protocol.py` = `D5A77D092E293FF5E60F07C55A7A751B1BCAEBC382DD5C92FCC4BF50876063C7`; `test_review_protocol.py` = `1E2B01EFB17972608BC8F5AC719950D6011465F9D7EDF5530B5D32E49196B1F8`.
+- **Fronteiras:** implementação usa somente biblioteca padrão (`dataclasses`, `enum`, `typing`). Inspeção estática não encontrou import/uso de subprocess, socket, urllib, Git, requests, upload/sync ou ferramentas Release; nenhuma externalidade foi executada. Nenhum módulo/teste SPEC1 foi alterado; nenhum teste SPEC1 ou suíte completa foi executado. Nenhum Release ou push ocorreu.
+- **Estado normativo:** hashes SPEC/PLAN/TASKS foram confirmados inalterados; ANALYZE-01 continua PASS e último gate válido. Nenhum outro arquivo foi criado/alterado além dos dois artefatos TASK-001 e deste status.
+
+### CHECKPOINT RICKCRAFT — TASK-001
+
+## Fase executada
+IMPLEMENT — TASK-001 — SPEC-0000000002
+
+## Objetivo da execução
+Implementar somente os modelos de pedido, escopo, idioma, efeitos solicitados e autorização.
+
+## Estado
+AGUARDANDO_APROVAÇÃO — TASK-001 concluída.
+
+## Gate utilizado
+ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS.
+
+## Testes executados
+`python -B -m unittest -v impl.tests.test_review_protocol` — 27/27 PASS.
+
+## Evidências
+`review_protocol.py`: `D5A77D092E293FF5E60F07C55A7A751B1BCAEBC382DD5C92FCC4BF50876063C7`.
+`test_review_protocol.py`: `1E2B01EFB17972608BC8F5AC719950D6011465F9D7EDF5530B5D32E49196B1F8`.
+
+## Arquivos criados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+
+## Arquivos alterados
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Próximo passo recomendado
+Revisar exclusivamente TASK-001 antes de autorizar TASK-002.
+
+## O que NÃO deve ser feito ainda
+Não executar TASK-002, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-001
+
+Revisar `review_protocol.py`, `test_review_protocol.py` e este registro. TASK-001 está COMPLETE após 27 testes focais aprovados. IMPLEMENT continua IN_PROGRESS; TASK-002–TASK-013 não iniciadas; CONVERGE permanece NOT_STARTED. É necessária autorização explícita separada antes de TASK-002.
 
 ## Aprovação de TASKS e início de ANALYZE — 2026-10-11
 

@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-010 executadas; TASK-011 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-011 executadas; TASK-012 a TASK-013 pendentes. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
@@ -44,6 +44,8 @@
 | `test_document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `7B1A226E2479EAD1D303366DF98DAE5E11E7072CF6DCEE88C8D4E86510BD883C` | 28 testes específicos; 27 aprovados e 1 skip por privilégio de symlink real no Windows. |
 | `document_search.py` | IMPLEMENT TASK-010 | SHA-256 `0D2D2A2729DFDD5FC840DDF182AC7BE65CFB778D69429172475B886FA58EA63D` | Pesquisa sob demanda por recuperação atual, filtros combinados por AND, validação estrita de valores JSON e ordenação por instante UTC e document_id; sem índice/cache persistente. |
 | `test_document_search.py` | IMPLEMENT TASK-010 | SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70` | 73 testes unitários controlados de filtros, exclusões, ordenação, proveniência recuperada e ausência de mutação persistente. |
+| `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `3E3F27B71F3DC5B81909282037020FE0529FCD44421375E140BFA107A6C48EB3` | Registra divergence, blocker, decision existente e result; avalia conflitos/continuidade sem alterar autoridade ou executar trabalho continuável; publica exclusivamente via API TASK-008. |
+| `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `336AEF40EE97129448EBAE1C10948885332C716DB9AF4BB484E921CB31BD9CA6` | 80 testes controlados de autoridade, lacunas, continuidade localizada, persistência append-only e limites operacionais. |
 
 ## Histórico de estado
 
@@ -89,11 +91,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-010 executadas com evidências registradas; TASK-011 a TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e requer sua própria sonda antes de uso ativo.
+- **Mudanças pendentes:** TASK-001 a TASK-011 executadas com evidências registradas; TASK-012 e TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e exige sonda própria antes do uso.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-010. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-010 antes de autorizar TASK-011.
+- **Bloqueios:** Nenhum bloqueio material para TASK-011. ANALYZE-03 permanece PASS para os hashes registrados; IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-011 antes de autorizar TASK-012.
 
 ## Validade do ANALYZE anterior
 
@@ -924,3 +926,46 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - RickCraftRoot explícito: `C:\Projects\Language\Skills\RickCraft\impl\src\RickCraft`. A consulta real encontrou o documento `DOC-e94fe576-a13a-422a-bd12-406629018cec` da análise `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5`, tipo `evidence`, na raiz preferencial `impl/.workspace`. SHA-256 lido: `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`.
 - A resolução efetiva selecionou preferred; evidência observada da raiz preferencial: UTILIZAVEL, com capacidades de sonda aprovadas e sem resíduos/avisos. Fallback ficou MISSING e não foi sondado. A chamada de resolução executou a sonda D-02 temporária de avaliação e limpou seus artefatos; inventário e bytes persistentes das duas raízes antes/depois permaneceram idênticos.
 - Nenhuma análise/documento foi criado, publicado ou alterado; nenhum arquivo operacional novo foi persistido. Sem rede ou Git. TASK-011 não foi iniciada; IMPLEMENT permanece IN_PROGRESS e CONVERGE NOT_STARTED.
+
+## IMPLEMENT TASK-011 — evidência
+
+### Escopo, gate e estado
+
+- Data: 2026-10-11. Executada somente TASK-011; SPEC, PLAN e TASKS não foram alterados.
+- Gate preservado: `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`.
+- Estado: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. TASK-001 a TASK-011 executadas; TASK-012 e TASK-013 pendentes.
+- Ambiente: Python 3.12.9; Windows 11 10.0.26200-SP0; sys.platform=win32. Nenhuma dependência externa foi adicionada.
+
+### Implementação e contratos locais
+
+- Criados `impl/src/RickCraft/gap_handling.py` (SHA-256 `3E3F27B71F3DC5B81909282037020FE0529FCD44421375E140BFA107A6C48EB3`) e `impl/tests/test_gap_handling.py` (SHA-256 `336AEF40EE97129448EBAE1C10948885332C716DB9AF4BB484E921CB31BD9CA6`). Somente esses arquivos e este status foram alterados nesta tarefa.
+- Tipos usados: `divergence`, `blocker`, `decision` e `result`, sem extensão do catálogo. Referências locais distinguem fontes `normative`, `workspace`, `evidence` e `operational`; uma fonte normativa exige referência explícita de autoridade.
+- Divergence exige ocorrência, duas ou mais referências, escopo afetado, impacto, motivo para não resolver silenciosamente e condição de retomada; autoridade/informação/evidência necessárias são registradas quando aplicáveis.
+- Blocker exige parte afetada, causa verificável, dependência, condição objetiva de retomada e ao menos um requisito de autoridade, informação ou evidência. Informação ausente, ambiguidade, insuficiência de evidência, indisponibilidade de autoridade e conflito normativo podem ser registrados sem preencher defaults.
+- `decision` aceita somente caso marcado explicitamente como decisão existente, com texto da decisão, Decision Owner, referência que demonstra autoridade do owner, fonte, escopo e justificativa. Owner/fonte ausentes e proposta/hipótese não marcada como existente são rejeitados; o registro declara que não transfere autoridade.
+- `result` registra operação, resultado, evidências, limitações e escopos bloqueados. Não aceita alegações `ANALYZE PASS`/`CONVERGED`, não escreve `status.md` e não muda gates.
+- Conflito workspace × fonte normativa preserva a referência normativa indicada pelo chamador como aplicável e registra que o workspace não a substitui. Conflito entre duas fontes normativas sem precedência formal não seleciona vencedora e sinaliza blocker/autoridade necessária. Não há ranking por data ou especificidade.
+- Continuidade usa escopos afetados e fatos explícitos por escopo: dependências, autorização, suficiência de informação/evidência/autoridade e ausência de conflito. Só escopo independente com todos os critérios verdadeiros aparece como continuável; a função apenas classifica e não executa trabalho.
+- Todas as persistências passam por `document_publisher.publicar_documento`; ID, raiz e publicação são retornados como persistidos somente após confirmação da API TASK-008. Falhas de publicação propagam sem receipt. Relações opcionais usam tokens existentes. Cada nova ocorrência cria DOC novo e não edita documentos anteriores.
+
+### Testes e regressões
+
+- TASK-011: `python -B -m unittest -q impl.tests.test_gap_handling` — 80/80 PASS.
+- TASK-010: `python -B -m unittest -q impl.tests.test_document_search` — 73/73 PASS.
+- TASK-009: `python -B -m unittest -q impl.tests.test_document_recovery` — 28 executados, 27 PASS e 1 SKIP por privilégio de symlink real no Windows; a proteção determinística permanece coberta.
+- TASK-008: `python -B -m unittest -q impl.tests.test_document_publisher` — 47/47 PASS.
+- TASK-007: `python -B -m unittest -q impl.tests.test_provenance` — 45/45 PASS.
+- TASK-006: `python -B -m unittest -q impl.tests.test_document_format` — 49/49 PASS.
+- Suíte integral: `python -B -m unittest discover -s impl/tests -v` — 416 executados, 415 PASS, 1 SKIP; resultado OK.
+- A primeira tentativa sandboxada da suíte focada falhou com WinError 5 ao criar e limpar fixtures TEMP; a repetição elevada, autorizada pela regra ambiental da tarefa, concluiu. Tentativas intermediárias identificaram e corrigiram somente problemas do harness (assinatura da recuperação, raiz fixture fora da fórmula permitida e asserção textual); a versão final passou 80/80. As 79 pastas `rickcraft-gap-*` da tentativa sandboxada foram confirmadas como filhas diretas de TEMP e removidas. A elevação é limitação ambiental, não requisito do produto.
+
+### Integração Debug somente leitura
+
+- Recuperado o documento histórico `DOC-e94fe576-a13a-422a-bd12-406629018cec`, da análise `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5`, tipo `evidence`, na raiz `preferred`. SHA-256 observado: `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`, igual ao registro anterior.
+- A recuperação usou resolução real e a sonda D-02 transitória necessária à leitura da raiz; os artefatos temporários foram limpos. Inventário e bytes persistentes das raízes antes/depois permaneceram idênticos.
+- Nenhuma divergence, blocker, decision ou result sintético foi publicado no Debug; nenhum documento anterior foi alterado. Publicações funcionais ocorreram somente em workspaces temporários dos testes e foram removidas no teardown.
+
+### Limites e estado corrente
+
+- TASK-012 não foi iniciada. Não houve Orchestrator, protocolo multiagent, chamada externa, rede, Git, Release, CONVERGE ou push.
+- IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisão de TASK-011 antes de autorizar TASK-012.

@@ -179,38 +179,106 @@ class WorkspaceIntegrationTests(unittest.TestCase):
             body="A evidência inicial está íntegra e contém ação em pt-BR.",
             purpose="Registrar observação inicial",
         )
+        primeiro_document_id = primeiro.document_id
         bytes_anteriores = primeiro.destination.read_bytes()
         hash_anterior = hashlib.sha256(bytes_anteriores).hexdigest()
-        metadata_primeira = parsear_documento(bytes_anteriores).metadata
         self.assertEqual(primeiro.workspace_root_kind, "preferred")
         self.assertEqual(primeiro.destination.name, f"{primeiro.document_id}.md")
         self.assertEqual(primeiro.destination.parent, self.paths.preferencial / analysis_id / "evidence")
-        self.assertEqual(metadata_primeira["inputs"], [observacao])
+        self.assertEqual(parsear_documento(bytes_anteriores).metadata["inputs"], [observacao])
         self.assertIn("ação", parsear_documento(bytes_anteriores).corpo)
 
         # Contexto B é um processo Python independente. Seus únicos dados
-        # funcionais de retomada são RickCraftRoot, analysis_id e document_id;
-        # não recebe objetos ou metadados do processo A.
+        # funcionais são RickCraftRoot, analysis_id e document_id. Ele recupera
+        # o locator persistido, muda a entrada, compara e publica a nova prova;
+        # não recebe objetos, locator ou metadados do processo A.
         child = r'''
-import json, sys
+import hashlib, json, sys, uuid
 from pathlib import Path
-from document_recovery import recuperar_documento
+from document_recovery import recuperar_documento, recuperar_documentos
 from document_search import SearchQuery, pesquisar_documentos
+from document_publisher import publicar_documento
+from provenance import verificar_arquivo_local
 root = Path(sys.argv[1])
-analysis_id, document_id = sys.argv[2], sys.argv[3]
-doc = recuperar_documento(root, document_id)
+analysis_id, first_document_id = sys.argv[2], sys.argv[3]
+first = recuperar_documento(root, first_document_id)
+assert first.analysis_id == analysis_id
+assert first.document_id == first_document_id
+assert first.document_type == "evidence"
+historical_input = first.parsed.metadata["inputs"][0]
+assert historical_input["kind"] == "local_file"
+source = Path(historical_input["locator"])
+assert source.is_absolute()
+first_path = first.locations[0].path
+first_sha256_before = hashlib.sha256(first_path.read_bytes()).hexdigest()
+assert first_sha256_before == first.sha256
+
+source.write_bytes("versão atualizada: ação revisada\r\n".encode("utf-8"))
+comparison = verificar_arquivo_local(historical_input, source)
+assert comparison["verification"] == "CHANGED_REASSESS"
+assert comparison["historical"]["sha256"] == historical_input["sha256"]
+
+second_id = "DOC-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+publication = publicar_documento(
+    root,
+    analysis_id,
+    "evidence",
+    "Validação posterior da entrada",
+    "A nova validação complementa a evidência anterior após mudança da entrada.",
+    {
+        "schema_version": 1,
+        "type_catalog_version": 1,
+        "created_at_utc": "2026-10-11T12:00:00Z",
+        "purpose": "Reavaliar a entrada alterada no contexto independente",
+        "origin": {"kind": "task_execution", "reference": "TASK-013 fixture context B"},
+        "inputs": [comparison],
+        "relations": [{"relation_type": "complements", "document_id": first_document_id}],
+    },
+    uuid_factory=lambda: uuid.UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+)
+assert publication.document_id == second_id
+
+history = recuperar_documentos(root)
+first_after = history.document(first_document_id)
+second = history.document(second_id)
+assert first_after.sha256 == first_sha256_before
+assert second.relations[0].relation_type == "complements"
+assert second.relations[0].document_id == first_document_id
+assert second.relations[0].resolved
+assert second.parsed.metadata["inputs"][0]["verification"] == "CHANGED_REASSESS"
+first_sha256_after = hashlib.sha256(first_after.locations[0].path.read_bytes()).hexdigest()
+assert first_sha256_after == first_sha256_before
 search = pesquisar_documentos(root, SearchQuery(
-    analysis_id=analysis_id, document_type="evidence", document_id=document_id,
-    text_terms=("EVIDÊNCIA", "pt-BR")))
-print(json.dumps({"analysis_id": doc.analysis_id, "document_id": doc.document_id,
-    "sha256": doc.sha256, "body": doc.parsed.corpo,
-    "search_ids": [item.document_id for item in search.matches]}, ensure_ascii=False))
+    analysis_id=analysis_id, document_type="evidence",
+    relation_equals={"relation_type": "complements", "document_id": first_document_id},
+    input_equals={"verification": "CHANGED_REASSESS"},
+    text_terms=("NOVA", "ação")))
+search_ids = [item.document_id for item in search.matches]
+assert search_ids == [second_id]
+temporary_residues = list(first_after.locations[0].path.parent.glob("*.tmp"))
+print(json.dumps({
+    "analysis_id": analysis_id,
+    "first_document_id": first_document_id,
+    "second_document_id": second.document_id,
+    "first_sha256_before": first_sha256_before,
+    "first_sha256_after": first_sha256_after,
+    "historical_input_sha256": historical_input["sha256"],
+    "verification": comparison["verification"],
+    "relation_type": second.relations[0].relation_type,
+    "relation_target": second.relations[0].document_id,
+    "relation_resolved": second.relations[0].resolved,
+    "search_ids": search_ids,
+    "temporary_residues": [str(path) for path in temporary_residues],
+}, ensure_ascii=False))
 '''
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(RUNTIME_DIRECTORY)
         environment["PYTHONIOENCODING"] = "utf-8"
+        # Depois da publicação A, o pai retém apenas bytes/hash/ID para suas
+        # assertivas externas; B não recebe nem pode reutilizar a observação.
+        del observacao, source, primeiro
         recovered_process = subprocess.run(
-            [sys.executable, "-B", "-c", child, str(self.rickcraft_root), analysis_id, primeiro.document_id],
+            [sys.executable, "-B", "-c", child, str(self.rickcraft_root), analysis_id, primeiro_document_id],
             check=True,
             capture_output=True,
             text=True,
@@ -219,45 +287,43 @@ print(json.dumps({"analysis_id": doc.analysis_id, "document_id": doc.document_id
         )
         recovered_child = json.loads(recovered_process.stdout)
         self.assertEqual(recovered_child["analysis_id"], analysis_id)
-        self.assertEqual(recovered_child["document_id"], primeiro.document_id)
-        self.assertEqual(recovered_child["sha256"], hash_anterior)
-        self.assertEqual(recovered_child["search_ids"], [primeiro.document_id])
-
-        # A entrada muda depois do primeiro registro. A recuperação compara
-        # com o histórico sem reescrevê-lo; uma nova evidência é append-only.
-        source.write_bytes("versão atualizada: ação revisada\r\n".encode("utf-8"))
-        comparacao = verificar_arquivo_local(observacao, source)
-        self.assertEqual(comparacao["verification"], "CHANGED_REASSESS")
-        self.assertEqual(comparacao["historical"]["sha256"], observacao["sha256"])
-        verificado_na_recuperacao = recuperar_documento(self.rickcraft_root, primeiro.document_id)
+        segundo_document_id = recovered_child["second_document_id"]
+        self.assertEqual(recovered_child["first_document_id"], primeiro_document_id)
+        self.assertNotEqual(segundo_document_id, primeiro_document_id)
+        self.assertEqual(recovered_child["first_sha256_before"], hash_anterior)
+        self.assertEqual(recovered_child["first_sha256_after"], hash_anterior)
         self.assertEqual(
-            verificado_na_recuperacao.input_verifications[0].verification["verification"],
-            "CHANGED_REASSESS",
+            recovered_child["historical_input_sha256"],
+            parsear_documento(bytes_anteriores).metadata["inputs"][0]["sha256"],
         )
+        self.assertEqual(recovered_child["verification"], "CHANGED_REASSESS")
+        self.assertEqual(recovered_child["relation_type"], "complements")
+        self.assertEqual(recovered_child["relation_target"], primeiro_document_id)
+        self.assertTrue(recovered_child["relation_resolved"])
+        self.assertEqual(recovered_child["search_ids"], [segundo_document_id])
+        self.assertEqual(recovered_child["temporary_residues"], [])
 
-        segundo = self.publish(
-            analysis_id,
-            1,
-            inputs=(comparacao,),
-            relations=({
-                "relation_type": "complements",
-                "document_id": primeiro.document_id,
-            },),
-            body="A nova validação complementa a evidência anterior após mudança da entrada.",
-            purpose="Reavaliar a entrada alterada",
-        )
-        self.assertNotEqual(segundo.document_id, primeiro.document_id)
-        self.assertEqual(primeiro.destination.read_bytes(), bytes_anteriores)
-        self.assertEqual(hashlib.sha256(primeiro.destination.read_bytes()).hexdigest(), hash_anterior)
-        self.assertFalse(any(primeiro.destination.parent.glob("*.tmp")))
+        # O pai só verifica o resultado persistido; não cria a comparação nem
+        # publica o segundo documento e não reutiliza a observação de A.
+        primeiro_recuperado = recuperar_documento(self.rickcraft_root, primeiro_document_id)
+        segundo_recuperado = recuperar_documento(self.rickcraft_root, segundo_document_id)
+        primeiro_destination = primeiro_recuperado.locations[0].path
+        self.assertEqual(primeiro_destination.read_bytes(), bytes_anteriores)
+        self.assertEqual(hashlib.sha256(primeiro_destination.read_bytes()).hexdigest(), hash_anterior)
+        self.assertEqual(primeiro_recuperado.parsed.metadata, parsear_documento(bytes_anteriores).metadata)
+        self.assertEqual(segundo_recuperado.relations[0].relation_type, "complements")
+        self.assertEqual(segundo_recuperado.relations[0].document_id, primeiro_document_id)
+        self.assertTrue(segundo_recuperado.relations[0].resolved)
+        self.assertEqual(segundo_recuperado.parsed.metadata["inputs"][0]["verification"], "CHANGED_REASSESS")
+        self.assertFalse(any(primeiro_destination.parent.glob("*.tmp")))
 
         historico = recuperar_documentos(self.rickcraft_root)
-        anterior_recuperado = historico.document(primeiro.document_id)
-        novo_recuperado = historico.document(segundo.document_id)
+        anterior_recuperado = historico.document(primeiro_document_id)
+        novo_recuperado = historico.document(segundo_document_id)
         self.assertEqual(anterior_recuperado.sha256, hash_anterior)
-        self.assertEqual(anterior_recuperado.parsed.metadata, metadata_primeira)
+        self.assertEqual(anterior_recuperado.parsed.metadata, parsear_documento(bytes_anteriores).metadata)
         self.assertEqual(novo_recuperado.relations[0].relation_type, "complements")
-        self.assertEqual(novo_recuperado.relations[0].document_id, primeiro.document_id)
+        self.assertEqual(novo_recuperado.relations[0].document_id, primeiro_document_id)
         self.assertTrue(novo_recuperado.relations[0].resolved)
         self.assertEqual(
             [item.document_id for item in pesquisar_documentos(
@@ -265,12 +331,12 @@ print(json.dumps({"analysis_id": doc.analysis_id, "document_id": doc.document_id
                 SearchQuery(
                     analysis_id=analysis_id,
                     document_type="evidence",
-                    relation_equals={"relation_type": "complements", "document_id": primeiro.document_id},
+                    relation_equals={"relation_type": "complements", "document_id": primeiro_document_id},
                     input_equals={"verification": "CHANGED_REASSESS"},
                     text_terms=("NOVA", "ação"),
                 ),
             ).matches],
-            [segundo.document_id],
+            [segundo_document_id],
         )
 
     def test_lacuna_autoridade_normativa_e_continuidade_sao_persistidas(self) -> None:

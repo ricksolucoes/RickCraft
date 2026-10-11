@@ -51,7 +51,7 @@
 | `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A` | Registra divergence, blocker, decision existente e result; preserva autoridade informada, propaga bloqueios transitivos e rejeita declarações positivas de gate SDD; publica exclusivamente via API TASK-008. |
 | `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858` | 89 testes controlados incluindo autoridade não inferida, dependências transitivas/não avaliadas e variações canônicas de gates. |
 | `test_release_boundaries.py` | IMPLEMENT TASK-012 | SHA-256 `4E10856DFCA14EFFDC1FBF8BA19A8D48CDDA03DEC2522D519F5246C14749E7DE` | Cinco testes de inventário allowlist, exclusão dos workspaces, publicação local em fixture, idioma e ausência de integração externa; allowlist do fallback deriva do mesmo arquivo candidato. |
-| `test_workspace_integration.py` | IMPLEMENT TASK-013 | SHA-256 `789A99E4300F57A849F614391E52CC1ED16883B13A767CB07B58B26F584D0A2B` | Quatro testes integrados de sonda/precedência, persistência entre processos, proveniência/append-only, lacunas/autoridade/continuidade e limites de publicação/idioma. |
+| `test_workspace_integration.py` | IMPLEMENT TASK-013 | SHA-256 `7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4` | Quatro testes integrados; CA-009 comprova que processo independente recupera a entrada histórica, reavalia, publica evidência relacionada e recupera o histórico. |
 
 ## Histórico de estado
 
@@ -95,14 +95,16 @@
 
 | 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-004 executada e testada; criação exclusiva e retomada de `ANL-UUIDv4` concluídas. Suíte específica 25/25; TASK-003 17/17; TASK-002 20/20; suíte completa 75/75 antes e depois da integração Debug. Criação e retomada reavaliaram D-02, selecionaram `preferred` e preservaram o mesmo ID. Evidência e hashes registrados abaixo. TASK-005 a TASK-013 pendentes; CONVERGE permanece NOT_STARTED. |
 | 2026-10-11 | IMPLEMENT | COMPLETE | TASK-013 concluiu a integração e regressão final; RF-001–RF-014 e CA-001–CA-015 possuem evidência reproduzível consolidada abaixo. Suíte completa: 434 executados, 433 aprovados e 1 SKIP ambiental histórico de symlink real. Nenhum Release ou CONVERGE foi executado; o último gate válido continua ANALYZE-03 para os hashes normativos registrados. |
+| 2026-10-11 | IMPLEMENT | IN_PROGRESS | Reaberta a declaração anterior IMPLEMENT COMPLETE após revisão externa identificar lacuna material em CA-009: o processo B anterior somente recuperava/pesquisava; comparação da proveniência e publicação relacionada ocorriam no processo pai. Correção limitada à evidência/teste TASK-013; SPEC/PLAN/TASKS não mudaram, ANALYZE-03 não foi invalidado e CONVERGE permanece NOT_STARTED. |
+| 2026-10-11 | IMPLEMENT | COMPLETE | Correção final da evidência CA-009 concluída: subprocesso independente recupera input persistido, reavalia, publica evidência relacionada e recupera histórico. Integração 4/4 e suíte completa 434 executados, 433 PASS e 1 SKIP ambiental; ANALYZE-03 válido e CONVERGE NOT_STARTED. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** Nenhuma tarefa de IMPLEMENT pendente; TASK-001 a TASK-013 executadas com evidências registradas. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado no Debug real e exige sonda própria antes do uso.
-- **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT está COMPLETE; CONVERGE permanece NOT_STARTED.
+- **Mudanças pendentes:** Nenhuma tarefa de IMPLEMENT pendente; TASK-001 a TASK-013 executadas. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado no Debug real e exige sonda própria antes de qualquer uso.
+- **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT está COMPLETE após a correção de CA-009; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para IMPLEMENT. A limitação de privilégio para o teste real de symlink está isolada e coberta deterministicamente; a restrição sandboxada WinError 5 foi contornada pelo mecanismo elevado autorizado para testes temporários. ANALYZE-03 permanece PASS para os hashes registrados; IMPLEMENT está COMPLETE e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar TASK-013 e a evidência consolidada antes de autorizar CONVERGE. Nenhum trabalho de CONVERGE foi iniciado.
+- **Bloqueios:** Nenhum bloqueio material para IMPLEMENT. A lacuna de evidência CA-009 foi corrigida no teste; nenhum defeito de runtime foi identificado. ANALYZE-03 permanece PASS para os hashes registrados; CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Após a correção e regressões, revisar TASK-013/CA-009 antes de qualquer autorização separada para CONVERGE. Nenhum trabalho de CONVERGE foi iniciado.
 
 ## Validade do ANALYZE anterior
 
@@ -1068,7 +1070,7 @@ Referência de comandos: suítes `python -B -m unittest -v impl.tests.test_<mód
 | RF-003 — organizar por análise/tipo | D-05–D-07 | TASK-004–005 | `test_cria_um_diretorio_exclusivo_sem_pastas_de_tipo`, `test_versao_um_e_catalogo_fechado_com_oito_tokens`; integração usa um ANL e dois DOCs relacionados. | COVERED |
 | RF-004 — persistir Markdown | D-07–D-09, D-13 | TASK-005–006, TASK-008 | `test_caracteres_pt_br_sobrevivem_ao_round_trip`, `test_destino_final_rele_hash_parse_e_flags_sao_confirmados`; fluxo integrado valida JSON, UTF-8, corpo, tipo, analysis_id e root kind. | COVERED |
 | RF-005 — histórico rastreável | D-09–D-10, D-13 | TASK-008–009 | `test_append_only_preserva_documento_anterior`, `test_mesmo_id_com_conteudo_diferente_registra_divergencia_e_bloqueia_lookup`; integração compara bytes/hash/metadata antes e depois. | COVERED |
-| RF-006 — continuidade entre contextos | D-04–D-10, D-12 | TASK-004, TASK-009–010, TASK-013 | `test_retoma_id_valido_existente_sem_alterar_identidade`; integração inicia processo independente com root e IDs e recupera/pesquisa sem estado Python transferido. | COVERED |
+| RF-006 — continuidade entre contextos | D-04–D-10, D-12 | TASK-004, TASK-009–010, TASK-013 | `test_retoma_id_valido_existente_sem_alterar_identidade`; processo B independente recebe root e IDs, recupera pelo filesystem, usa proveniência persistida, reavalia e publica evidência relacionada sem estado Python transferido. | COVERED |
 | RF-007 — entradas e validade | D-09–D-11 | TASK-006–007, TASK-009 | `test_sha256_vetor_padrao_abc`, `test_locator_diferente_com_mesmos_bytes_retorna_changed`, `test_unavailable_nao_fabrica_sha256`; integração detecta `CHANGED_REASSESS`. | COVERED |
 | RF-008 — comparação/investigação | D-04, D-10–D-12 | TASK-007, TASK-009–010 | `test_resultado_preserva_referencia_historica`, `test_45_resultados_ordenados_por_created_at_utc`, `test_19_text_terms_usa_casefold`; busca do documento histórico e do fixture. | COVERED |
 | RF-009 — autonomia limitada | D-09–D-10 e regras de lacuna | TASK-011, TASK-013 | `test_escopo_depende_de_escopo_continuavel_sem_bloqueio`, `test_dependencia_transitiva_bloqueia_cadeia_completa`; matriz integrada de autorização, informação/evidência, conflito e dependências. | COVERED |
@@ -1092,7 +1094,7 @@ Ambiente de todas as verificações: Python 3.12.9, Windows 11 10.0.26200-SP0, `
 | CA-006 | `test_retoma_id_valido_existente_sem_alterar_identidade`, testes de recuperação/pesquisa. | Processo B independente recebeu somente RickCraftRoot, analysis_id e document_id; recuperou e pesquisou pelo filesystem. | PASS; o processo filho é subprocess explícito do harness, não atividade implícita do runtime. |
 | CA-007 | `test_append_only_preserva_documento_anterior`, `test_concorrencia_nao_sobrescreve_e_referencia_filenames_coerentes`. | Documento posterior relacionado; bytes/hash/metadata do primeiro comparados e inalterados. | PASS; concorrência e colisões continuam cobertas pela suíte TASK-008. |
 | CA-008 | `test_mesmo_arquivo_retorna_matched_somente_apos_comparacao`, `test_arquivo_removido_retorna_unavailable`, `test_fonte_versionada_sem_versao_ou_hash_retorna_unverifiable`. | Fluxo integrado altera entrada local e observa `CHANGED_REASSESS`, mantendo referência histórica. | PASS; sem limitação adicional. |
-| CA-009 | `test_registro_encaixa_em_inputs_task006_e_faz_round_trip`; testes de relação/recuperação. | Processo posterior recupera evidência anterior, reavalia input, publica novo DOC relacionado e recupera ambos sem alterar anterior. | PASS; cenário sintético apenas em fixture. |
+| CA-009 | `test_publicacao_recuperacao_processo_novo_proveniencia_e_append_only`; processo B recupera input persistido, altera fixture, reavalia, publica e recupera evidência relacionada. | B recebe somente RickCraftRoot, analysis_id e ID inicial; input `local_file`/locator vem do metadata recuperado. Resultado `CHANGED_REASSESS`, relação `complements` resolvida e documento inicial imutável. | PASS; evidência fixture cross-process, sem estado Debug. |
 | CA-010 | `test_blocker_registra_identificacao_de_autoridade_ainda_desconhecida`. | Integração persiste blocker de escopo A por conflito/necessidade informacional, com causa e retomada explícitas; escopo independente B pode continuar. | PASS; nenhum trabalho é iniciado pelo classificador. |
 | CA-011 | `test_dependencia_transitiva_bloqueia_cadeia_completa`, `test_escopo_depende_de_escopo_continuavel_sem_bloqueio`, `test_dependencia_nao_avaliada_impede_continuidade`. | Matriz integrada prova autorizado/apto, sem autorização, evidência insuficiente, conflito e dependência direta/transitiva de blocker. | PASS; classificação não executa trabalho automaticamente. |
 | CA-012 | `test_conflito_preserva_authority_explicitamente_fornecida`, `test_blocker_registra_identificacao_de_autoridade_ainda_desconhecida`. | Divergence workspace×normativa persistida; conflito normativa×normativa permanece sem vencedora/owner inferido; nenhum gate criado. | PASS; autoridade não fornecida permanece desconhecida. |
@@ -1117,6 +1119,15 @@ Ambiente de todas as verificações: Python 3.12.9, Windows 11 10.0.26200-SP0, `
 - Limitação ambiental e tentativas: a tentativa sandboxada inicial falhou com WinError 5 ao criar/limpar fixtures temporárias sob `impl/tests`; a repetição elevada inicial da integração revelou dois erros do harness, não do runtime: reutilização do diretório preferred criado pela etapa D-02 e decodificação da saída do subprocesso sem forçar UTF-8. O fixture passou a remover somente suas raízes vazias próprias antes das etapas seguintes e o subprocesso passou a declarar `PYTHONIOENCODING=utf-8`; a integração final 4/4 e a suíte completa foram repetidas e passaram. Quatro diretórios vazios `rickcraft-integration-*` deixados pela tentativa sandboxada foram confirmados dentro de `impl/tests` e removidos; nenhum fixture ficou. Uma primeira chamada manual de leitura Debug omitiu o avaliador obrigatório da API; foi corrigida e repetida com sucesso, sem efeito no workspace. Elevação não é requisito do produto. O único SKIP é a criação de symlink real sem privilégio Windows; aceitação não depende somente desse teste.
 - `status.md` foi lido/escrito e reaberto em UTF-8 estrito; SPEC/PLAN/TASKS mantêm exatamente seus hashes; nenhum runtime anterior mudou. D-02 Debug não criou resíduo persistente e snapshot permaneceu idêntico. Nenhum novo ANL/DOC Debug, documento operacional, Release, pacote, CONVERGE, commit, push, chamada GitHub ou acesso externo ocorreu.
 - Validação humana adicional não requerida para concluir IMPLEMENT: os critérios aplicáveis possuem evidência técnica reproduzível. Isso não declara CONVERGE.
+
+### Correção final de CA-009 — evidência cross-process — 2026-10-11
+
+- A revisão externa identificou lacuna material: a evidência anterior satisfazia CA-006 (processo B independente recuperava/pesquisava), mas não CA-009, pois o subprocesso terminava antes da comparação e publicação; essas operações ainda eram feitas pelo processo pai. A alegação anterior permanece registrada como histórico e é corrigida por esta evidência.
+- Correção limitada ao teste `impl/tests/test_workspace_integration.py`; nenhum runtime foi alterado. O processo A publica a primeira evidência. O processo B recebe somente RickCraftRoot, analysis_id e document_id inicial; recupera o documento, lê o input histórico e locator persistido, altera a entrada temporária, chama `verificar_arquivo_local` com o input recuperado, obtém `CHANGED_REASSESS`, publica o segundo DOC `evidence` relacionado por `complements` e recupera/pesquisa o histórico. O processo pai apenas verifica persistência e bytes.
+- Fixture: analysis_id `ANL-12345678-1234-4234-8234-123456789abc`; primeiro DOC `DOC-87654321-4321-4321-8432-cba987654321`; segundo DOC `DOC-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`. SHA-256 histórico do input recuperado: `6b337caf807b3f1711f79818f1cb81bbf03ede9b4a89febe91b0136befe8abea`. A relação foi resolvida, a busca retornou o segundo ID e nenhum `.tmp` permaneceu. O primeiro documento preservou bytes, SHA-256 e metadata antes/depois.
+- SHA-256 anterior do teste: `789A99E4300F57A849F614391E52CC1ED16883B13A767CB07B58B26F584D0A2B`; novo SHA-256: `7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4`. A tabela corrente de artefatos e a matriz CA-009 foram atualizadas; RF-006 explicita a reavaliação/publicação pelo processo B.
+- Regressões: integração `python -B -m unittest -v impl.tests.test_workspace_integration` — 4/4 PASS; TASK-009 `python -B -m unittest -v impl.tests.test_document_recovery` — 28 executados, 27 PASS, 1 SKIP ambiental de symlink; TASK-007 `python -B -m unittest -v impl.tests.test_provenance` — 45/45 PASS; TASK-008 `python -B -m unittest -v impl.tests.test_document_publisher` — 47/47 PASS; suíte `python -B -m unittest discover -s impl/tests -v` — 434 executados, 433 PASS, 1 SKIP; resultado `OK (skipped=1)`. Tentativas sandboxadas de integração/TASK-009/TASK-007/TASK-008 receberam WinError 5 ao criar ou limpar fixtures; repetições pelo mecanismo elevado autorizado passaram. O skip histórico continua sendo somente symlink real no Windows.
+- Nenhuma integração Debug foi executada; nenhum ANL/DOC operacional foi criado, nenhum Release/CONVERGE foi produzido e nenhum push foi feito. SPEC/PLAN/TASKS mantêm os hashes do ANALYZE-03; nenhum gate normativo foi invalidado. IMPLEMENT foi reaberta durante esta correção e retornou a COMPLETE após os testes; CONVERGE permanece NOT_STARTED.
 
 ### Estado final e próxima etapa
 
@@ -1243,3 +1254,57 @@ Autorização explícita separada antes de iniciar CONVERGE.
 
 ## Ponto de parada
 TASK-013 encerrada. Não iniciar CONVERGE, não produzir Release e não fazer push.
+
+## CHECKPOINT RICKCRAFT — correção final de CA-009
+
+### Fase executada
+Correção de evidência — IMPLEMENT TASK-013 — SPEC-0000000001.
+
+### Estado
+AGUARDANDO_APROVAÇÃO.
+
+### O que foi realizado
+O processo independente passou a recuperar a evidência anterior, obter dela a proveniência local, reavaliar a entrada alterada, publicar o novo documento relacionado e recuperar o histórico resultante. O documento inicial permaneceu byte a byte idêntico. Implementação e regressões concluídas; IMPLEMENT COMPLETE e CONVERGE NOT_STARTED.
+
+### Arquivos criados
+Nenhum.
+
+### Arquivos alterados
+- `impl/tests/test_workspace_integration.py` — SHA-256 `7A5D3340196CA967AFAEC16BF9CA4D346A67EB740AD694D56D3ADD8396D91AD4`.
+- `specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`.
+
+### Evidência e regressão
+Fixture `ANL-12345678-1234-4234-8234-123456789abc`, primeiro DOC `DOC-87654321-4321-4321-8432-cba987654321`, segundo DOC `DOC-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa`; comparação `CHANGED_REASSESS`, relação `complements` resolvida. Integração 4/4, TASK-009 27 PASS/1 SKIP, TASK-007 45/45, TASK-008 47/47 e suíte 433 PASS/1 SKIP (434 executados). Tentativas sandboxadas encontraram WinError 5 em fixtures; repetições elevadas autorizadas passaram.
+
+### Próximo passo
+Revisar exclusivamente a correção TASK-013/CA-009 antes de autorização separada para CONVERGE.
+
+### O que não deve ser feito ainda
+Não executar CONVERGE, não produzir Release e não fazer push.
+
+# HANDOFF PARA REVISÃO — RICKCRAFT — correção final de CA-009
+
+## Estado
+AGUARDANDO_APROVAÇÃO.
+
+## Objetivo executado
+Corrigir exclusivamente a evidência cross-process de CA-009, sem alterar runtime.
+
+## Resultados principais
+O processo B recuperou do documento anterior o locator e o SHA histórico, detectou alteração (`CHANGED_REASSESS`), publicou e recuperou a nova evidência relacionada. O processo pai confirmou relação, busca, ausência de `.tmp` e imutabilidade do primeiro DOC. CA-009 está PASS com evidência executável.
+
+## Estado SDD
+SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS no gate ANALYZE-03; IMPLEMENT COMPLETE; CONVERGE NOT_STARTED.
+
+## Bloqueios
+Nenhum bloqueio material. Permanece o skip ambiental histórico de symlink real no Windows; as tentativas sandboxadas com WinError 5 passaram quando repetidas pelo mecanismo elevado autorizado.
+
+## Próximo passo e autorização
+Revisar esta correção antes de qualquer autorização explícita separada para CONVERGE.
+
+## Arquivos que o revisor deve analisar
+- `impl/tests/test_workspace_integration.py`.
+- `specs/SPEC-0000000001-workspace-operacional-rastreavel/status.md`.
+
+## Ponto de parada
+Não executar CONVERGE, não gerar Release e não fazer push.

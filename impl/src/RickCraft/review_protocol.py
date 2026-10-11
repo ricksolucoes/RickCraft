@@ -1,4 +1,4 @@
-"""Modelos imutáveis de pedido, escopo e autorização da TASK-001."""
+"""Value objects imutáveis do protocolo de revisão técnica."""
 
 from __future__ import annotations
 
@@ -150,3 +150,132 @@ class ReviewRequest:
         if len({artifact for artifact, _ in validated_versions}) != len(validated_versions):
             raise ReviewInputError("source_versions não pode repetir artefatos.")
         object.__setattr__(self, "source_versions", tuple(sorted(validated_versions)))
+
+
+@dataclass(frozen=True)
+class AuthorityReference:
+    """Referência fornecida pelo host para owner e competência declarados."""
+
+    source_reference: str
+    owner: str
+    competence_reference: str
+    scopes: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        _texto_obrigatorio(self.source_reference, "source_reference")
+        _texto_obrigatorio(self.owner, "owner")
+        _texto_obrigatorio(self.competence_reference, "competence_reference")
+        scopes = _textos_unicos(self.scopes, "authority scopes", ordenar=True)
+        if not scopes:
+            raise ReviewInputError("AuthorityReference requer ao menos um escopo explícito.")
+        object.__setattr__(self, "scopes", scopes)
+
+
+@dataclass(frozen=True)
+class AuthorizedPrecedence:
+    """Relação dirigida: prevailing_source prevalece sobre subordinate_source."""
+
+    prevailing_source: str
+    subordinate_source: str
+    scope: str
+    authorizing_authority: str
+    decision_reference: str
+
+    def __post_init__(self) -> None:
+        _texto_obrigatorio(self.prevailing_source, "prevailing_source")
+        _texto_obrigatorio(self.subordinate_source, "subordinate_source")
+        if self.prevailing_source == self.subordinate_source:
+            raise ReviewInputError("Uma precedência exige duas fontes distintas.")
+        _texto_obrigatorio(self.scope, "precedence scope")
+        _texto_obrigatorio(self.authorizing_authority, "authorizing_authority")
+        _texto_obrigatorio(self.decision_reference, "decision_reference")
+
+
+@dataclass(frozen=True)
+class AuthorityContext:
+    """Autoridades e precedências explícitas fornecidas, sem descoberta externa."""
+
+    authorities: tuple[AuthorityReference, ...] = ()
+    precedences: tuple[AuthorizedPrecedence, ...] = ()
+
+    def __post_init__(self) -> None:
+        authorities = _sequencia(self.authorities, "authorities")
+        if any(not isinstance(item, AuthorityReference) for item in authorities):
+            raise ReviewInputError(
+                "authorities deve conter somente AuthorityReference."
+            )
+        authority_ids = tuple(item.source_reference for item in authorities)
+        if len(set(authority_ids)) != len(authority_ids):
+            raise ReviewInputError("authorities não pode duplicar source_reference.")
+        authority_index = {item.source_reference: item for item in authorities}
+
+        precedences = _sequencia(self.precedences, "precedences")
+        if any(not isinstance(item, AuthorizedPrecedence) for item in precedences):
+            raise ReviewInputError(
+                "precedences deve conter somente AuthorizedPrecedence."
+            )
+        seen_exact: set[AuthorizedPrecedence] = set()
+        seen_pair_scope: dict[tuple[frozenset[str], str], AuthorizedPrecedence] = {}
+        for relation in precedences:
+            if relation in seen_exact:
+                raise ReviewInputError("precedences não pode conter relação duplicada.")
+            seen_exact.add(relation)
+
+            authorizer = authority_index.get(relation.authorizing_authority)
+            if authorizer is None:
+                raise ReviewInputError(
+                    "A autoridade autorizadora deve estar explicitamente no contexto."
+                )
+            if relation.scope not in authorizer.scopes:
+                raise ReviewInputError(
+                    "A autoridade autorizadora não declarou competência para o escopo."
+                )
+
+            pair_scope = (
+                frozenset((relation.prevailing_source, relation.subordinate_source)),
+                relation.scope,
+            )
+            previous = seen_pair_scope.get(pair_scope)
+            if previous is not None:
+                if (
+                    previous.prevailing_source == relation.subordinate_source
+                    and previous.subordinate_source == relation.prevailing_source
+                ):
+                    raise ReviewInputError(
+                        "Precedências opostas para o mesmo par e escopo são contraditórias."
+                    )
+                raise ReviewInputError(
+                    "Há mais de uma relação de precedência para o mesmo par e escopo."
+                )
+            seen_pair_scope[pair_scope] = relation
+
+        object.__setattr__(self, "authorities", tuple(sorted(authorities, key=lambda item: item.source_reference)))
+        object.__setattr__(self, "precedences", tuple(sorted(
+            precedences,
+            key=lambda item: (
+                item.scope,
+                item.prevailing_source,
+                item.subordinate_source,
+                item.authorizing_authority,
+                item.decision_reference,
+            ),
+        )))
+
+    def precedence_for(
+        self, source_a: str, source_b: str, scope: str
+    ) -> AuthorizedPrecedence | None:
+        """Retorna somente a relação declarada para o par e escopo exatos."""
+        _texto_obrigatorio(source_a, "source_a")
+        _texto_obrigatorio(source_b, "source_b")
+        _texto_obrigatorio(scope, "precedence scope")
+        if source_a == source_b:
+            return None
+        for relation in self.precedences:
+            if relation.scope != scope:
+                continue
+            if {relation.prevailing_source, relation.subordinate_source} == {
+                source_a,
+                source_b,
+            }:
+                return relation
+        return None

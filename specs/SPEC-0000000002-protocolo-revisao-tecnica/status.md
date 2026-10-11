@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-001
+- **IMPLEMENT:** IN_PROGRESS — TASK-002 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -15,6 +15,58 @@
 ## Início de IMPLEMENT — TASK-001 — 2026-10-11
 
 O responsável autorizou exclusivamente TASK-001 nas versões SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`, usando o gate válido `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`. Os três hashes foram recalculados e conferem; ANALYZE permanece válido porque suas entradas normativas não mudaram. Etapa atual = IMPLEMENT; IMPLEMENT = IN_PROGRESS; TASK-001 = IN_PROGRESS; TASK-002–TASK-013 não iniciadas; CONVERGE = NOT_STARTED.
+
+## Início de IMPLEMENT — TASK-002 — 2026-10-11
+
+O responsável confirmou a aprovação externa da TASK-001. Seus hashes aceitos são `review_protocol.py` `D5A77D092E293FF5E60F07C55A7A751B1BCAEBC382DD5C92FCC4BF50876063C7` (blob Git `77d1fca0d49e5fba99801a40eabc7bbe64e3f033`) e `test_review_protocol.py` `1E2B01EFB17972608BC8F5AC719950D6011465F9D7EDF5530B5D32E49196B1F8` (blob Git `f46e9595cd2a9bc4138dedb1e150118d75593235`). Os hashes de SPEC/PLAN/TASKS foram recalculados e conferem com as versões aprovadas; ANALYZE-01 permanece PASS. A autorização recebida é somente para TASK-002. Etapa atual = IMPLEMENT; TASK-001 = COMPLETE — aprovada após revisão externa; TASK-002 = IN_PROGRESS; TASK-003–TASK-013 não executadas; CONVERGE = NOT_STARTED.
+
+## IMPLEMENT — TASK-002 — Contexto de autoridade e precedência explícita
+
+- **Estado:** TASK-001 = COMPLETE — aprovada após revisão externa; TASK-002 = COMPLETE — aguardando revisão; TASK-003–TASK-013 não executadas. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED.
+- **Versões usadas:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; gate `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS`.
+- **TASK-001 preservada:** hashes aceitos `review_protocol.py` `D5A77D092E293FF5E60F07C55A7A751B1BCAEBC382DD5C92FCC4BF50876063C7` e `test_review_protocol.py` `1E2B01EFB17972608BC8F5AC719950D6011465F9D7EDF5530B5D32E49196B1F8`; os 27 testes anteriores continuam passando na execução focal conjunta.
+- **Implementação TASK-002:** adicionados `AuthorityReference`, `AuthorizedPrecedence` e `AuthorityContext` como dataclasses congeladas. Referência exige source, owner informado, referência de competência e escopos explícitos únicos. Precedência usa direção explícita (`prevailing_source` sobre `subordinate_source`), escopo, autoridade autorizadora e decision reference. O contexto vazio é válido. O contexto rejeita autoridade autorizadora ausente ou fora do escopo, relação duplicada, relações opostas e mais de uma relação ambígua para o mesmo par/escopo. `precedence_for` consulta apenas o par e escopo exatos e retorna a relação declarada ou `None`; não ranqueia nem infere precedência.
+- **Autoridade:** owner e competência permanecem declarações/referências recebidas do host. Não há owners hard-coded, autenticação criptográfica, import de Policies/Registries/SPECs, consulta externa, inferência por data/nome/especificidade ou promoção automática de executor/Agent/auditor. Nenhuma integração com `gap_handling` foi adicionada.
+- **Testes executados:** `python -B -m unittest -v impl.tests.test_review_protocol` — `Ran 45 tests`; `OK`; 45 PASS, 0 FAIL, 0 SKIP. Os 27 casos da TASK-001 passaram junto com os casos de autoridade/precedência desta tarefa.
+- **Hashes SHA-256 após a implementação:** `review_protocol.py` = `3F16B432A421DEE448A9635711DCEEA78D4065404C1B84BB4C5480D21F88C1F2`; `test_review_protocol.py` = `8129136DEAAADC405CD91A137FBA8F732189FD5CB213C113BA297A2288C08DB2`.
+- **Fronteiras:** alteração restrita aos dois arquivos existentes da TASK-001 e a este status. Biblioteca padrão somente. Nenhum módulo/teste SPEC1 foi alterado; nenhuma suíte completa, integração, persistência, rede, Git, subprocesso, Release ou push foi executado.
+- **Validação:** hashes SPEC/PLAN/TASKS conferem com as bases autorizadas; ANALYZE-01 permanece PASS; `git diff --check` executado ao final.
+
+### CHECKPOINT RICKCRAFT — TASK-002
+
+## Fase executada
+IMPLEMENT — TASK-002 — SPEC-0000000002
+
+## Objetivo da execução
+Representar e validar autoridade, competência, escopo e precedência explícita.
+
+## Estado
+AGUARDANDO_APROVAÇÃO — TASK-002 concluída.
+
+## Gate utilizado
+ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS.
+
+## Testes executados
+`python -B -m unittest -v impl.tests.test_review_protocol` — 45/45 PASS, incluindo regressão dos 27 casos TASK-001.
+
+## Evidências
+`review_protocol.py`: `3F16B432A421DEE448A9635711DCEEA78D4065404C1B84BB4C5480D21F88C1F2`.
+`test_review_protocol.py`: `8129136DEAAADC405CD91A137FBA8F732189FD5CB213C113BA297A2288C08DB2`.
+
+## Arquivos alterados
+- `impl/src/RickCraft/review_protocol.py`
+- `impl/tests/test_review_protocol.py`
+- `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## Próximo passo recomendado
+Revisar exclusivamente TASK-002 antes de autorizar TASK-003.
+
+## O que NÃO deve ser feito ainda
+Não executar TASK-003, integrar `gap_handling`, executar CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-002
+
+Revisar os dois artefatos de implementação e este registro. TASK-002 está COMPLETE após 45 testes focais aprovados. TASK-001 permanece aprovada; TASK-003–TASK-013 não executadas. IMPLEMENT continua IN_PROGRESS e CONVERGE NOT_STARTED. É necessária autorização explícita separada antes de TASK-003.
 
 ## IMPLEMENT — TASK-001 — Pedido, escopo, idioma e autorização
 

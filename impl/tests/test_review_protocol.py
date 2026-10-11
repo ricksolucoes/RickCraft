@@ -10,6 +10,9 @@ sys.path.insert(0, str(RUNTIME_DIRECTORY))
 
 from review_protocol import (  # noqa: E402
     AuthorizationGrant,
+    AuthorityContext,
+    AuthorityReference,
+    AuthorizedPrecedence,
     RequestedEffect,
     ReviewInputError,
     ReviewRequest,
@@ -212,6 +215,185 @@ class ReviewRequestTests(unittest.TestCase):
             self.request(scopes="core")
         with self.assertRaisesRegex(ReviewInputError, "authorized_artifacts deve ser"):
             self.request(authorized_artifacts="src.py")
+
+
+class AuthorityContextTests(unittest.TestCase):
+    @staticmethod
+    def authority(
+        *, source: str = "owner-ref", owner: str = "Owner X", scopes: object = ("core",)
+    ) -> AuthorityReference:
+        return AuthorityReference(
+            source_reference=source,
+            owner=owner,
+            competence_reference="competence-doc#core",
+            scopes=scopes,  # type: ignore[arg-type]
+        )
+
+    @staticmethod
+    def precedence(
+        *, prevailing: str = "policy-a", subordinate: str = "policy-b", scope: str = "core",
+        authority: str = "owner-ref", decision: str = "decision#42",
+    ) -> AuthorizedPrecedence:
+        return AuthorizedPrecedence(
+            prevailing_source=prevailing,
+            subordinate_source=subordinate,
+            scope=scope,
+            authorizing_authority=authority,
+            decision_reference=decision,
+        )
+
+    def test_authority_reference_valida(self) -> None:
+        authority = self.authority(scopes=["workspace", "core"])
+        self.assertEqual(authority.owner, "Owner X")
+        self.assertEqual(authority.scopes, ("core", "workspace"))
+
+    def test_authority_reference_rejeita_fonte_owner_e_competencia_vazios(self) -> None:
+        for field, value in (
+            ("source_reference", " "),
+            ("owner", ""),
+            ("competence_reference", "\t"),
+        ):
+            with self.subTest(field=field), self.assertRaises(ReviewInputError):
+                arguments: dict[str, object] = {
+                    "source_reference": "source",
+                    "owner": "Owner",
+                    "competence_reference": "competence",
+                    "scopes": ("core",),
+                }
+                arguments[field] = value
+                AuthorityReference(**arguments)  # type: ignore[arg-type]
+
+    def test_authority_scopes_vazios_duplicados_ou_invalidos_sao_rejeitados(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "ao menos um escopo"):
+            self.authority(scopes=())
+        with self.assertRaisesRegex(ReviewInputError, "duplicados"):
+            self.authority(scopes=["core", "core"])
+        with self.assertRaisesRegex(ReviewInputError, "authority scopes"):
+            self.authority(scopes=[""])
+        with self.assertRaisesRegex(ReviewInputError, "sequência explícita"):
+            self.authority(scopes={"core"})
+
+    def test_contexto_vazio_e_valido_sem_owner_inventado(self) -> None:
+        context = AuthorityContext()
+        self.assertEqual(context.authorities, ())
+        self.assertEqual(context.precedences, ())
+        self.assertIsNone(context.precedence_for("A", "B", "core"))
+
+    def test_precedencia_direcionada_valida_entre_fontes_distintas(self) -> None:
+        relation = self.precedence()
+        context = AuthorityContext([self.authority()], [relation])
+        self.assertIs(context.precedence_for("policy-a", "policy-b", "core"), relation)
+        self.assertIs(context.precedence_for("policy-b", "policy-a", "core"), relation)
+        self.assertEqual(relation.prevailing_source, "policy-a")
+        self.assertEqual(relation.subordinate_source, "policy-b")
+
+    def test_mesma_fonte_nos_dois_lados_e_rejeitada(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "duas fontes distintas"):
+            self.precedence(prevailing="policy-a", subordinate="policy-a")
+
+    def test_precedencia_rejeita_escopo_authoridade_e_decisao_vazios(self) -> None:
+        for field, value in (
+            ("scope", " "),
+            ("authorizing_authority", ""),
+            ("decision_reference", "\t"),
+        ):
+            with self.subTest(field=field), self.assertRaises(ReviewInputError):
+                arguments: dict[str, object] = {
+                    "prevailing_source": "A",
+                    "subordinate_source": "B",
+                    "scope": "core",
+                    "authorizing_authority": "owner-ref",
+                    "decision_reference": "decision",
+                }
+                arguments[field] = value
+                AuthorizedPrecedence(**arguments)  # type: ignore[arg-type]
+
+    def test_autoridade_autorizadora_ausente_no_contexto_rejeita_relacao(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "explicitamente no contexto"):
+            AuthorityContext((), (self.precedence(),))
+
+    def test_autoridade_presente_fora_do_escopo_rejeita_relacao(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "não declarou competência"):
+            AuthorityContext(
+                (self.authority(scopes=("other-scope",)),), (self.precedence(),)
+            )
+
+    def test_autoridade_competente_no_escopo_valida_relacao(self) -> None:
+        context = AuthorityContext((self.authority(),), (self.precedence(),))
+        self.assertEqual(len(context.precedences), 1)
+        self.assertEqual(context.precedence_for("policy-a", "policy-b", "core").decision_reference,
+                         "decision#42")  # type: ignore[union-attr]
+
+    def test_relacao_exatamente_duplicada_e_rejeitada(self) -> None:
+        relation = self.precedence()
+        with self.assertRaisesRegex(ReviewInputError, "relação duplicada"):
+            AuthorityContext((self.authority(),), (relation, relation))
+
+    def test_precedencias_opostas_para_mesmo_par_e_escopo_sao_rejeitadas(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "contraditórias"):
+            AuthorityContext(
+                (self.authority(),),
+                (
+                    self.precedence(),
+                    self.precedence(prevailing="policy-b", subordinate="policy-a"),
+                ),
+            )
+
+    def test_sem_precedencia_nao_existe_fonte_vencedora(self) -> None:
+        context = AuthorityContext((self.authority(),), ())
+        self.assertIsNone(context.precedence_for("policy-a", "policy-b", "core"))
+        self.assertIsNone(context.precedence_for("policy-a", "policy-b", "other"))
+
+    def test_textos_de_nome_data_ou_especificidade_nao_criam_precedencia(self) -> None:
+        authority = self.authority(
+            source="executor-2026-10-11-most-specific", owner="Executor"
+        )
+        context = AuthorityContext((authority,), ())
+        self.assertEqual(context.authorities[0].owner, "Executor")
+        self.assertEqual(context.precedences, ())
+        self.assertIsNone(context.precedence_for("newer-A", "specific-B", "core"))
+
+    def test_executor_agent_ou_auditor_nao_e_promovido_a_owner(self) -> None:
+        context = AuthorityContext()
+        self.assertEqual(context.authorities, ())
+        supplied = self.authority(owner="Executor")
+        context_with_supplied = AuthorityContext((supplied,), ())
+        self.assertEqual(context_with_supplied.authorities[0].owner, "Executor")
+        self.assertNotEqual(context_with_supplied.authorities[0].owner, "Auditor")
+
+    def test_modelos_de_autoridade_sao_imutaveis(self) -> None:
+        authority = self.authority()
+        relation = self.precedence()
+        context = AuthorityContext((authority,), (relation,))
+        with self.assertRaises(FrozenInstanceError):
+            authority.owner = "Other"  # type: ignore[misc]
+        with self.assertRaises(FrozenInstanceError):
+            relation.scope = "other"  # type: ignore[misc]
+        with self.assertRaises(FrozenInstanceError):
+            context.authorities = ()  # type: ignore[misc]
+
+    def test_mutacao_das_colecoes_originais_nao_altera_contexto(self) -> None:
+        scopes = ["core"]
+        authorities = [self.authority(scopes=scopes)]
+        precedences = [self.precedence()]
+        context = AuthorityContext(authorities, precedences)
+        scopes.append("later")
+        authorities.clear()
+        precedences.clear()
+        self.assertEqual(context.authorities[0].scopes, ("core",))
+        self.assertEqual(len(context.authorities), 1)
+        self.assertEqual(len(context.precedences), 1)
+        self.assertEqual(
+            context.precedence_for("policy-a", "policy-b", "core").prevailing_source,
+            "policy-a",
+        )  # type: ignore[union-attr]
+
+    def test_mudanca_da_ordem_de_entrada_preserva_contexto_canonico(self) -> None:
+        first = self.authority(source="owner-a", scopes=("z", "a"))
+        second = self.authority(source="owner-b", owner="Owner Y", scopes=("b",))
+        a = AuthorityContext([first, second], ())
+        b = AuthorityContext([second, first], ())
+        self.assertEqual(a, b)
 
 
 if __name__ == "__main__":

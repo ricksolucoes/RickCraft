@@ -27,11 +27,13 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-004 executadas; TASK-005 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-005 executadas; TASK-006 a TASK-013 pendentes. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
 | `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600` | 17 testes específicos, incluindo ausência de errno/símbolo opcional e bloqueio do resolvedor sem sonda de fallback. |
+| `document_catalog.py` | IMPLEMENT TASK-005 | SHA-256 `7FE3206000E542DEBD4FEA7C369528C1795C50BBAF3A5FDCD4EF891E2CF3D687` | Catálogo fechado V1, validação de tipos/IDs e derivação segura do caminho documental. |
+| `test_document_catalog.py` | IMPLEMENT TASK-005 | SHA-256 `3BDAE4F09CFFCFFDD85ADF4B5AC91A54D6BCEEE3FD364DDCD6DD1D3022496FAF` | 15 testes específicos para catálogo, caminhos, contenção e criação idempotente. |
 
 ## Histórico de estado
 
@@ -77,11 +79,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-004 foram executadas com evidências registradas; TASK-005 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nesta resolução e nas duas operações de TASK-004; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
+- **Mudanças pendentes:** TASK-001 a TASK-005 executadas com evidências registradas; TASK-006 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nas operações registradas; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-004. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-004 antes de autorizar TASK-005.
+- **Bloqueios:** Nenhum bloqueio material para TASK-005. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-005 antes de autorizar TASK-006.
 
 ## Validade do ANALYZE anterior
 

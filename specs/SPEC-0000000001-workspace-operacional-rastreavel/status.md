@@ -10,7 +10,7 @@
 
 ## Estado atual
 
-- **Etapa atual:** ANALYZE
+- **Etapa atual:** IMPLEMENT
 - **SPEC:** COMPLETE
 - **PLAN:** COMPLETE
 - **TASKS:** COMPLETE
@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. A matriz CA-003 atribui classificação a TASK-003 e avaliação/seleção do fallback a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. ANALYZE-03 passou para esta versão; TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. A matriz CA-003 atribui classificação a TASK-003 e avaliação/seleção do fallback a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. ANALYZE-03 passou para esta versão. TASK-001 e TASK-002 foram executadas; TASK-003–TASK-013 permanecem pendentes. |
 
 ## Histórico de estado
 
@@ -65,14 +65,15 @@
 | 2026-10-10 | TASKS | COMPLETE | CA-003 agora aponta para TASK-002 e TASK-003: TASK-003 classifica e fornece o resultado; TASK-002 consome-o e decide sobre precedência/fallback. Fronteiras existentes preservadas. Novo SHA-256 de `tasks.md`: `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece INVALIDATED; último gate válido: Nenhum. |
 | 2026-10-10 | ANALYZE | IN_PROGRESS | Início da reexecução integral autorizada `ANALYZE-2026-10-10-SPEC-0000000001-03`, sobre SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. IMPLEMENT permanece IN_PROGRESS apenas como estágio previamente iniciado; nenhuma TASK, implementação, teste ou sonda foi executada nesta análise. |
 | 2026-10-10 | ANALYZE | PASS | Gate documental integral concluído para as três versões exatas registradas. TASK-002/TASK-003 são executáveis sem circularidade semântica; CA-003 está coerente; não foram encontrados achados bloqueantes. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. IMPLEMENT permanece IN_PROGRESS, sem retomada nesta execução; CONVERGE permanece NOT_STARTED. Último gate válido: ANALYZE PASS somente para esses hashes. |
+| 2026-10-10 | IMPLEMENT | IN_PROGRESS | TASK-002 executada com testes específicos e regressão completa aprovados. Arquivos novos: `impl/src/RickCraft/workspace_resolver.py` SHA-256 `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A`; `impl/tests/test_workspace_resolver.py` SHA-256 `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E`. TASK-001 permaneceu inalterada; TASK-003–TASK-013 não foram iniciadas. ANALYZE-03 continua válido para SPEC/PLAN/TASKS; CONVERGE permanece NOT_STARTED. |
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 foi executada com evidência satisfatória e preservada; TASK-002–TASK-013 não foram executadas. A sonda D-02 segue obrigatória antes do uso de cada raiz e não foi executada.
-- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece como resultado histórico de sua versão. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` é o gate válido para os três hashes registrados abaixo. IMPLEMENT segue IN_PROGRESS como estágio já iniciado; nenhum novo trabalho de IMPLEMENT ocorreu ou está autorizado por esta execução. CONVERGE permanece NOT_STARTED.
+- **Mudanças pendentes:** TASK-001 e TASK-002 foram executadas com evidências registradas; TASK-003–TASK-013 não foram executadas. A sonda D-02 segue obrigatória antes do uso de cada raiz e não foi executada.
+- **Etapas invalidadas:** O ANALYZE FAIL da execução `ANALYZE-2026-10-10-SPEC-0000000001-01` permanece como resultado histórico de sua versão. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` é o gate válido para os três hashes registrados acima. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. A sonda D-02 continua sendo critério operacional obrigatório antes de usar cada raiz; a prova auxiliar em TEMP foi inconclusiva por restrição de acesso do ambiente desta sessão.
 - **Bloqueios:** Nenhum achado bloqueante no ANALYZE-03. D-02 não foi executada e permanece pré-condição operacional antes do uso de cada raiz.
-- **Próxima autorização necessária:** Revisar o gate ANALYZE-03 publicado; qualquer início posterior de TASK-002 depende de autorização explícita separada. O PASS não retoma IMPLEMENT nem inicia TASK-002 nesta execução.
+- **Próxima autorização necessária:** Revisar a implementação e as evidências de TASK-002 antes de autorizar TASK-003. D-02 permanece reservada à TASK-003.
 
 ## Validade do ANALYZE anterior
 
@@ -339,6 +340,38 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 - **Correção:** CA-003 cobre TASK-002 e TASK-003; TASK-003 classifica impossibilidade concreta ou erro desconhecido e entrega o resultado, enquanto TASK-002 só considera fallback após impossibilidade classificada e bloqueia erro desconhecido sem fallback. Matriz D-03 permanece dividida entre classificação (TASK-003) e consumo/seleção (TASK-002); D-04 segue em TASK-002/TASK-008/TASK-009.
 - **Estado preservado:** TASKS = COMPLETE; ANALYZE = INVALIDATED; IMPLEMENT = IN_PROGRESS apenas como estágio já iniciado, sem novo trabalho autorizado até novo ANALYZE PASS; CONVERGE = NOT_STARTED; último gate válido = Nenhum. O ANALYZE-02 continua apenas histórico.
 - **TASK-001 preservada:** SPEC, PLAN, runtime e testes de TASK-001 não foram alterados; evidência técnica permanece registrada. TASK-002 e TASK-003 não foram executadas; nenhum teste ou D-02 foi executado; `.workspace/` não foi criada.
+
+## Evidência de IMPLEMENT — TASK-002
+
+### Escopo, gate e estado
+
+- **Data:** 2026-10-10.
+- **Tarefa executada:** TASK-002 — derivar caminhos e preservar precedência de localização.
+- **Estado:** IMPLEMENT permanece IN_PROGRESS; TASK-002 foi concluída para seu escopo. TASK-003–TASK-013 permanecem pendentes. CONVERGE permanece NOT_STARTED.
+- **Gate preservado:** `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS somente para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. Esses três artefatos não foram alterados.
+- **Ambiente observado:** Python 3.12.9; Windows 11 10.0.26200, 64-bit AMD64. A plataforma é observação desta execução, não requisito universal.
+
+### Artefatos
+
+| Arquivo | Conteúdo | SHA-256 |
+|---|---|---|
+| `impl/src/RickCraft/workspace_resolver.py` | Derivação de caminhos, resultados semânticos tipados e seleção sem cache entre chamadas. | `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A` |
+| `impl/tests/test_workspace_resolver.py` | Testes unitários controlados de TASK-002. | `E870A806DDD955C1682B111EE59EC4B341848461A875306D910AB2D23859C67E` |
+
+**Arquivos TASK-001 preservados:** `rickcraft_root.py` SHA-256 `990BF4A64535F55C879FB9958F743BF2923C778AC474843FF227266CAFD56EDF`; `test_rickcraft_root.py` SHA-256 `8620D432184A77551E99F0C5BFD4C499164B006A926F4D72BA97B2D2356FF1E8`.
+
+### Implementação e verificações
+
+- O resolvedor reutiliza `validate_rickcraft_root` da TASK-001 e compõe caminhos com `pathlib`: LocalDefinidoUsuario = `RickCraftRoot.parent`; preferencial = pai do LocalDefinidoUsuario / `.workspace`; fallback = `RickCraftRoot/.workspace`.
+- Cada chamada deriva novamente e avalia primeiro o preferencial. Só avalia fallback após `IMPOSSIBILIDADE_CONCRETA`; resultado `ERRO_DESCONHECIDO` ou resultado semântico inválido bloqueia. Duas impossibilidades concretas resultam em workspace indisponível. Não há cache, classificação de exceções brutas, terceira localização nem publicador.
+- **Testes específicos:** comando `python -B -m unittest -v impl.tests.test_workspace_resolver`; 19 testes executados, 19 aprovados. Cobriram fórmulas Debug, ordem, seleção, bloqueio, reavaliações sucessivas nos dois sentidos, fallback anterior sem cache, CWD/HOME, resultados inválidos e ausência de operações de sonda.
+- **Regressão completa:** comando `python -B -m unittest discover -s impl/tests -v`; execução final elevada: 32 testes executados, 32 aprovados. A suíte inclui os 13 testes existentes da TASK-001 e os 19 testes da TASK-002.
+- **Limitação ambiental:** a primeira execução completa no sandbox terminou com 18 erros de limpeza de fixtures temporárias de TASK-001 (`WinError 5`, acesso negado); os 19 testes novos passaram. Após autorização para elevação e repetição da suíte completa, todos os 32 testes passaram. Os 13 diretórios temporários órfãos da tentativa sandbox foram removidos após conferir que estavam diretamente em `impl/tests/`.
+- **Limites:** apenas os dois arquivos listados foram criados; `rickcraft_root.py` e `test_rickcraft_root.py` não foram alterados. Nenhuma dependência externa foi adicionada. Nenhuma pasta `.workspace/` foi criada; a raiz real não foi declarada utilizável. D-02 e classificação concreta D-03 não foram implementadas nem executadas. TASK-003 não foi iniciada. Nenhum Release ou conteúdo inglês paralelo foi produzido.
+
+### Resultado de TASK-002
+
+TASK-002 foi implementada e sua suíte específica passou; a regressão completa também passou. A implementação deriva somente as duas localizações aprovadas, aceita resultados semânticos controlados e reavalia a prioridade em cada chamada, sem executar operações concretas de filesystem nas candidatas. Evidência satisfatória para o escopo de TASK-002; isso não é CONVERGE nem conclusão de IMPLEMENT. Próximo passo: revisão desta implementação e de suas evidências antes de autorização separada para TASK-003.
 
 ## Evidência do ANALYZE-03
 

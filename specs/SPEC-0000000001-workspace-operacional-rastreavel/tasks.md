@@ -213,7 +213,7 @@
 |---|---|---|
 | CA-001 | TASK-002, TASK-003, TASK-013 | Criar raiz ausente quando necessária; registrar operações e resultado de D-02 sem presumir sucesso. |
 | CA-002 | TASK-002, TASK-003 | Fixture instrumentada prova tentativa do preferencial primeiro; derivação Debug confere com o PLAN. |
-| CA-003 | TASK-003 | Erro concreto classificado aciona fallback; erro desconhecido não; evidência por cenário. |
+| CA-003 | TASK-002, TASK-003 | TASK-003 classifica a causa concreta e fornece resultado semântico; TASK-002 só avalia/seleciona fallback após impossibilidade classificada e bloqueia sem fallback para erro desconhecido. |
 | CA-004 | TASK-004 | UUIDv4 válido, diretório exclusivo, correlação e colisões/limite documentados. |
 | CA-005 | TASK-005, TASK-006 | Estrutura por análise/tipo e `.md` com formato validado. |
 | CA-006 | TASK-009, TASK-010, TASK-013 | Novo processo/contexto recupera e interpreta documentos sem conversa original. |

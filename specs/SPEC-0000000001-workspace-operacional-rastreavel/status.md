@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | Revisado em 2026-10-10 para remover inconsistências de lifecycle da sonda D-02, sincronizar o mecanismo de publicação `os.link` e explicitar a regeneração integral em colisões de `DOC-UUIDv4`. Python 3.12/stdlib, host e binding permanecem inalterados. A sonda D-02 não foi executada com sucesso; a prova auxiliar em TEMP foi inconclusiva por acesso negado. PLAN aprovado explicitamente pelo responsável em 2026-10-10 nesta versão; a aprovação não inicia TASKS automaticamente. |
-| `tasks.md` | COMPLETE | SHA-256 `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. O ANALYZE PASS anterior foi invalidado por esta mudança material. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 delimita derivação, reavaliação e seleção usando resultados D-02/D-03; TASK-003 implementa a sonda e classifica causas concretas, integrando depois seus resultados a TASK-002. A matriz CA-003 agora atribui a classificação a TASK-003 e a avaliação/seleção do fallback a TASK-002. D-04 permanece em TASK-002/TASK-008/TASK-009. TASK-001 e sua evidência permanecem preservadas; TASK-002–TASK-013 não foram executadas. ANALYZE continua INVALIDATED. |
 
 ## Histórico de estado
 
@@ -61,6 +61,8 @@
 | 2026-10-10 | TASKS | IN_PROGRESS | Início da correção material da fronteira semântica TASK-002/TASK-003. Hash de entrada de `tasks.md`: `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. SPEC, PLAN e arquivos/testes de TASK-001 foram preservados. Nenhuma tarefa de implementação, análise, teste ou sonda foi executada nesta correção. |
 | 2026-10-10 | TASKS | COMPLETE | Separadas as responsabilidades: TASK-002 deriva, reavalia e escolhe usando resultados D-02/D-03; TASK-003 executa a sonda concreta, classifica falhas e integra os resultados ao resolvedor. As 13 tarefas e dependências foram preservadas. Novo SHA-256 de `tasks.md`: `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`. |
 | 2026-10-10 | ANALYZE | INVALIDATED | A alteração material de TASKS invalida o PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02`, que permanece no histórico vinculado ao SHA-256 anterior `032EA7B7A66576CAEA1075D64FCA857D429FCB318C09E2960356163A1503F2B8`. Último gate válido: Nenhum. Novo ANALYZE será necessário antes de qualquer novo trabalho de IMPLEMENT. |
+| 2026-10-10 | TASKS | IN_PROGRESS | Início da sincronização residual da matriz CA-003 com a fronteira TASK-002/TASK-003 já formalizada. Hash de entrada de `tasks.md`: `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`. Nenhuma tarefa, teste ou sonda foi executada. |
+| 2026-10-10 | TASKS | COMPLETE | CA-003 agora aponta para TASK-002 e TASK-003: TASK-003 classifica e fornece o resultado; TASK-002 consome-o e decide sobre precedência/fallback. Fronteiras existentes preservadas. Novo SHA-256 de `tasks.md`: `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece INVALIDATED; último gate válido: Nenhum. |
 
 ## Pendências e invalidações
 
@@ -325,3 +327,13 @@ As estratégias são planejadas para IMPLEMENT/CONVERGE e não foram executadas.
 - **ANALYZE:** o PASS de `ANALYZE-2026-10-10-SPEC-0000000001-02` permanece no histórico, vinculado ao hash anterior de TASKS, e foi invalidado pela alteração material. ANALYZE atual = INVALIDATED; último gate válido = Nenhum. Um novo ANALYZE é necessário antes de retomar qualquer trabalho de IMPLEMENT.
 - **TASK-001 preservada:** sua implementação e evidência técnica não foram alteradas nem invalidadas. Hashes atuais continuam `rickcraft_root.py` = `990BF4A64535F55C879FB9958F743BF2923C778AC474843FF227266CAFD56EDF` e `test_rickcraft_root.py` = `8620D432184A77551E99F0C5BFD4C499164B006A926F4D72BA97B2D2356FF1E8`.
 - **Estado e limites:** SPEC e PLAN permanecem COMPLETE; TASKS = COMPLETE; IMPLEMENT = IN_PROGRESS apenas como etapa já iniciada, sem autorização para novo trabalho enquanto ANALYZE estiver invalidado; CONVERGE = NOT_STARTED. TASK-002 e TASK-003 não foram executadas; não houve implementação nova, alteração de código, execução de testes, execução de D-02, criação de `.workspace/`, instalação de dependências ou geração de Release.
+
+## Sincronização final de CA-003
+
+- **Data:** 2026-10-10.
+- **Motivo:** a linha CA-003 ainda atribuía a TASK-003 o acionamento do fallback, embora a fronteira vigente reserve a classificação concreta a TASK-003 e a decisão de precedência/seleção a TASK-002.
+- **Versão anterior de TASKS:** SHA-256 `761AAEA795290BE944305C2B1E4E0F6BC953BEED553132D33BFA6A1399AC4584`.
+- **Nova versão de TASKS:** SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`; exatamente 13 tarefas continuam presentes.
+- **Correção:** CA-003 cobre TASK-002 e TASK-003; TASK-003 classifica impossibilidade concreta ou erro desconhecido e entrega o resultado, enquanto TASK-002 só considera fallback após impossibilidade classificada e bloqueia erro desconhecido sem fallback. Matriz D-03 permanece dividida entre classificação (TASK-003) e consumo/seleção (TASK-002); D-04 segue em TASK-002/TASK-008/TASK-009.
+- **Estado preservado:** TASKS = COMPLETE; ANALYZE = INVALIDATED; IMPLEMENT = IN_PROGRESS apenas como estágio já iniciado, sem novo trabalho autorizado até novo ANALYZE PASS; CONVERGE = NOT_STARTED; último gate válido = Nenhum. O ANALYZE-02 continua apenas histórico.
+- **TASK-001 preservada:** SPEC, PLAN, runtime e testes de TASK-001 não foram alterados; evidência técnica permanece registrada. TASK-002 e TASK-003 não foram executadas; nenhum teste ou D-02 foi executado; `.workspace/` não foi criada.

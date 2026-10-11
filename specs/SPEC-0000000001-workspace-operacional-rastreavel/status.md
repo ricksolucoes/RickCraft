@@ -36,8 +36,8 @@
 | `test_document_catalog.py` | IMPLEMENT TASK-005 | SHA-256 `3BDAE4F09CFFCFFDD85ADF4B5AC91A54D6BCEEE3FD364DDCD6DD1D3022496FAF` | 15 testes específicos para catálogo, caminhos, contenção e criação idempotente. |
 | `document_format.py` | IMPLEMENT TASK-006 | SHA-256 `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7` | Serialização/parsing determinísticos de Markdown + JSON v1; validação estrutural, relações e UTF-8 estrito. |
 | `test_document_format.py` | IMPLEMENT TASK-006 | SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA` | 49 testes unitários de serialização, parsing, validação e rejeições. |
-| `provenance.py` | IMPLEMENT TASK-007 | SHA-256 `5F5977225D50841677179C2C689AADB4DFF2CBE0C5C1F160E6520361B781619C` | Proveniência de três famílias de entrada; SHA-256 dos bytes exatos e estados verificáveis. |
-| `test_provenance.py` | IMPLEMENT TASK-007 | SHA-256 `BBEDF66BB4717D22DC1BE59F674FF515EA12B4457A6FD18E2BB388E8AF4487AE` | 39 testes de hashing, observação, comparação, estados e integração com `inputs` v1. |
+| `provenance.py` | IMPLEMENT TASK-007 | SHA-256 `ACEFF2AE342A53DA36DD60D702B78264DDCED9C59998B079FBE9E2880F2DFCE9` | Proveniência de três famílias de entrada; SHA-256 dos bytes exatos e estados verificáveis. |
+| `test_provenance.py` | IMPLEMENT TASK-007 | SHA-256 `5C8A4499D9E92D33DC19E8FA1704C7CCBC213798CF9ACBC8694F5A7707EF8064` | 45 testes de hashing, observação, comparação, estados e integração com `inputs` v1. |
 
 ## Histórico de estado
 
@@ -764,3 +764,16 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - Nenhum documento operacional foi publicado; nenhum `DOC-*.md` ou temporário de publicação foi criado. Fixtures temporários dos testes foram removidos. Nenhuma chamada `os.link`, acesso à rede, subprocesso Git ou D-02 ocorreu no runtime/testes; `git diff --check` foi usado somente na validação do workspace. As verificações usaram fixtures locais e bytes fornecidos pelos testes.
 - TASK-008 não foi iniciada. Não houve recuperação de documentos, pesquisa, publicação, CONVERGE ou Release.
 - Estado corrente sincronizado: TASK-001 a TASK-007 executadas; TASK-008 a TASK-013 pendentes. Nenhum bloqueio material para TASK-007. Próxima autorização: revisar TASK-007 antes de autorizar TASK-008.
+
+### Correção final de identidade local — TASK-007
+
+- Data: 2026-10-10. Correção limitada à comparação de identidade da família `local_file`; SPEC, PLAN, TASKS e ANALYZE-03 permaneceram inalterados/válidos.
+- Defeito: a verificação comparava somente o SHA-256 e ignorava `historico["locator"]`. Assim, dois arquivos distintos com bytes iguais podiam resultar em `MATCHED`.
+- Correção: o locator histórico precisa ser absoluto e verificável; sua forma lexical é normalizada e comparada com o locator absoluto normalizado atual. Locator diferente resulta em `CHANGED_REASSESS`, mesmo com bytes iguais. Locator ausente ou inválido resulta em `UNVERIFIABLE` com motivo. A verificação preserva o locator atual no resultado e mantém a referência histórica sem mutá-la. Não foi adicionada resolução física ou de symlinks.
+- Hashes anteriores: `provenance.py` `5F5977225D50841677179C2C689AADB4DFF2CBE0C5C1F160E6520361B781619C`; `test_provenance.py` `BBEDF66BB4717D22DC1BE59F674FF515EA12B4457A6FD18E2BB388E8AF4487AE`.
+- Hashes atuais: `impl/src/RickCraft/provenance.py` `ACEFF2AE342A53DA36DD60D702B78264DDCED9C59998B079FBE9E2880F2DFCE9`; `impl/tests/test_provenance.py` `5C8A4499D9E92D33DC19E8FA1704C7CCBC213798CF9ACBC8694F5A7707EF8064`.
+- Acrescentados seis testes: locator diferente com bytes iguais; locator diferente com bytes diferentes; histórico sem locator; locator histórico relativo; formas lexicais `..` equivalentes; e preservação/imutabilidade histórica ao reportar mudança de locator. Os demais testes das famílias e estados foram preservados.
+- Suíte TASK-007: `python -B -m unittest discover -s impl/tests -p test_provenance.py -v` — 45/45 PASS. Regressão TASK-006: `python -B -m unittest discover -s impl/tests -p test_document_format.py -v` — 49/49 PASS. Suíte completa: `python -B -m unittest discover -s impl/tests -v` — 188/188 PASS.
+- A tentativa inicial no sandbox registrou `WinError 5` nas fixtures temporárias e uma falha de fixture: o teste de indisponibilidade verificava caminho diferente do locator histórico. A fixture foi corrigida para testar inacessibilidade do mesmo locator; as execuções finais repetidas pelo mecanismo elevado passaram. Elevação é limitação ambiental, não requisito do produto.
+- TASK-006 permaneceu preservada: `document_format.py` SHA-256 `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7`; `test_document_format.py` SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA`.
+- ANALYZE permanece PASS para as versões exatas já registradas; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. TASK-008 não foi iniciada. Nenhum documento foi publicado, nenhum `os.link`, rede, Git externo, D-02, Release ou CONVERGE foi executado.

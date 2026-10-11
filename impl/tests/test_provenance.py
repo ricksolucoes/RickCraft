@@ -127,6 +127,67 @@ class ProvenanceTests(unittest.TestCase):
         atual = verificar_arquivo_local(historico, caminho, clock=self.clock)
         self.assertEqual(atual["verification"], "CHANGED_REASSESS")
 
+    def test_locator_diferente_com_mesmos_bytes_retorna_changed(self) -> None:
+        origem = self.root / "origem.txt"
+        outra = self.root / "outra.txt"
+        origem.write_bytes(b"mesmos bytes")
+        outra.write_bytes(b"mesmos bytes")
+        historico = observar_arquivo_local(origem, clock=self.clock)
+        self.assertEqual(historico["sha256"], calcular_sha256(outra.read_bytes()))
+        atual = verificar_arquivo_local(historico, outra, clock=self.clock)
+        self.assertEqual(atual["verification"], "CHANGED_REASSESS")
+        self.assertEqual(atual["locator"], os.path.abspath(outra))
+
+    def test_locator_diferente_com_bytes_diferentes_retorna_changed(self) -> None:
+        origem = self.root / "origem.txt"
+        outra = self.root / "outra.txt"
+        origem.write_bytes(b"primeiro")
+        outra.write_bytes(b"segundo")
+        historico = observar_arquivo_local(origem, clock=self.clock)
+        self.assertNotEqual(historico["sha256"], calcular_sha256(outra.read_bytes()))
+        atual = verificar_arquivo_local(historico, outra, clock=self.clock)
+        self.assertEqual(atual["verification"], "CHANGED_REASSESS")
+
+    def test_locator_historico_ausente_retorna_unverifiable_com_motivo(self) -> None:
+        caminho = self.root / "entrada"
+        caminho.write_bytes(b"conteudo")
+        historico = observar_arquivo_local(caminho, clock=self.clock)
+        historico.pop("locator")
+        atual = verificar_arquivo_local(historico, caminho, clock=self.clock)
+        self.assertEqual(atual["verification"], "UNVERIFIABLE")
+        self.assertTrue(atual["reason"])
+
+    def test_locator_historico_relativo_e_inverificavel(self) -> None:
+        caminho = self.root / "entrada"
+        caminho.write_bytes(b"conteudo")
+        historico = observar_arquivo_local(caminho, clock=self.clock)
+        historico["locator"] = "entrada"
+        atual = verificar_arquivo_local(historico, caminho, clock=self.clock)
+        self.assertEqual(atual["verification"], "UNVERIFIABLE")
+        self.assertTrue(atual["reason"])
+
+    def test_forms_lexicais_normalizadas_equivalentes_nao_mudam_identidade(self) -> None:
+        caminho = self.root / "entrada.txt"
+        caminho.write_bytes(b"conteudo")
+        historico = observar_arquivo_local(caminho, clock=self.clock)
+        lexical = self.root / "sub" / ".." / "entrada.txt"
+        atual = verificar_arquivo_local(historico, lexical, clock=self.clock)
+        self.assertEqual(atual["locator"], historico["locator"])
+        self.assertEqual(atual["verification"], "MATCHED")
+
+    def test_locator_diferente_preserva_historico_sem_mutacao(self) -> None:
+        origem = self.root / "origem.txt"
+        outra = self.root / "outra.txt"
+        origem.write_bytes(b"identicos")
+        outra.write_bytes(b"identicos")
+        historico = observar_arquivo_local(origem, clock=self.clock)
+        antes = deepcopy(historico)
+        atual = verificar_arquivo_local(historico, outra, clock=self.clock)
+        self.assertEqual(atual["verification"], "CHANGED_REASSESS")
+        self.assertEqual(atual["locator"], os.path.abspath(outra))
+        self.assertEqual(atual["historical"]["locator"], historico["locator"])
+        self.assertEqual(historico, antes)
+
     def test_arquivo_removido_retorna_unavailable(self) -> None:
         caminho = self.root / "entrada"
         caminho.write_bytes(b"conteudo")
@@ -309,8 +370,8 @@ class ProvenanceTests(unittest.TestCase):
             self.assertFalse(link.called)
 
     def test_falha_filesystem_e_indisponivel_sem_capturar_erro_programacao(self) -> None:
-        caminho = self.root / "entrada"
-        historico = observar_arquivo_local(self.root / "inexistente", clock=self.clock)
+        caminho = self.root / "inexistente"
+        historico = observar_arquivo_local(caminho, clock=self.clock)
         with patch("pathlib.Path.read_bytes", side_effect=PermissionError("negado")):
             atual = verificar_arquivo_local(historico, caminho, clock=self.clock)
         self.assertEqual(atual["verification"], "UNAVAILABLE")

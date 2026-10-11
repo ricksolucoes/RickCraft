@@ -68,6 +68,27 @@ def verificar_arquivo_local(
     registro_historico = _validar_historico(historico, KIND_LOCAL_FILE)
     locator = _normalizar_locator_local(caminho)
     instante = _instante_utc(clock)
+    locator_historico = _normalizar_locator_historico_local(
+        registro_historico.get("locator")
+    )
+    if locator_historico is None:
+        return _registro(
+            KIND_LOCAL_FILE,
+            locator,
+            instante,
+            verification="UNVERIFIABLE",
+            reason="A referência histórica não contém locator local absoluto verificável.",
+            historical=_referencia_historica(registro_historico),
+        )
+    if os.path.normcase(locator_historico) != os.path.normcase(locator):
+        return _registro(
+            KIND_LOCAL_FILE,
+            locator,
+            instante,
+            verification="CHANGED_REASSESS",
+            historical=_referencia_historica(registro_historico),
+        )
+
     try:
         conteudo = Path(locator).read_bytes()
     except OSError as exc:
@@ -306,6 +327,16 @@ def _normalizar_locator_local(caminho: str | os.PathLike[str]) -> str:
         return os.path.abspath(valor)
     except (OSError, ValueError) as exc:
         raise ProvenanceError("O caminho local não pôde ser normalizado.") from exc
+
+
+def _normalizar_locator_historico_local(valor: object) -> str | None:
+    """Aceita somente locator histórico absoluto e normaliza sua forma lexical."""
+    if type(valor) is not str or not valor or not os.path.isabs(valor):
+        return None
+    try:
+        return os.path.abspath(valor)
+    except (OSError, ValueError):
+        return None
 
 
 def _instante_utc(clock: Clock | None) -> str:

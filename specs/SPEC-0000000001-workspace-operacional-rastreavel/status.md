@@ -38,8 +38,8 @@
 | `test_document_format.py` | IMPLEMENT TASK-006 | SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA` | 49 testes unitários de serialização, parsing, validação e rejeições. |
 | `provenance.py` | IMPLEMENT TASK-007 | SHA-256 `ACEFF2AE342A53DA36DD60D702B78264DDCED9C59998B079FBE9E2880F2DFCE9` | Proveniência de três famílias de entrada; SHA-256 dos bytes exatos e estados verificáveis. |
 | `test_provenance.py` | IMPLEMENT TASK-007 | SHA-256 `5C8A4499D9E92D33DC19E8FA1704C7CCBC213798CF9ACBC8694F5A7707EF8064` | 45 testes de hashing, observação, comparação, estados e integração com `inputs` v1. |
-| `document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `069126B28787D77BE6995C3C203E7FF17A77B53B35D9D36AD31C848E975A4542` | Publicação append-only por `os.link`, reavaliação D-04, colisões, verificação final, diagnóstico D-03 e limpeza reportável. |
-| `test_document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `F600AE66A6C3390A8D1008A3DEBF2E31E2B980EB1ABFD940BECC67A4B4C4B8DD` | 45 testes de publicação, concorrência, colisões, reavaliação e verificação. |
+| `document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `56E4F43040890875953F44310C8318B226C69EF22AB39F7127CBBE26F30775FA` | Publicação append-only por `os.link`, reavaliação D-04, colisões, verificação final, diagnóstico D-03 e resíduos preservados também em falhas combinadas com cleanup. |
+| `test_document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `FCC8F4194078E7427168A9A51F1E1E28BB6E58B84DAA99453808DF7DDB60E974` | 47 testes de publicação, concorrência, colisões, reavaliação, verificação e propagação de resíduos. |
 
 ## Histórico de estado
 
@@ -821,3 +821,16 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - Foram usados `os.link` e D-02 somente nos testes controlados e na integração Debug real autorizada; não houve rede, Git, upload, pesquisa, recuperação histórica ou união de raízes.
 - TASK-009 não foi iniciada. Não houve CONVERGE, Release ou push. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisar TASK-008 antes de autorizar TASK-009.
+
+
+### Correção final de diagnóstico de resíduos — TASK-008
+
+- Data: 2026-10-10. Defeito: quando `_limpar_temporario()` falhava durante o tratamento de um `DocumentPublicationError`, a lista acumulada incluía o caminho `.tmp`, mas o relançamento da exceção original podia deixar `temporary_residues` vazio. Isso ocultava o resíduo próprio justamente quando coexistia uma falha principal.
+- Correção: antes de relançar, o diagnóstico agora combina os resíduos já registrados com os acumulados da limpeza e preserva mensagem, causa original, `errno`, `winerror`, `resultado_capacidade`, `destination` e `linked`. Após `os.link`, o destino correto e `linked=True` continuam registrados. A limpeza permanece best-effort e o destino publicado não é removido.
+- Hashes anteriores: `document_publisher.py` `069126B28787D77BE6995C3C203E7FF17A77B53B35D9D36AD31C848E975A4542`; `test_document_publisher.py` `F600AE66A6C3390A8D1008A3DEBF2E31E2B980EB1ABFD940BECC67A4B4C4B8DD`.
+- Hashes atuais: `impl/src/RickCraft/document_publisher.py` `56E4F43040890875953F44310C8318B226C69EF22AB39F7127CBBE26F30775FA`; `impl/tests/test_document_publisher.py` `FCC8F4194078E7427168A9A51F1E1E28BB6E58B84DAA99453808DF7DDB60E974`.
+- Dois testes novos cobrem falha de validação antes do link e falha de validação após o link, ambas com cleanup falho. Eles confirmam resíduo, estado `linked`, destino, causa e `errno`/`winerror`; os arquivos temporários simulados foram removidos manualmente no teardown. Os testes existentes continuam cobrindo cleanup falho após sucesso, cleanup bem-sucedido, colisões, oito tentativas, ausência de nona tentativa, concorrência e append-only.
+- Verificação focada dos três cenários de cleanup: `python -B -m unittest impl.tests.test_document_publisher.DocumentPublisherTests.test_residuo_e_reportado_com_falha_principal_antes_de_os_link impl.tests.test_document_publisher.DocumentPublisherTests.test_residuo_e_reportado_com_falha_principal_apos_os_link impl.tests.test_document_publisher.DocumentPublisherTests.test_cleanup_falho_e_reportavel_sem_invalidar_sucesso -v` — 3/3 PASS.
+- TASK-008: `python -B -m unittest impl.tests.test_document_publisher -v` — 47/47 PASS. TASK-007: `python -B -m unittest -q impl.tests.test_provenance` — 45/45 PASS. TASK-006: `python -B -m unittest -q impl.tests.test_document_format` — 49/49 PASS. Suíte completa: `python -B -m unittest discover -s impl/tests -v` — 235/235 PASS.
+- A tentativa sandboxada focada recebeu `WinError 5` ao criar/limpar fixtures temporárias, antes dos testes iniciarem; a repetição pelo mecanismo elevado autorizado passou. A elevação é limitação ambiental, não requisito do produto.
+- A integração real já registrada para `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5` e `DOC-e94fe576-a13a-422a-bd12-406629018cec` foi preservada e não repetida. Esta correção não criou nova publicação, documento ou análise, não executou D-02 nem alterou SPEC/PLAN/TASKS. TASK-009 não foi iniciada; TASK-001 a TASK-008 permanecem executadas; TASK-009 a TASK-013 permanecem pendentes. ANALYZE continua PASS, IMPLEMENT IN_PROGRESS e CONVERGE NOT_STARTED.

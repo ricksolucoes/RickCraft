@@ -203,14 +203,29 @@ def publicar_documento(
             except DocumentPublicationError as exc:
                 if temporario is not None:
                     residuos_acumulados.extend(_limpar_temporario(temporario))
-                if publicado and not exc.linked:
-                    raise DocumentPublicationError(
+                residuos = tuple(
+                    dict.fromkeys((*exc.temporary_residues, *residuos_acumulados))
+                )
+                destino = destination if publicado else exc.destination
+                linked = publicado or exc.linked
+                if (
+                    residuos != exc.temporary_residues
+                    or destino != exc.destination
+                    or linked != exc.linked
+                ):
+                    erro_enriquecido = DocumentPublicationError(
                         str(exc),
-                        cause=exc,
-                        temporary_residues=tuple(residuos_acumulados),
-                        destination=destination,
-                        linked=True,
-                    ) from exc
+                        cause=exc.cause,
+                        temporary_residues=residuos,
+                        destination=destino,
+                        linked=linked,
+                    )
+                    # Copiar os campos explícitos preserva também diagnósticos
+                    # que não possam ser reconstruídos apenas a partir de cause.
+                    erro_enriquecido.errno = exc.errno
+                    erro_enriquecido.winerror = exc.winerror
+                    erro_enriquecido.resultado_capacidade = exc.resultado_capacidade
+                    raise erro_enriquecido from exc
                 raise
             except Exception as exc:
                 if temporario is not None:

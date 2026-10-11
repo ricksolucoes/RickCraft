@@ -689,6 +689,94 @@ class DocumentPublisherTests(unittest.TestCase):
         for temp in temporarios:
             original_unlink(temp)
 
+    def test_residuo_e_reportado_com_falha_principal_antes_de_os_link(self) -> None:
+        original_unlink = Path.unlink
+        original_write = publisher._escrever_temporario_exclusivo
+        temporarios: list[Path] = []
+        causa = OSError(errno.EIO, "falha principal de validação")
+        causa.winerror = 123  # type: ignore[attr-defined]
+        falha = publisher.DocumentPublicationError(
+            "falha principal de validação", cause=causa
+        )
+
+        def gravar(folder, data, factory):
+            path = original_write(folder, data, factory)
+            temporarios.append(path)
+            return path
+
+        def validar(*_args, **_kwargs):
+            raise falha
+
+        def unlink(path, *args, **kwargs):
+            if path.suffix == ".tmp":
+                raise PermissionError(errno.EACCES, "limpeza simulada")
+            return original_unlink(path, *args, **kwargs)
+
+        try:
+            with patch.object(publisher, "_escrever_temporario_exclusivo", side_effect=gravar), patch.object(
+                publisher, "_validar_identidade_documento", side_effect=validar
+            ), patch.object(Path, "unlink", autospec=True, side_effect=unlink):
+                with self.assertRaises(publisher.DocumentPublicationError) as contexto:
+                    self._publish()
+            erro = contexto.exception
+            self.assertFalse(erro.linked)
+            self.assertIs(erro.cause, causa)
+            self.assertEqual(erro.errno, errno.EIO)
+            self.assertEqual(erro.winerror, 123)
+            self.assertEqual(erro.temporary_residues, tuple(temporarios))
+            self.assertEqual(len(temporarios), 1)
+        finally:
+            for temp in temporarios:
+                original_unlink(temp)
+
+    def test_residuo_e_reportado_com_falha_principal_apos_os_link(self) -> None:
+        original_unlink = Path.unlink
+        original_write = publisher._escrever_temporario_exclusivo
+        original_parse = publisher.parsear_documento
+        temporarios: list[Path] = []
+        chamadas_parse = 0
+        causa = OSError(errno.EIO, "falha principal de verificação")
+        causa.winerror = 123  # type: ignore[attr-defined]
+        falha = publisher.DocumentPublicationError(
+            "falha principal de verificação", cause=causa
+        )
+
+        def gravar(folder, data, factory):
+            path = original_write(folder, data, factory)
+            temporarios.append(path)
+            return path
+
+        def parsear(conteudo):
+            nonlocal chamadas_parse
+            chamadas_parse += 1
+            if chamadas_parse == 2:
+                raise falha
+            return original_parse(conteudo)
+
+        def unlink(path, *args, **kwargs):
+            if path.suffix == ".tmp":
+                raise PermissionError(errno.EACCES, "limpeza simulada")
+            return original_unlink(path, *args, **kwargs)
+
+        try:
+            with patch.object(publisher, "_escrever_temporario_exclusivo", side_effect=gravar), patch.object(
+                publisher, "parsear_documento", side_effect=parsear
+            ), patch.object(Path, "unlink", autospec=True, side_effect=unlink):
+                with self.assertRaises(publisher.DocumentPublicationError) as contexto:
+                    self._publish()
+            erro = contexto.exception
+            self.assertTrue(erro.linked)
+            self.assertIsNotNone(erro.destination)
+            self.assertTrue(erro.destination.is_file())
+            self.assertIs(erro.cause, causa)
+            self.assertEqual(erro.errno, errno.EIO)
+            self.assertEqual(erro.winerror, 123)
+            self.assertEqual(erro.temporary_residues, tuple(temporarios))
+            self.assertEqual(len(temporarios), 1)
+        finally:
+            for temp in temporarios:
+                original_unlink(temp)
+
     def test_tmp_nao_e_publicado_com_extensao_md(self) -> None:
         result, _ = self._publish()
         self.assertEqual(result.destination.suffix, ".md")

@@ -405,3 +405,153 @@ class VerificationClaim:
             ),
         ))
         object.__setattr__(self, "evidence", ordered)
+
+
+class TechnicalDimension(Enum):
+    """Dimensões que podem ser consideradas sem implicar avaliação."""
+
+    PATTERNS = "PATTERNS"
+    SOLID = "SOLID"
+    INTERFACE_ARCHITECTURE = "INTERFACE_ARCHITECTURE"
+    CLEAN_CODE = "CLEAN_CODE"
+    DELPHI_OBJECT_PASCAL = "DELPHI_OBJECT_PASCAL"
+    OBJECTIVE_NORMATIVE_RULES = "OBJECTIVE_NORMATIVE_RULES"
+    QUALITY_AUDIT = "QUALITY_AUDIT"
+
+
+class DimensionAssessmentState(Enum):
+    """Estado explícito da consideração de uma dimensão em um escopo."""
+
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    NOT_ASSESSED_INSUFFICIENT_EVIDENCE = "NOT_ASSESSED_INSUFFICIENT_EVIDENCE"
+    SPECIALIST_REQUIRED = "SPECIALIST_REQUIRED"
+    SPECIALIST_ASSESSMENT_RECEIVED = "SPECIALIST_ASSESSMENT_RECEIVED"
+    CORE_SCOPE_ASSESSMENT = "CORE_SCOPE_ASSESSMENT"
+
+
+class AssessmentCharacter(Enum):
+    """Caráter declarado pelo host para uma avaliação recebida."""
+
+    CONSULTATIVE = "CONSULTATIVE"
+    AUTHORITATIVE = "AUTHORITATIVE"
+
+
+def _evidencias_unicas(value: object, field: str) -> tuple[EvidenceReference, ...]:
+    items = _sequencia(value, field)
+    if any(not isinstance(item, EvidenceReference) for item in items):
+        raise ReviewInputError(f"{field} deve conter somente EvidenceReference.")
+    if len(set(items)) != len(items):
+        raise ReviewInputError(f"{field} não pode conter evidências duplicadas.")
+    return tuple(sorted(items, key=lambda item: (
+        item.kind.value,
+        item.origin,
+        item.reference,
+        item.target,
+        item.version or "",
+        item.digest or "",
+        item.limitation or "",
+        item.verifiability or "",
+    )))
+
+
+@dataclass(frozen=True)
+class SpecialistAssessment:
+    """Avaliação recebida do host, sem descoberta ou chamada de especialista."""
+
+    dimension: TechnicalDimension
+    scope: str
+    conclusion: str
+    evidence: tuple[EvidenceReference, ...]
+    character: AssessmentCharacter
+    owner: str | None = None
+    competence_reference: str | None = None
+    authority_reference: AuthorityReference | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.dimension, TechnicalDimension):
+            raise ReviewInputError("dimension deve ser TechnicalDimension explícita.")
+        _texto_obrigatorio(self.scope, "specialist scope")
+        _texto_obrigatorio(self.conclusion, "specialist conclusion")
+        if not isinstance(self.character, AssessmentCharacter):
+            raise ReviewInputError("character deve ser AssessmentCharacter explícito.")
+        evidence = _evidencias_unicas(self.evidence, "specialist evidence")
+        object.__setattr__(self, "evidence", evidence)
+        owner = _texto_opcional(self.owner, "owner")
+        competence = _texto_opcional(self.competence_reference, "competence_reference")
+        if self.authority_reference is not None and not isinstance(
+            self.authority_reference, AuthorityReference
+        ):
+            raise ReviewInputError("authority_reference deve ser AuthorityReference.")
+        if self.character is AssessmentCharacter.AUTHORITATIVE:
+            if owner is None:
+                raise ReviewInputError("AUTHORITATIVE requer owner explícito.")
+            if competence is None:
+                raise ReviewInputError("AUTHORITATIVE requer competence_reference.")
+            if self.authority_reference is None:
+                raise ReviewInputError("AUTHORITATIVE requer AuthorityReference explícita.")
+            authority = self.authority_reference
+            if (
+                authority.owner != owner
+                or authority.competence_reference != competence
+                or self.scope not in authority.scopes
+            ):
+                raise ReviewInputError(
+                    "AuthorityReference deve corresponder ao owner, competência e escopo."
+                )
+            if not evidence:
+                raise ReviewInputError("AUTHORITATIVE requer ao menos uma evidência explícita.")
+
+    def validate_authority(self, context: AuthorityContext) -> None:
+        """Confirma presença da referência no contexto fornecido explicitamente."""
+        if not isinstance(context, AuthorityContext):
+            raise ReviewInputError("context deve ser AuthorityContext explícito.")
+        if self.character is not AssessmentCharacter.AUTHORITATIVE:
+            return
+        if self.authority_reference not in context.authorities:
+            raise ReviewInputError(
+                "AuthorityReference autoritativa deve estar presente no contexto explícito."
+            )
+
+
+@dataclass(frozen=True)
+class DimensionAssessment:
+    """Estado imutável de uma dimensão para um escopo declarado."""
+
+    dimension: TechnicalDimension
+    scope: str
+    state: DimensionAssessmentState
+    evidence: tuple[EvidenceReference, ...] = ()
+    specialist_assessment: SpecialistAssessment | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.dimension, TechnicalDimension):
+            raise ReviewInputError("dimension deve ser TechnicalDimension explícita.")
+        _texto_obrigatorio(self.scope, "dimension scope")
+        if not isinstance(self.state, DimensionAssessmentState):
+            raise ReviewInputError("state deve ser DimensionAssessmentState explícito.")
+        object.__setattr__(self, "evidence", _evidencias_unicas(self.evidence, "dimension evidence"))
+        specialist = self.specialist_assessment
+        if specialist is not None and not isinstance(specialist, SpecialistAssessment):
+            raise ReviewInputError("specialist_assessment deve ser SpecialistAssessment.")
+        if specialist is not None and (
+            specialist.dimension is not self.dimension or specialist.scope != self.scope
+        ):
+            raise ReviewInputError("SpecialistAssessment deve corresponder à dimensão e ao escopo.")
+        if self.state is DimensionAssessmentState.SPECIALIST_ASSESSMENT_RECEIVED and specialist is None:
+            raise ReviewInputError(
+                "SPECIALIST_ASSESSMENT_RECEIVED requer SpecialistAssessment correspondente."
+            )
+        if self.state is DimensionAssessmentState.NOT_APPLICABLE and specialist is not None:
+            raise ReviewInputError("NOT_APPLICABLE não pode carregar SpecialistAssessment.")
+        if self.state is DimensionAssessmentState.SPECIALIST_REQUIRED and (
+            specialist is not None and specialist.character is AssessmentCharacter.AUTHORITATIVE
+        ):
+            raise ReviewInputError(
+                "SPECIALIST_REQUIRED não pode carregar assessment autoritativa suficiente."
+            )
+        if self.state is DimensionAssessmentState.CORE_SCOPE_ASSESSMENT and (
+            specialist is not None and specialist.character is AssessmentCharacter.AUTHORITATIVE
+        ):
+            raise ReviewInputError(
+                "CORE_SCOPE_ASSESSMENT não pode atribuir competência especializada ao Core."
+            )

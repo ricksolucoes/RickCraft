@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS — TASK-003 concluída, aguardando revisão
+- **IMPLEMENT:** IN_PROGRESS — TASK-004 concluída, aguardando revisão
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -564,3 +564,35 @@ SPEC e PLAN permanecem COMPLETE e aprovados. Etapa atual = TASKS; ANALYZE = NOT_
 ### HANDOFF PARA REVISÃO — correção pontual TASK-006
 
 Revisar exclusivamente a semântica de conflito da TASK-006 e o registro desta correção. TASKS está COMPLETE, pronta para revisão e não aprovada. É necessária autorização explícita separada antes de ANALYZE.
+
+## IMPLEMENT — TASK-004 — Dimensões técnicas e avaliações especializadas — 2026-10-11
+
+A aprovação externa de TASK-003 foi confirmada pelo responsável. Baseline aceita: `review_protocol.py` SHA-256 `2F9F2AE2512E78572A7561666122967CAF11DBF4253B3846F15B1D1731852C96` (blob Git `1705d2d8acac7bb4272db20c65d0afddc4a65034`) e `test_review_protocol.py` SHA-256 `93981E2A1E04068597900723B188685B8A59FF87925DF0D79616B05DEDC30FC9` (blob Git `345972ed0317968b546df6640b6f8c7ae2ebb671`). SPEC, PLAN e TASKS foram recalculadas antes da alteração e conferem, respectivamente, com `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`. O gate `ANALYZE-2026-10-11-SPEC-0000000002-01` permanece PASS; nenhuma entrada normativa mudou.
+
+TASK-004 passou a IN_PROGRESS e foi concluída nesta execução. Foram adicionados `TechnicalDimension` com exatamente as sete dimensões e sua ordem canônica, `DimensionAssessmentState` com os cinco estados do PLAN, `AssessmentCharacter` e os value objects imutáveis `DimensionAssessment` e `SpecialistAssessment`. As validações exigem tipo e escopo explícitos, evidências tipadas sem duplicatas e coerência entre dimensão/escopo/assessment. `AUTHORITATIVE` exige owner, referência de competência, `AuthorityReference` compatível com o escopo e ao menos uma evidência; `validate_authority` exige que essa mesma referência esteja no `AuthorityContext` explícito. Avaliações consultivas não são promovidas. Nenhum owner é inferido e nenhuma lógica substantiva dos domínios especializados foi implementada.
+
+Verificação executada: `python -B -m unittest -v impl.tests.test_review_protocol` — 82 testes executados, 82 PASS, 0 FAIL, 0 SKIP; inclui regressão das TASK-001, TASK-002 e TASK-003. Nenhuma suíte adicional foi executada. Os value objects não acessam fontes nem executam IO; não chamam Agents, `provenance.py` ou `gap_handling.py`, e não introduzem rede, Git, subprocesso, persistência ou Release. Nenhum módulo ou teste da SPEC1 foi alterado.
+
+Hashes SHA-256 finais, calculados após releitura estrita UTF-8 e confirmados por cálculo repetido:
+
+- `impl/src/RickCraft/review_protocol.py`: `9EF7B449ACA7F65E586196E95AF49784C386BDA9C3577B34EB0A4A4B90EBC3B6`
+- `impl/tests/test_review_protocol.py`: `8B2F026B22A91E614C616181BDC56B79702A300F7ABA3D4FC3D22AFD7D19396E`
+
+`git diff --check` passou sem erros. `git status --short` listou somente os três arquivos autorizados. Git emitiu avisos de conversão LF→CRLF para os dois arquivos de código e este status no Windows; não houve erro de whitespace.
+
+Estado corrente: Etapa = IMPLEMENT; SPEC/PLAN/TASKS = COMPLETE e aprovadas; ANALYZE = PASS; IMPLEMENT = IN_PROGRESS; CONVERGE = NOT_STARTED. TASK-001–TASK-003 permanecem COMPLETE e aprovadas; TASK-004 = COMPLETE, aguardando revisão; TASK-005–TASK-013 não executadas. Último gate válido: `ANALYZE-2026-10-11-SPEC-0000000002-01`. Nenhum bloqueio ou limitação adicional identificado.
+
+### CHECKPOINT RICKCRAFT — TASK-004
+
+- **Fase:** IMPLEMENT — TASK-004 — SPEC-0000000002.
+- **Objetivo:** modelar dimensões técnicas e avaliações especializadas recebidas sem assumir autoridade substantiva.
+- **Estado:** AGUARDANDO_APROVAÇÃO; TASK-004 COMPLETE, aguardando revisão.
+- **Arquivos criados:** nenhum.
+- **Arquivos alterados:** `review_protocol.py`, `test_review_protocol.py` e este `status.md`.
+- **Testes:** comando focal acima; 82/82 PASS, 0 FAIL, 0 SKIP.
+- **Próximo passo:** revisar exclusivamente TASK-004 antes de qualquer autorização da TASK-005.
+- **Não fazer ainda:** não iniciar TASK-005, CONVERGE ou Release; não fazer push.
+
+### HANDOFF PARA REVISÃO — TASK-004
+
+Revisar `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este registro. TASK-004 está COMPLETE, aguardando revisão; TASK-005 permanece não executada. É necessária autorização explícita separada antes de TASK-005.

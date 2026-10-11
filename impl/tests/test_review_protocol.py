@@ -10,15 +10,20 @@ sys.path.insert(0, str(RUNTIME_DIRECTORY))
 
 from review_protocol import (  # noqa: E402
     AuthorizationGrant,
+    AssessmentCharacter,
     AuthorityContext,
     AuthorityReference,
     AuthorizedPrecedence,
     EvidenceKind,
     EvidenceReference,
+    DimensionAssessment,
+    DimensionAssessmentState,
     RequestedEffect,
     ReviewInputError,
     ReviewRequest,
     ReviewScope,
+    SpecialistAssessment,
+    TechnicalDimension,
     VerificationClaim,
     VerificationStatus,
 )
@@ -583,6 +588,173 @@ class EvidenceAndClaimTests(unittest.TestCase):
         )
         self.assertEqual(claim.evidence[0].verifiability, "CHANGED_REASSESS")
         self.assertIs(claim.status, VerificationStatus.HISTORICAL_IDENTIFIED)
+
+
+class TechnicalDimensionTests(unittest.TestCase):
+    @staticmethod
+    def evidence(reference: str = "test://assessment") -> EvidenceReference:
+        return EvidenceReference(
+            EvidenceKind.DIRECT_OBSERVATION, "fixture", reference, "scope-a"
+        )
+
+    @classmethod
+    def specialist(cls, **overrides: object) -> SpecialistAssessment:
+        authority = AuthorityReference(
+            "authority:owner-a", "owner-a", "competence:patterns", ("scope-a",)
+        )
+        values: dict[str, object] = {
+            "dimension": TechnicalDimension.PATTERNS,
+            "scope": "scope-a",
+            "conclusion": "Avaliação recebida no escopo informado.",
+            "evidence": (cls.evidence(),),
+            "character": AssessmentCharacter.CONSULTATIVE,
+            "owner": "owner-a",
+            "competence_reference": "competence:patterns",
+        }
+        values.update(overrides)
+        if values.get("character") is AssessmentCharacter.AUTHORITATIVE:
+            values.setdefault("authority_reference", authority)
+        return SpecialistAssessment(**values)  # type: ignore[arg-type]
+
+    def test_conjunto_exato_e_ordem_canonica_das_dimensoes(self) -> None:
+        self.assertEqual(
+            tuple(item.name for item in TechnicalDimension),
+            (
+                "PATTERNS", "SOLID", "INTERFACE_ARCHITECTURE", "CLEAN_CODE",
+                "DELPHI_OBJECT_PASCAL", "OBJECTIVE_NORMATIVE_RULES", "QUALITY_AUDIT",
+            ),
+        )
+
+    def test_estados_de_dimensao_validos_sem_inferir_resultado(self) -> None:
+        for state in (
+            DimensionAssessmentState.NOT_APPLICABLE,
+            DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE,
+            DimensionAssessmentState.SPECIALIST_REQUIRED,
+            DimensionAssessmentState.CORE_SCOPE_ASSESSMENT,
+        ):
+            with self.subTest(state=state):
+                assessment = DimensionAssessment(TechnicalDimension.SOLID, "scope-a", state)
+                self.assertIs(assessment.state, state)
+
+    def test_specialist_assessment_received_exige_avaliacao_correspondente(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "requer SpecialistAssessment"):
+            DimensionAssessment(
+                TechnicalDimension.PATTERNS, "scope-a",
+                DimensionAssessmentState.SPECIALIST_ASSESSMENT_RECEIVED,
+            )
+        specialist = self.specialist()
+        result = DimensionAssessment(
+            TechnicalDimension.PATTERNS, "scope-a",
+            DimensionAssessmentState.SPECIALIST_ASSESSMENT_RECEIVED,
+            specialist_assessment=specialist,
+        )
+        self.assertIs(result.specialist_assessment, specialist)
+
+    def test_specialist_consultative_nao_e_promovida(self) -> None:
+        assessment = self.specialist()
+        self.assertIs(assessment.character, AssessmentCharacter.CONSULTATIVE)
+        assessment.validate_authority(AuthorityContext())
+        self.assertIs(assessment.character, AssessmentCharacter.CONSULTATIVE)
+
+    def test_authoritative_requer_owner_competencia_authority_evidence(self) -> None:
+        required = {
+            "character": AssessmentCharacter.AUTHORITATIVE,
+            "authority_reference": AuthorityReference(
+                "authority:owner-a", "owner-a", "competence:patterns", ("scope-a",)
+            ),
+        }
+        for field, value, expected in (
+            ("owner", None, "owner explícito"),
+            ("competence_reference", None, "competence_reference"),
+            ("evidence", (), "evidência explícita"),
+        ):
+            args = dict(required)
+            args[field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ReviewInputError, expected):
+                self.specialist(**args)
+
+    def test_authoritative_corresponde_a_referencia_explicita_no_contexto(self) -> None:
+        reference = AuthorityReference(
+            "authority:owner-a", "owner-a", "competence:patterns", ("scope-a",)
+        )
+        assessment = self.specialist(
+            character=AssessmentCharacter.AUTHORITATIVE,
+            authority_reference=reference,
+        )
+        assessment.validate_authority(AuthorityContext(authorities=[reference]))
+        with self.assertRaisesRegex(ReviewInputError, "contexto explícito"):
+            assessment.validate_authority(AuthorityContext())
+
+    def test_dimensao_nao_inventa_owner_e_scope_vazio_e_rejeitado(self) -> None:
+        assessment = self.specialist(owner=None, competence_reference=None)
+        self.assertIsNone(assessment.owner)
+        with self.assertRaisesRegex(ReviewInputError, "scope"):
+            self.specialist(scope=" ")
+        with self.assertRaisesRegex(ReviewInputError, "conclusion"):
+            self.specialist(conclusion=" ")
+
+    def test_enums_arbitrarios_e_evidencia_de_tipo_incorreto_sao_rejeitados(self) -> None:
+        with self.assertRaisesRegex(ReviewInputError, "TechnicalDimension explícita"):
+            DimensionAssessment("PATTERNS", "scope-a", DimensionAssessmentState.NOT_APPLICABLE)  # type: ignore[arg-type]
+        with self.assertRaisesRegex(ReviewInputError, "DimensionAssessmentState explícito"):
+            DimensionAssessment(TechnicalDimension.PATTERNS, "scope-a", "NOT_APPLICABLE")  # type: ignore[arg-type]
+        with self.assertRaisesRegex(ReviewInputError, "AssessmentCharacter explícito"):
+            self.specialist(character="CONSULTATIVE")  # type: ignore[arg-type]
+        with self.assertRaisesRegex(ReviewInputError, "somente EvidenceReference"):
+            self.specialist(evidence=["report"])
+
+    def test_evidencia_duplicada_e_assessment_incompativel_sao_rejeitados(self) -> None:
+        item = self.evidence()
+        with self.assertRaisesRegex(ReviewInputError, "duplicadas"):
+            self.specialist(evidence=[item, item])
+        with self.assertRaisesRegex(ReviewInputError, "dimensão e ao escopo"):
+            DimensionAssessment(
+                TechnicalDimension.SOLID, "scope-a",
+                DimensionAssessmentState.SPECIALIST_ASSESSMENT_RECEIVED,
+                specialist_assessment=self.specialist(),
+            )
+
+    def test_estados_nao_carregam_decisao_contraditoria(self) -> None:
+        authoritative = self.specialist(character=AssessmentCharacter.AUTHORITATIVE)
+        for state in (
+            DimensionAssessmentState.NOT_APPLICABLE,
+            DimensionAssessmentState.SPECIALIST_REQUIRED,
+            DimensionAssessmentState.CORE_SCOPE_ASSESSMENT,
+        ):
+            with self.subTest(state=state), self.assertRaises(ReviewInputError):
+                DimensionAssessment(
+                    TechnicalDimension.PATTERNS, "scope-a", state,
+                    specialist_assessment=authoritative,
+                )
+
+    def test_colecoes_sao_copiadas_ordenadas_e_objetos_sao_imutaveis(self) -> None:
+        first = self.evidence("test://a")
+        second = self.evidence("test://b")
+        provided = [second, first]
+        specialist = self.specialist(evidence=provided)
+        provided.clear()
+        self.assertEqual(tuple(item.reference for item in specialist.evidence),
+                         ("test://a", "test://b"))
+        values = [second, first]
+        assessment = DimensionAssessment(
+            TechnicalDimension.PATTERNS, "scope-a",
+            DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE,
+            evidence=values,
+        )
+        values.clear()
+        self.assertEqual(len(assessment.evidence), 2)
+        with self.assertRaises(FrozenInstanceError):
+            assessment.scope = "other"  # type: ignore[misc]
+        with self.assertRaises(FrozenInstanceError):
+            specialist.conclusion = "alterada"  # type: ignore[misc]
+
+    def test_multiplas_dimensoes_coexistem_sem_regra_substantiva(self) -> None:
+        assessments = (
+            DimensionAssessment(TechnicalDimension.PATTERNS, "scope-a", DimensionAssessmentState.NOT_APPLICABLE),
+            DimensionAssessment(TechnicalDimension.SOLID, "scope-a", DimensionAssessmentState.SPECIALIST_REQUIRED),
+        )
+        self.assertEqual(tuple(item.dimension for item in assessments),
+                         (TechnicalDimension.PATTERNS, TechnicalDimension.SOLID))
 
 
 if __name__ == "__main__":

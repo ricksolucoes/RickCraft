@@ -403,6 +403,24 @@ class GapHandlingTests(unittest.TestCase):
                 purpose="Gate inválido", **self.publish_kwargs(),
             )
 
+    def test_variantes_canonicas_de_gate_sao_rejeitadas_em_todos_os_campos(self):
+        gate_claims = (
+            "ANALYZE PASS", "ANALYZE = PASS", "ANALYZE: PASS", "ANALYZE - PASS",
+            "CONVERGED", "CONVERGE CONVERGED", "CONVERGE = CONVERGED",
+            "CONVERGE: CONVERGED", "CONVERGE - CONVERGED",
+            "analyze   :   pass", "converge   =   converged",
+        )
+        for field in ("operation", "outcome", "evidence_references", "limitations", "blocked_scopes"):
+            for claim in gate_claims:
+                with self.subTest(field=field, claim=claim):
+                    value = (claim,) if field in {"evidence_references", "limitations", "blocked_scopes"} else claim
+                    with self.assertRaises(gaps.GapHandlingError):
+                        gaps._validate_result(self.result_case(**{field: value}))
+
+    def test_mencao_negativa_nao_e_declaracao_positiva_de_gate(self):
+        case = self.result_case(outcome="Este registro não declara ANALYZE = PASS")
+        self.assertIsNotNone(gaps._validate_result(case))
+
     def test_28_resultado_nao_pode_declarar_converged(self):
         with self.assertRaises(gaps.GapHandlingError):
             gaps.registrar_resultado(
@@ -485,7 +503,34 @@ class GapHandlingTests(unittest.TestCase):
         )
         self.assertTrue(result.blocker_required)
         self.assertIsNone(result.authoritative_reference)
-        self.assertTrue(result.required_authority)
+        self.assertIsNone(result.required_authority)
+        self.assertIsNone(result.divergence.required_authority)
+        self.assertIn("identificar a autoridade competente", result.divergence.required_information)
+
+    def test_conflito_preserva_authority_explicitamente_fornecida(self):
+        owner = "Owner X explicitamente fornecido"
+        result = gaps.avaliar_conflito_fontes(
+            normative("POL-A", "X"), normative("POL-B", "Y"),
+            affected_scope="operação X", impact="regras incompatíveis",
+            resume_condition="decisão formal", materially_incompatible=True,
+            required_authority=owner,
+        )
+        self.assertTrue(result.blocker_required)
+        self.assertIsNone(result.authoritative_reference)
+        self.assertEqual(result.required_authority, owner)
+        self.assertEqual(result.divergence.required_authority, owner)
+
+    def test_conflito_nao_promove_executor_a_auditor_ou_agent(self):
+        result = gaps.avaliar_conflito_fontes(
+            normative("POL-A", "X"), normative("POL-B", "Y"),
+            affected_scope="operação X", impact="regras incompatíveis",
+            resume_condition="identificar autoridade", materially_incompatible=True,
+        )
+        self.assertIsNone(result.required_authority)
+        self.assertIsNone(result.divergence.required_authority)
+        self.assertNotIn("Executor", result.divergence.unresolved_reason)
+        self.assertNotIn("Auditor", result.divergence.unresolved_reason)
+        self.assertNotIn("Agent", result.divergence.unresolved_reason)
 
     def test_41_conflito_normativo_pode_gerar_divergence_e_blocker(self):
         conflict = gaps.avaliar_conflito_fontes(
@@ -502,12 +547,31 @@ class GapHandlingTests(unittest.TestCase):
             self.blocker_case(
                 affected_scope="parte dependente", cause="duas fontes normativas incompatíveis",
                 dependency="precedência formal", required_authority=conflict.required_authority,
-                required_information=None,
+                required_information=conflict.divergence.required_information,
             ),
             purpose="Bloquear somente a operação dependente", **self.publish_kwargs(),
         )
         self.assertEqual(divergence.document_type, "divergence")
         self.assertEqual(blocker.document_type, "blocker")
+
+    def test_blocker_registra_identificacao_de_autoridade_ainda_desconhecida(self):
+        conflict = gaps.avaliar_conflito_fontes(
+            normative("POL-A", "X"), normative("POL-B", "Y"),
+            affected_scope="operação X", impact="regras incompatíveis",
+            resume_condition="autoridade identificada e decisão registrada", materially_incompatible=True,
+        )
+        self.assertIsNone(conflict.required_authority)
+        receipt = gaps.registrar_blocker(
+            self.rickcraft_root, ANALYSIS_ID,
+            self.blocker_case(
+                cause="conflito entre fontes normativas sem precedência",
+                dependency="precedência formal",
+                required_authority=None,
+                required_information=conflict.divergence.required_information,
+            ),
+            purpose="Aguardar identificação da autoridade", **self.publish_kwargs(),
+        )
+        self.assertEqual(receipt.document_type, "blocker")
 
     def test_42_invalid_source_category_rejected(self):
         with self.assertRaises(gaps.GapHandlingError):
@@ -543,6 +607,47 @@ class GapHandlingTests(unittest.TestCase):
             ("A",), (gaps.ScopeRequest("B", ("A",), True, True, True, True, True),),
         )
         self.assertNotIn("B", result.continuable_scopes)
+
+    def test_dependencia_transitiva_bloqueia_cadeia_completa(self):
+        result = gaps.avaliar_continuidade_localizada(
+            ("A",), (
+                gaps.ScopeRequest("B", ("A",), True, True, True, True, True),
+                gaps.ScopeRequest("C", ("B",), True, True, True, True, True),
+                gaps.ScopeRequest("D", ("C",), True, True, True, True, True),
+            ),
+        )
+        self.assertEqual(result.continuable_scopes, ())
+        for scope in ("B", "C", "D"):
+            item = next(entry for entry in result.scopes if entry.scope == scope)
+            self.assertFalse(item.continuable)
+            self.assertTrue(any("depende de escopo bloqueado" in reason for reason in item.reasons))
+
+    def test_dependencia_nao_avaliada_impede_continuidade(self):
+        result = gaps.avaliar_continuidade_localizada(
+            ("A",), (gaps.ScopeRequest("B", ("UNKNOWN",), True, True, True, True, True),),
+        )
+        item = result.scopes[0]
+        self.assertFalse(item.continuable)
+        self.assertIn("depende de escopo não avaliado: UNKNOWN", item.reasons)
+
+    def test_escopo_depende_de_escopo_continuavel_sem_bloqueio(self):
+        result = gaps.avaliar_continuidade_localizada(
+            ("A",), (
+                gaps.ScopeRequest("B", (), True, True, True, True, True),
+                gaps.ScopeRequest("C", ("B",), True, True, True, True, True),
+            ),
+        )
+        self.assertEqual(result.continuable_scopes, ("B", "C"))
+
+    def test_dependencia_transitiva_fora_da_ordem_declarada_tambem_propaga(self):
+        result = gaps.avaliar_continuidade_localizada(
+            ("A",), (
+                gaps.ScopeRequest("D", ("C",), True, True, True, True, True),
+                gaps.ScopeRequest("C", ("B",), True, True, True, True, True),
+                gaps.ScopeRequest("B", ("A",), True, True, True, True, True),
+            ),
+        )
+        self.assertEqual(result.continuable_scopes, ())
 
     def test_47_escopo_independente_sem_autorizacao_nao_continua(self):
         result = gaps.avaliar_continuidade_localizada(

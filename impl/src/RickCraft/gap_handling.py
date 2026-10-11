@@ -125,7 +125,9 @@ Clock = Callable[[], datetime]
 
 _CATEGORIES = {"normative", "workspace", "evidence", "operational"}
 _INVALID_RESULT_CLAIMS = re.compile(
-    r"\b(?:ANALYZE\s+PASS|CONVERGED|CONVERGE\s+CONVERGED)\b", re.IGNORECASE
+    r"(?<!\w)(?:ANALYZE(?:\s+|[:=\-–]\s*)(?:[:=\-–]\s*)?PASS|"
+    r"CONVERGED|CONVERGE(?:\s+|[:=\-–]\s*)(?:[:=\-–]\s*)?CONVERGED)(?!\w)",
+    re.IGNORECASE,
 )
 
 
@@ -145,6 +147,8 @@ def avaliar_conflito_fontes(
     _require_text(affected_scope, "affected_scope")
     _require_text(impact, "impact")
     _require_text(resume_condition, "resume_condition")
+    if required_authority is not None:
+        _require_text(required_authority, "required_authority")
     if type(materially_incompatible) is not bool:
         raise GapHandlingError("materially_incompatible deve ser booleano explícito.")
     if not materially_incompatible:
@@ -159,7 +163,6 @@ def avaliar_conflito_fontes(
         authoritative_reference = normative[0].reference
     elif len(normative) == 2:
         blocker_required = True
-        authority_needed = authority_needed or "Decision Owner competente para resolver o conflito normativo"
     else:
         blocker_required = True
 
@@ -178,6 +181,9 @@ def avaliar_conflito_fontes(
             "As fontes foram informadas como materialmente incompatíveis; não há autoridade fornecida para escolher uma vencedora."
         )
 
+    required_information = None
+    if len(normative) == 2 and authority_needed is None:
+        required_information = "identificar a autoridade competente para resolver o conflito normativo"
     case = DivergenceCase(
         occurrence="Conflito material entre as referências fornecidas.",
         references=(source_a, source_b),
@@ -186,6 +192,7 @@ def avaliar_conflito_fontes(
         unresolved_reason=reason,
         resume_condition=resume_condition,
         required_authority=authority_needed,
+        required_information=required_information,
     )
     return ConflictAssessment(case, authoritative_reference, blocker_required, authority_needed)
 
@@ -224,14 +231,14 @@ def avaliar_continuidade_localizada(
             conflict_free=_explicit_bool(request.conflict_free, "conflict_free"),
         ))
 
-    results: list[ScopeContinuity] = []
+    local_reasons: dict[str, list[str]] = {}
     for request in validated:
         reasons: list[str] = []
-        affected_dependencies = sorted(set(request.depends_on).intersection(affected))
         if request.scope in affected:
             reasons.append("escopo diretamente afetado pela lacuna")
-        if affected_dependencies:
-            reasons.append("depende de escopo bloqueado: " + ", ".join(affected_dependencies))
+        for dependency in sorted(set(request.depends_on)):
+            if dependency not in affected and dependency not in seen:
+                reasons.append(f"depende de escopo não avaliado: {dependency}")
         if not request.explicitly_authorized:
             reasons.append("não há autorização explícita para este escopo")
         if not request.information_sufficient:
@@ -242,6 +249,35 @@ def avaliar_continuidade_localizada(
             reasons.append("autoridade necessária insuficiente")
         if not request.conflict_free:
             reasons.append("há conflito material não resolvido")
+
+        local_reasons[request.scope] = reasons
+
+    blocked = set(affected)
+    blocked.update(scope for scope, reasons in local_reasons.items() if reasons)
+    propagated: dict[str, set[str]] = {request.scope: set() for request in validated}
+    changed = True
+    while changed:
+        changed = False
+        for request in validated:
+            if request.scope in blocked:
+                continue
+            blocked_dependencies = sorted(
+                dependency for dependency in set(request.depends_on)
+                if dependency in blocked
+            )
+            if blocked_dependencies:
+                blocked.add(request.scope)
+                propagated[request.scope].update(blocked_dependencies)
+                changed = True
+
+    results: list[ScopeContinuity] = []
+    for request in validated:
+        reasons = list(local_reasons[request.scope])
+        if propagated[request.scope]:
+            reasons.append(
+                "depende de escopo bloqueado: "
+                + ", ".join(sorted(propagated[request.scope]))
+            )
         results.append(ScopeContinuity(request.scope, not reasons, tuple(reasons)))
     return ContinuityAssessment(affected, tuple(results))
 
@@ -542,7 +578,7 @@ def _validate_result(case: OperationalResultCase) -> ContinuityAssessment | None
             raise GapHandlingError(f"{name} deve ser uma tupla explícita de textos.")
         for value in values:
             statements.append(_require_text(value, name))
-    if any(_INVALID_RESULT_CLAIMS.search(statement) for statement in statements):
+    if any(_declares_forbidden_gate(statement) for statement in statements):
         raise GapHandlingError("result não pode declarar gate ANALYZE PASS ou CONVERGED.")
     if not isinstance(case.scope_requests, tuple):
         raise GapHandlingError("scope_requests deve ser uma tupla explícita de ScopeRequest.")
@@ -551,6 +587,16 @@ def _validate_result(case: OperationalResultCase) -> ContinuityAssessment | None
     if case.scope_requests:
         raise GapHandlingError("scope_requests exige blocked_scopes/affected_scopes explícitos.")
     return None
+
+
+def _declares_forbidden_gate(statement: str) -> bool:
+    for match in _INVALID_RESULT_CLAIMS.finditer(statement):
+        line_start = statement.rfind("\n", 0, match.start()) + 1
+        prefix = statement[line_start:match.start()].rstrip().casefold()
+        if re.search(r"\b(?:não|nao)\s+(?:declara|afirma)\s*$", prefix):
+            continue
+        return True
+    return False
 
 
 def _require_text(value: object, name: str) -> str:

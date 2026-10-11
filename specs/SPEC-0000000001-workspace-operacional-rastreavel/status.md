@@ -44,8 +44,8 @@
 | `test_document_recovery.py` | IMPLEMENT TASK-009 | SHA-256 `7B1A226E2479EAD1D303366DF98DAE5E11E7072CF6DCEE88C8D4E86510BD883C` | 28 testes específicos; 27 aprovados e 1 skip por privilégio de symlink real no Windows. |
 | `document_search.py` | IMPLEMENT TASK-010 | SHA-256 `0D2D2A2729DFDD5FC840DDF182AC7BE65CFB778D69429172475B886FA58EA63D` | Pesquisa sob demanda por recuperação atual, filtros combinados por AND, validação estrita de valores JSON e ordenação por instante UTC e document_id; sem índice/cache persistente. |
 | `test_document_search.py` | IMPLEMENT TASK-010 | SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70` | 73 testes unitários controlados de filtros, exclusões, ordenação, proveniência recuperada e ausência de mutação persistente. |
-| `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `3E3F27B71F3DC5B81909282037020FE0529FCD44421375E140BFA107A6C48EB3` | Registra divergence, blocker, decision existente e result; avalia conflitos/continuidade sem alterar autoridade ou executar trabalho continuável; publica exclusivamente via API TASK-008. |
-| `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `336AEF40EE97129448EBAE1C10948885332C716DB9AF4BB484E921CB31BD9CA6` | 80 testes controlados de autoridade, lacunas, continuidade localizada, persistência append-only e limites operacionais. |
+| `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A` | Registra divergence, blocker, decision existente e result; preserva autoridade informada, propaga bloqueios transitivos e rejeita declarações positivas de gate SDD; publica exclusivamente via API TASK-008. |
+| `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858` | 89 testes controlados incluindo autoridade não inferida, dependências transitivas/não avaliadas e variações canônicas de gates. |
 
 ## Histórico de estado
 
@@ -969,3 +969,17 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - TASK-012 não foi iniciada. Não houve Orchestrator, protocolo multiagent, chamada externa, rede, Git, Release, CONVERGE ou push.
 - IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisão de TASK-011 antes de autorizar TASK-012.
+## CORREÇÃO FINAL DE AUTORIDADE E CONTINUIDADE — TASK-011
+
+- Objetivo: corrigir somente autoridade inferida, propagação de dependências e detecção de declarações de gates em `result`. SPEC, PLAN, TASKS e TASK-001 a TASK-010 permaneceram inalterados; ANALYZE-03 continua PASS para os hashes registrados.
+- Baseline substituída: `gap_handling.py` SHA-256 `3E3F27B71F3DC5B81909282037020FE0529FCD44421375E140BFA107A6C48EB3`; `test_gap_handling.py` SHA-256 `336AEF40EE97129448EBAE1C10948885332C716DB9AF4BB484E921CB31BD9CA6`.
+- Versões corrigidas: `gap_handling.py` SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `test_gap_handling.py` SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`.
+- Autoridade: conflito entre duas fontes normativas sem precedência continua sem vencedora; `required_authority` permanece `None` se não fornecida e é preservada quando explicitamente fornecida. A necessidade de identificar autoridade fica em `required_information`, sem promover Executor, Auditor, Agent ou classe de owner.
+- Continuidade: escopos afetados, localmente não aptos e com dependências desconhecidas ficam bloqueados; a propagação por dependências itera até ponto fixo. Dependências de escopo bloqueado são explicadas no resultado. Escopos independentes ou dependentes somente de escopos continuáveis permanecem elegíveis quando todos os critérios explícitos forem satisfeitos.
+- Gates em `result`: rejeitadas, sem distinção de caixa e com espaços/separadores canônicos, `ANALYZE PASS`, `ANALYZE = PASS`, `ANALYZE: PASS`, `ANALYZE - PASS`, `CONVERGED`, `CONVERGE CONVERGED`, `CONVERGE = CONVERGED`, `CONVERGE: CONVERGED` e `CONVERGE - CONVERGED`. Menção precedida por “não declara” ou “não afirma” é tratada como explicação negativa, não declaração positiva.
+- Testes TASK-011: `python -B -m unittest -q impl.tests.test_gap_handling` — 89/89 PASS.
+- Regressões: `python -B -m unittest -q impl.tests.test_document_search` — 73/73 PASS; `python -B -m unittest -q impl.tests.test_document_recovery` — 28 executados, 27 PASS, 1 SKIP por privilégio de symlink real no Windows; `python -B -m unittest -q impl.tests.test_document_publisher` — 47/47 PASS; `python -B -m unittest -q impl.tests.test_provenance` — 45/45 PASS; `python -B -m unittest -q impl.tests.test_document_format` — 49/49 PASS.
+- Suíte completa: `python -B -m unittest discover -s impl/tests -v` — 425 executados, 424 PASS, 1 SKIP; resultado OK.
+- Limitação ambiental: tentativas sandboxadas falharam em criar/limpar fixtures temporárias com WinError 5. As execuções finais foram repetidas com elevação autorizada e passaram; a elevação não é requisito do produto. Uma execução elevada inicial revelou que `ANALYZE: PASS` ainda escapava; a regex foi corrigida e a suíte TASK-011 repetida com sucesso antes das regressões.
+- Debug: nenhum documento sintético, ANL ou DOC foi criado; a evidência Debug anterior não foi repetida nem modificada. Sem rede, Git externo, Release, CONVERGE ou push.
+- Estado corrente: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. TASK-001 a TASK-011 executadas; TASK-012 e TASK-013 pendentes. Próximo passo: revisar TASK-011 corrigida antes de autorizar TASK-012.

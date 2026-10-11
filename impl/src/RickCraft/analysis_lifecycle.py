@@ -106,17 +106,56 @@ def _retomar(
 ) -> AnalysisDirectory:
     diretorio = workspace.caminho / analysis_id
     try:
-        informacoes = diretorio.stat()
+        raiz_fisica = workspace.caminho.resolve(strict=True)
+        informacoes = diretorio.lstat()
     except FileNotFoundError as exc:
         raise AnalysisNotFoundError(
             f"A análise solicitada não existe: {analysis_id}."
         ) from exc
 
+    if diretorio.parent != workspace.caminho or diretorio.name != analysis_id:
+        raise AnalysisNotFoundError(
+            f"A análise solicitada não está diretamente na raiz selecionada: {analysis_id}."
+        )
+
+    if _e_redirecionamento_filesystem(diretorio, informacoes):
+        raise AnalysisNotFoundError(
+            f"A análise solicitada usa um redirecionamento de filesystem: {analysis_id}."
+        )
+
     if not stat.S_ISDIR(informacoes.st_mode):
         raise AnalysisNotFoundError(
             f"A identidade solicitada não aponta para um diretório: {analysis_id}."
         )
+
+    try:
+        diretorio_fisico = diretorio.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise AnalysisNotFoundError(
+            f"A localização física da análise não pôde ser confirmada: {analysis_id}."
+        ) from exc
+
+    esperado = raiz_fisica / analysis_id
+    if diretorio_fisico != esperado or diretorio_fisico.parent != raiz_fisica:
+        raise AnalysisNotFoundError(
+            f"A análise solicitada não corresponde ao diretório físico esperado: {analysis_id}."
+        )
+
     return AnalysisDirectory(analysis_id, diretorio, workspace)
+
+
+def _e_redirecionamento_filesystem(diretorio: Path, informacoes: object) -> bool:
+    """Detecta links e redirecionamentos Windows reconhecidos pela stdlib."""
+    if stat.S_ISLNK(informacoes.st_mode):
+        return True
+
+    verificar_junction = getattr(diretorio, "is_junction", None)
+    if callable(verificar_junction) and verificar_junction():
+        return True
+
+    atributo_reparse = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    atributos = getattr(informacoes, "st_file_attributes", 0)
+    return bool(atributo_reparse and atributos & atributo_reparse)
 
 
 def _criar(

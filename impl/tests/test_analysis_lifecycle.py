@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import errno
 from pathlib import Path
+import stat
 import sys
 import tempfile
 import unittest
 import uuid
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -162,6 +164,109 @@ class CicloAnaliseTests(unittest.TestCase):
 
         self.assertEqual(resultado.analysis_id, analysis_id)
         self.assertEqual(resultado.directory, directory)
+
+    def test_redirecionamento_com_id_valido_para_fora_e_rejeitado(self) -> None:
+        analysis_id = "ANL-12345678-1234-4234-8234-123456789abc"
+        alvo_externo = self.base / "analise-externa"
+        alvo_externo.mkdir()
+        redirecionamento = self.preferencial / analysis_id
+        gerador = unittest.mock.Mock(
+            side_effect=AssertionError("retomada rejeitada não gera UUID")
+        )
+        alternativas_antes = list(self.preferencial.glob("ANL-*"))
+
+        try:
+            redirecionamento.symlink_to(alvo_externo, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            # O ambiente pode negar a criação de symlink; ainda exercita
+            # deterministicamente o bloqueio da classificação de redirecionamento.
+            redirecionamento.mkdir()
+            lstat_original = Path.lstat
+
+            def lstat_como_symlink(path, *args, **kwargs):
+                if path == redirecionamento:
+                    return SimpleNamespace(
+                        st_mode=stat.S_IFLNK,
+                        st_file_attributes=0,
+                    )
+                return lstat_original(path, *args, **kwargs)
+
+            with patch(
+                "pathlib.Path.lstat",
+                lstat_como_symlink,
+            ):
+                with self.assertRaises(AnalysisNotFoundError):
+                    self.executar(
+                        resume_analysis_id=analysis_id, uuid_factory=gerador
+                    )
+        else:
+            with self.assertRaises(AnalysisNotFoundError):
+                self.executar(resume_analysis_id=analysis_id, uuid_factory=gerador)
+
+        gerador.assert_not_called()
+        self.assertEqual(list(self.preferencial.glob("ANL-*")), alternativas_antes + [redirecionamento])
+
+    def test_junction_detectada_pela_stdlib_bloqueia_retomada(self) -> None:
+        analysis_id = "ANL-12345678-1234-4234-8234-123456789abc"
+        directory = self.preferencial / analysis_id
+        directory.mkdir()
+        if not callable(getattr(directory, "is_junction", None)):
+            self.skipTest("Path.is_junction não está disponível neste runtime")
+
+        gerador = unittest.mock.Mock(
+            side_effect=AssertionError("retomada rejeitada não gera UUID")
+        )
+        with patch.object(type(directory), "is_junction", return_value=True):
+            with self.assertRaises(AnalysisNotFoundError):
+                self.executar(resume_analysis_id=analysis_id, uuid_factory=gerador)
+
+        gerador.assert_not_called()
+        self.assertEqual(list(self.preferencial.glob("ANL-*")), [directory])
+
+    def test_resolucao_fisica_em_outro_diretorio_da_raiz_e_rejeitada(self) -> None:
+        analysis_id = "ANL-12345678-1234-4234-8234-123456789abc"
+        solicitado = self.preferencial / analysis_id
+        outro = self.preferencial / "ANL-87654321-4321-4321-8432-cba987654321"
+        solicitado.mkdir()
+        outro.mkdir()
+        resolve_original = Path.resolve
+
+        def resolver_controlado(path, *, strict=False):
+            if path == solicitado:
+                return resolve_original(outro, strict=True)
+            return resolve_original(path, strict=strict)
+
+        gerador = unittest.mock.Mock(
+            side_effect=AssertionError("retomada rejeitada não gera UUID")
+        )
+        with (
+            patch("analysis_lifecycle._e_redirecionamento_filesystem", return_value=False),
+            patch.object(Path, "resolve", resolver_controlado),
+        ):
+            with self.assertRaises(AnalysisNotFoundError):
+                self.executar(resume_analysis_id=analysis_id, uuid_factory=gerador)
+
+        gerador.assert_not_called()
+        self.assertEqual(
+            sorted(path.name for path in self.preferencial.glob("ANL-*")),
+            sorted((solicitado.name, outro.name)),
+        )
+
+    def test_analise_criada_normalmente_pela_implementacao_e_retornavel(self) -> None:
+        analysis_id = "ANL-12345678-1234-4234-8234-123456789abc"
+        criada = self.executar(uuid_factory=lambda: self.uuid4(analysis_id[4:]))
+        gerador = unittest.mock.Mock(
+            side_effect=AssertionError("retomada não gera UUID")
+        )
+
+        retomada = self.executar(
+            resume_analysis_id=criada.analysis_id, uuid_factory=gerador
+        )
+
+        self.assertEqual(retomada.analysis_id, criada.analysis_id)
+        self.assertEqual(retomada.directory, criada.directory)
+        gerador.assert_not_called()
+        self.assertEqual(list(self.preferencial.glob("ANL-*")), [criada.directory])
 
     def test_retomada_nao_gera_uuid_novo(self) -> None:
         analysis_id = "ANL-12345678-1234-4234-8234-123456789abc"

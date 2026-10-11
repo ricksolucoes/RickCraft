@@ -28,8 +28,8 @@
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
 | `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-004 executadas; TASK-005 a TASK-013 pendentes. |
-| `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `AC28E38E0B1107708F912BF8353A863F40DF24761C77EA3472298EB3C06B32BA` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada explícita sem geração de nova identidade. |
-| `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5F212FE3C614C5D4BB5C2C38C909587AA06DF549B4BD6282BA154F6D7D7A79DE` | 25 testes específicos cobrindo identidade, colisões, retomada e resolução do workspace. |
+| `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
+| `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
 | `test_workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `106D334BADB0D0A65B75BFC1D6D609AC696CEC403CF067392F02718FD8BA2600` | 17 testes específicos, incluindo ausência de errno/símbolo opcional e bloqueio do resolvedor sem sonda de fallback. |
 
@@ -621,3 +621,41 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 
 - TASK-004 comprova apenas a identidade e a existência do diretório ANL. Não implementa catálogo, conteúdo documental, diretórios de tipo, leitura/união histórica ou recuperação documental da TASK-009.
 - IMPLEMENT permanece IN_PROGRESS e CONVERGE permanece NOT_STARTED. A próxima autorização necessária é revisão de TASK-004 antes de iniciar TASK-005.
+
+## Correção final de contenção na retomada — IMPLEMENT TASK-004
+
+### Escopo, gate e estado
+
+- Corrigida exclusivamente a retomada de `resume_analysis_id` na implementação de TASK-004. A análise lexical precisa ser um filho direto da raiz de workspace selecionada, existir como diretório real, não ser link/junction/reparse reconhecível pela biblioteca padrão e resolver fisicamente exatamente para `workspace_real / analysis_id`. Redirecionamentos, destinos divergentes e resolução física não confirmável bloqueiam; nenhuma identidade alternativa é gerada.
+- SPEC, PLAN e TASKS mantêm os hashes do ANALYZE-03: `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. ANALYZE permanece PASS; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. TASK-001–TASK-003 e suas evidências foram preservadas; TASK-005–TASK-013 não foram iniciadas.
+- Ambiente observado: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa foi adicionada.
+
+### Defeito, correção e artefatos
+
+- Defeito: a retomada usava `stat()`, que segue links e podia aceitar um `ANL-*` lexicalmente sob o workspace mas fisicamente fora dele ou em outro diretório.
+- Correção: a retomada usa `lstat()`, rejeita symlink e redirecionamentos reconhecidos como junction/reparse pela stdlib, resolve estritamente a raiz e o destino e exige igualdade com o caminho físico direto esperado. O fluxo de criação UUIDv4, `Path.mkdir()` exclusivo e limite de oito colisões não foi alterado.
+- `analysis_lifecycle.py`: hash anterior `AC28E38E0B1107708F912BF8353A863F40DF24761C77EA3472298EB3C06B32BA`; novo SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66`.
+- `test_analysis_lifecycle.py`: hash anterior `5F212FE3C614C5D4BB5C2C38C909587AA06DF549B4BD6282BA154F6D7D7A79DE`; novo SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367`. Os 25 testes anteriores foram preservados; quatro testes adicionais cobrem retomada de diretório criado pela implementação, symlink/redirecionamento externo, divergência física para outro diretório dentro da mesma raiz e rejeição pelo detector de junction da stdlib. O Windows negou a criação real de symlink com WinError 1314; o teste então usou lstat controlado para exercitar deterministicamente a rejeição. As rejeições verificam que não se chama `uuid_factory` nem se cria identidade alternativa.
+- Arquivos alterados nesta execução: somente os dois arquivos acima e este `status.md`.
+
+### Testes e regressões
+
+- TASK-004: `python -B -m unittest discover -s impl/tests -p test_analysis_lifecycle.py -v` — 29/29 passaram.
+- TASK-003: `python -B -m unittest discover -s impl/tests -p test_workspace_probe.py -v` — 17/17 passaram.
+- TASK-002: `python -B -m unittest discover -s impl/tests -p test_workspace_resolver.py -v` — 20/20 passaram.
+- Suíte completa antes da integração real: `python -B -m unittest discover -s impl/tests -v` — 78/78 passaram antes do último teste controlado; após a inclusão dele, 79/79 passaram.
+- Suíte completa depois da integração real e da cobertura final: `python -B -m unittest discover -s impl/tests -v` — 79/79 passaram.
+- As execuções sandboxadas iniciais falharam com WinError 5 na criação/limpeza de fixtures temporários Windows. As execuções de teste registradas acima foram repetidas com elevação local e passaram; elevação é limitação ambiental, não requisito do produto. Os diretórios temporários deixados pelas tentativas bloqueadas foram removidos após validação de que estavam diretamente sob `impl/tests`.
+
+### Integração real Debug — nova análise e retomada
+
+- Comando: `python -B -c` com RickCraftRoot explícito `impl/src/RickCraft`, duas chamadas independentes a `criar_ou_retomar_analise`, um `AvaliadorWorkspace()` novo por operação e um gerador sentinela que falha se chamado durante a retomada.
+- ID da integração com evidência JSON completa: `ANL-fe12d42d-1af2-47ce-9560-b2016a2c5c64`; UUID versão 4, canônico e minúsculo.
+- Criação e retomada selecionaram `preferred`, em `C:\Projects\Language\Skills\RickCraft\impl\.workspace`. Em ambas as operações, D-02 retornou `utilizavel`; a raiz fallback não foi sondada. A sonda registrou criação/validação da raiz, diretório exclusivo, `open("xb")`, escrita/flush/fsync, releitura, `os.link`, confirmação de não substituição, zero falhas, zero avisos e nenhum resíduo.
+- A retomada retornou exatamente o mesmo ID e diretório, com zero chamadas ao gerador UUID. O diretório ANL permaneceu vazio; não foram criados diretórios de TipoDocumento, DOC-* ou arquivos operacionais Markdown.
+- Duas chamadas diagnósticas anteriores desta execução também completaram criação e retomada, mas falharam somente depois, ao serializar a evidência em memória com referência ao objeto errado. Os diretórios operacionais resultantes foram preservados: `ANL-d1a99a0a-3828-49b7-b732-1ad9de16667a` e `ANL-4714a894-da00-41b5-8772-c9e250dd1cf1`. A evidência D-02 detalhada foi capturada na integração final acima; esses dois diretórios extras são consequência das chamadas diagnósticas e permanecem vazios. O diretório histórico `ANL-fb52688a-30c8-4de1-8c45-42377a7b994e` foi preservado.
+
+### Limites
+
+- TASK-004 continua restrita à identidade e ao diretório ANL. Nenhum diretório de TipoDocumento, `DOC-*.md`, documento, Release ou conteúdo de TASK-005 foi produzido.
+- IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisão desta correção antes de autorizar TASK-005.

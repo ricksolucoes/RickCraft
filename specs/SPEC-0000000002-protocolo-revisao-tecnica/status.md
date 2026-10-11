@@ -2,10 +2,10 @@
 
 ## Estado corrente
 
-- **Etapa atual:** PLAN
+- **Etapa atual:** TASKS
 - **SPEC:** COMPLETE — aprovada pelo responsável pelo projeto
-- **PLAN:** COMPLETE — pronta para revisão, não aprovada
-- **TASKS:** NOT_STARTED
+- **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
+- **TASKS:** COMPLETE — pronta para revisão, não aprovada
 - **ANALYZE:** NOT_STARTED
 - **IMPLEMENT:** NOT_STARTED
 - **CONVERGE:** NOT_STARTED
@@ -61,15 +61,16 @@ Nenhuma documentação externa foi necessária.
 | Artefato | Estado |
 |---|---|
 | `spec.md` | COMPLETE e aprovada; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` |
-| `plan.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` |
+| `plan.md` | COMPLETE e aprovado; SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; blob Git `0c28cf63a68e09365e1fb3ead7a02e609b60fcfa` |
+| `tasks.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `23CB09014D3DCD14D3330B4C8542BB83EFFB9170A77F2F400913349C426425CE` |
 | `status.md` | Estado corrente desta unidade; UTF-8 |
 
 O registro autoritativo da alocação permanece em `registries/specifications.md`.
 
 ## Decisões pendentes
 
-- Revisão/aprovação explícita do PLAN.
-- Autorização separada antes de criar TASKS.
+- Revisão/aprovação explícita de `tasks.md`.
+- Autorização separada antes de iniciar ANALYZE.
 
 ## CHECKPOINT RICKCRAFT
 
@@ -218,3 +219,26 @@ Após a correção, PLAN retornou a COMPLETE, pronto para revisão e não aprova
 ### HANDOFF PARA REVISÃO — correção PLAN
 
 PLAN está COMPLETE e aguarda aprovação explícita. Arquivos a revisar: `plan.md` e esta seção de `status.md`. Próxima etapa proposta: aprovar/revisar o PLAN antes de criar TASKS. Nenhuma autorização posterior está implícita.
+
+## Aprovação do PLAN e execução de TASKS — 2026-10-11
+
+O responsável pelo projeto aprovou o PLAN exato: SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`, blob Git `0c28cf63a68e09365e1fb3ead7a02e609b60fcfa`. A autorização recebida limita-se a TASKS; não autoriza ANALYZE, IMPLEMENT, CONVERGE ou Release. A SPEC aprovada permanece no SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`.
+
+TASKS passou de NOT_STARTED para IN_PROGRESS durante esta execução. Foram definidas TASK-001–TASK-013 com objetivos individuais, origem SPEC/PLAN, dependências, arquivos autorizados, testes/regressões, evidência mínima e exclusões. As matrizes direta/inversa cobrem D-01–D-15, RF-001–RF-021, CA-001–CA-021 e cenários A–O. A inspeção das APIs/runtime e testes existentes serviu para não planejar alterações a módulos SPEC1 já disponíveis.
+
+TASKS retornou a COMPLETE, pronta para revisão e não aprovada. SHA-256 completo de `tasks.md`, relido e confirmado em UTF-8 estrito: `23CB09014D3DCD14D3330B4C8542BB83EFFB9170A77F2F400913349C426425CE`. Nenhum runtime/teste foi alterado ou executado. ANALYZE, IMPLEMENT e CONVERGE permanecem NOT_STARTED; último gate válido permanece nenhum. Nenhum Release foi produzido.
+
+### CHECKPOINT RICKCRAFT — TASKS
+
+- **Fase:** TASKS — SPEC-0000000002.
+- **Estado:** AGUARDANDO_APROVAÇÃO; TASKS COMPLETE e pronta para revisão.
+- **Arquivos criados:** `tasks.md`.
+- **Arquivos alterados:** `status.md`.
+- **Tarefas definidas:** TASK-001–TASK-013.
+- **Cobertura:** D-01–D-15, RF-001–RF-021, CA-001–CA-021 e cenários A–O, com matrizes direta/inversa.
+- **Próximo passo:** revisar exclusivamente `tasks.md` antes de autorizar ANALYZE.
+- **Não executar:** ANALYZE, IMPLEMENT, CONVERGE, Release ou push.
+
+### HANDOFF PARA REVISÃO — TASKS
+
+TASKS está COMPLETE e aguarda aprovação explícita. Revisar `tasks.md` e esta evidência em `status.md`. A aprovação não inicia ANALYZE automaticamente; exige autorização separada. Nenhuma implementação ou teste foi executado.

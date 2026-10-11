@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-007 executadas; TASK-008 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. TASK-001 a TASK-008 executadas; TASK-009 a TASK-013 pendentes. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
@@ -38,6 +38,8 @@
 | `test_document_format.py` | IMPLEMENT TASK-006 | SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA` | 49 testes unitários de serialização, parsing, validação e rejeições. |
 | `provenance.py` | IMPLEMENT TASK-007 | SHA-256 `ACEFF2AE342A53DA36DD60D702B78264DDCED9C59998B079FBE9E2880F2DFCE9` | Proveniência de três famílias de entrada; SHA-256 dos bytes exatos e estados verificáveis. |
 | `test_provenance.py` | IMPLEMENT TASK-007 | SHA-256 `5C8A4499D9E92D33DC19E8FA1704C7CCBC213798CF9ACBC8694F5A7707EF8064` | 45 testes de hashing, observação, comparação, estados e integração com `inputs` v1. |
+| `document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `069126B28787D77BE6995C3C203E7FF17A77B53B35D9D36AD31C848E975A4542` | Publicação append-only por `os.link`, reavaliação D-04, colisões, verificação final, diagnóstico D-03 e limpeza reportável. |
+| `test_document_publisher.py` | IMPLEMENT TASK-008 | SHA-256 `F600AE66A6C3390A8D1008A3DEBF2E31E2B980EB1ABFD940BECC67A4B4C4B8DD` | 45 testes de publicação, concorrência, colisões, reavaliação e verificação. |
 
 ## Histórico de estado
 
@@ -83,11 +85,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-007 executadas com evidências registradas; TASK-008 a TASK-013 permanecem pendentes. D-02 passou para a raiz preferencial nas operações registradas; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
+- **Mudanças pendentes:** TASK-001 a TASK-008 executadas com evidências registradas; TASK-009 a TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial na integração TASK-008; o fallback não foi sondado e requer sua própria sonda se vier a ser usado.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-007. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-007 antes de autorizar TASK-008.
+- **Bloqueios:** Nenhum bloqueio material para TASK-008. ANALYZE-03 permanece PASS para as versões exatas registradas. IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-008 antes de autorizar TASK-009.
 
 ## Validade do ANALYZE anterior
 
@@ -777,3 +779,45 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - A tentativa inicial no sandbox registrou `WinError 5` nas fixtures temporárias e uma falha de fixture: o teste de indisponibilidade verificava caminho diferente do locator histórico. A fixture foi corrigida para testar inacessibilidade do mesmo locator; as execuções finais repetidas pelo mecanismo elevado passaram. Elevação é limitação ambiental, não requisito do produto.
 - TASK-006 permaneceu preservada: `document_format.py` SHA-256 `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7`; `test_document_format.py` SHA-256 `EDC8E15A2E9422BE81C10B92DD12FDE66B45C0A699137D7D4EEE0BBC500D7CAA`.
 - ANALYZE permanece PASS para as versões exatas já registradas; IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. TASK-008 não foi iniciada. Nenhum documento foi publicado, nenhum `os.link`, rede, Git externo, D-02, Release ou CONVERGE foi executado.
+
+## IMPLEMENT TASK-008 — evidência
+
+### Escopo, gate e estado
+
+- Data: 2026-10-10. Executada somente TASK-008: publicação append-only de documentos Markdown v1, com geração DOC-UUIDv4, temporário exclusivo, validação estrutural, hash final, criação por `os.link`, colisão limitada e reavaliação D-04 antes de cada tentativa.
+- Gate preservado: `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS exclusivamente para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`. Nenhum artefato normativo foi alterado.
+- Estado: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED; último gate válido permanece ANALYZE-03. TASK-001 a TASK-008 executadas; TASK-009 a TASK-013 pendentes.
+- Ambiente observado: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa foi instalada ou adicionada.
+
+### Implementação e artefatos
+
+- Criado `impl/src/RickCraft/document_publisher.py`, SHA-256 `069126B28787D77BE6995C3C203E7FF17A77B53B35D9D36AD31C848E975A4542`.
+- Criado `impl/tests/test_document_publisher.py`, SHA-256 `F600AE66A6C3390A8D1008A3DEBF2E31E2B980EB1ABFD940BECC67A4B4C4B8DD`.
+- Cada tentativa chama novamente `resolver_workspace` com um avaliador novo. A seleção `preferred`/`fallback` usada é escrita em `workspace_root_kind` controlado pelo publicador. Colisão no nome DOC-UUIDv4 abandona somente essa identidade e repete resolução, preparação, serialização e temporário; oito colisões bloqueiam sem uma nona tentativa. Erros de publicação diferentes de colisão bloqueiam sem consumir retry como colisão.
+- A publicação cria somente o diretório de tipo solicitado, grava os bytes serializados em temporário `.tmp` exclusivo com `open("xb")`, flush e fsync disponível, relê e valida o envelope com TASK-006, calcula SHA-256 dos bytes e cria o destino ausente por `os.link`. O destino é relido, parseado e comparado com o hash antes de retornar sucesso. Limpeza do temporário é best-effort e resíduos são reportados sem apagar documentos publicados. Não há edição de documento anterior.
+- Falha de filesystem não reconhecida como colisão preserva causa, `errno`/`winerror` e resultado semântico calculado por `classificar_falha` D-03. Ela bloqueia a publicação atual; o publicador não decide fallback nem reutiliza raiz anterior.
+- Nenhum componente de TASK-001 a TASK-007 foi alterado. TASK-006 permaneceu compatível; seus 49 testes passaram.
+
+### Testes e regressões
+
+- TASK-008: `python -B -m unittest impl.tests.test_document_publisher -v` — 45 testes executados, 45 aprovados (`OK`).
+- TASK-007: `python -B -m unittest -q impl.tests.test_provenance` — 45 testes executados, 45 aprovados (`OK`).
+- TASK-006: `python -B -m unittest -q impl.tests.test_document_format` — 49 testes executados, 49 aprovados (`OK`).
+- TASK-005, exercitada pelo publisher: `python -B -m unittest -q impl.tests.test_document_catalog` — 15 testes executados, 15 aprovados (`OK`).
+- Regressão completa antes da integração real: `python -B -m unittest discover -s impl/tests -v` — 231 testes executados, 231 aprovados (`OK`).
+- Regressão completa final, após a integração real e a revisão final de diagnóstico/cobertura: `python -B -m unittest discover -s impl/tests -v` — 233 testes executados, 233 aprovados (`OK`).
+- Uma tentativa sandboxada da suíte TASK-008 falhou com `WinError 5` na criação e limpeza de fixtures temporárias Windows. Na primeira repetição elevada, três verificações de colisão identificaram que o test double não fornecia a reavaliação exigida após colisão; o double foi corrigido sem alterar o contrato runtime. Uma revisão posterior acrescentou classificação D-03 de falhas não colisão, teste de erro desconhecido após publicação anterior e casos controlados de acesso negado, EIO, errno ausente e operação não suportada. As regressões finais foram repetidas pelo mecanismo elevado e passaram. Os 43 diretórios temporários vazios da tentativa sandboxada foram conferidos como filhos diretos de `%TEMP%` e removidos; nenhum conteúdo recursivo foi apagado. Elevação é limitação ambiental, não requisito do produto.
+
+### Integração real Debug — publicação
+
+- RickCraftRoot explícito: `C:\Projects\Language\Skills\RickCraft\impl\src\RickCraft`.
+- A operação de criação gerou `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5`, UUIDv4 canônico minúsculo, em `preferred`: `impl/.workspace`. A resolução executou D-02 nessa operação; resultado observado: UTILIZÁVEL, com criação/validação da raiz, criação exclusiva, `open("xb")`, escrita, flush/fsync, releitura, `os.link`, verificação do destino preexistente sem substituição; zero falhas, avisos ou resíduos.
+- A publicação executou nova resolução D-04/D-02 independentemente. Selecionou novamente `preferred` em `impl/.workspace`, resultado UTILIZÁVEL com as mesmas capacidades observadas; fallback não foi sondado, pois o preferencial passou.
+- Documento publicado: `DOC-e94fe576-a13a-422a-bd12-406629018cec`; caminho relativo a `impl/.workspace`: `ANL-d8f4c3a4-974a-4fe3-a448-215e8eb93fe5/evidence/DOC-e94fe576-a13a-422a-bd12-406629018cec.md`; SHA-256 dos bytes finais `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`. A leitura final e parsing confirmaram o documento; uma tentativa; nenhum resíduo temporário. A análise contém somente a pasta `evidence` autorizada e o DOC publicado.
+- A integração produziu um único novo diretório ANL e um único `evidence/DOC-*.md`; não editou análise/documento histórico, não criou outro tipo, nem usou uma análise histórica para publicação. Os demais ANL já existentes foram preservados. A nova pasta e documento são estado operacional persistente autorizado.
+- Após essa única integração real, a implementação recebeu somente diagnóstico D-03 para falhas de filesystem não colisão; o fluxo de sucesso, bytes e formato não mudou. TASK-008 e a suíte completa foram repetidas sobre a versão final. Não foi criada uma segunda análise/documento real.
+
+### Limites e estado operacional
+
+- Foram usados `os.link` e D-02 somente nos testes controlados e na integração Debug real autorizada; não houve rede, Git, upload, pesquisa, recuperação histórica ou união de raízes.
+- TASK-009 não foi iniciada. Não houve CONVERGE, Release ou push. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisar TASK-008 antes de autorizar TASK-009.

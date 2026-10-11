@@ -27,7 +27,7 @@
 |---|---|---|---|
 | `spec.md` | COMPLETE | SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C` | Versão elaborada e revisada internamente em 2026-10-10; aprovada explicitamente pelo responsável pelo projeto em 2026-10-10. |
 | `plan.md` | COMPLETE | SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` | PLAN aprovado explicitamente. A observação da prova auxiliar em TEMP permanece histórica e inconclusiva; a evidência D-02 real atual da raiz preferencial está registrada na seção TASK-003 abaixo. |
-| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-011 executadas; TASK-012 a TASK-013 pendentes. |
+| `tasks.md` | COMPLETE | SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6` | 13 tarefas preservadas. TASK-002 deriva, reavalia e seleciona usando resultados D-02/D-03; TASK-003 executa a sonda e classifica causas concretas, integrando resultados a TASK-002. CA-003 e D-04 permanecem cobertos conforme definidos. ANALYZE-03 passou para esta versão. Estado corrente: TASK-001 a TASK-012 executadas; TASK-013 pendente. |
 | `analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66` | Criação exclusiva de `ANL-UUIDv4`, limite de colisões e retomada com validação de redirecionamentos e contenção física. |
 | `test_analysis_lifecycle.py` | IMPLEMENT TASK-004 | SHA-256 `5D8D11D1E641994F3E40486DD72EFCDE4D8D96B239E71472578F1CFAF06BC367` | 29 testes específicos cobrindo identidade, colisões, retomada e contenção contra redirecionamentos. |
 | `workspace_probe.py` | IMPLEMENT TASK-003 | SHA-256 `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0` | Classificação D-03 corrigida: somente códigos errno disponíveis e não nulos podem representar causa concreta; erro sem código permanece desconhecido. |
@@ -46,6 +46,7 @@
 | `test_document_search.py` | IMPLEMENT TASK-010 | SHA-256 `69E63603CC72D926D12EA6A8EAB9286B77C742E40EE9E2B3ACF954933CD27A70` | 73 testes unitários controlados de filtros, exclusões, ordenação, proveniência recuperada e ausência de mutação persistente. |
 | `gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A` | Registra divergence, blocker, decision existente e result; preserva autoridade informada, propaga bloqueios transitivos e rejeita declarações positivas de gate SDD; publica exclusivamente via API TASK-008. |
 | `test_gap_handling.py` | IMPLEMENT TASK-011 | SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858` | 89 testes controlados incluindo autoridade não inferida, dependências transitivas/não avaliadas e variações canônicas de gates. |
+| `test_release_boundaries.py` | IMPLEMENT TASK-012 | SHA-256 `811026537E3B41D238D7EF2F656ADFAA9990B1D54552474655995F2210FB97B4` | Cinco testes de inventário allowlist, exclusão dos workspaces, publicação local em fixture, idioma e ausência de integração externa. |
 
 ## Histórico de estado
 
@@ -91,11 +92,11 @@
 
 ## Pendências e invalidações
 
-- **Mudanças pendentes:** TASK-001 a TASK-011 executadas com evidências registradas; TASK-012 e TASK-013 permanecem pendentes. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e exige sonda própria antes do uso.
+- **Mudanças pendentes:** TASK-001 a TASK-012 executadas com evidências registradas; TASK-013 permanece pendente. D-02 selecionou a raiz preferencial nas operações autorizadas; o fallback não foi sondado e exige sonda própria antes do uso.
 - **Etapas invalidadas:** O ANALYZE FAIL de -01 permanece histórico para sua versão. O PASS de -02 permanece histórico e inválido para o TASKS atual. O PASS de `ANALYZE-2026-10-10-SPEC-0000000001-03` continua sendo o gate válido exclusivamente para os hashes registrados. IMPLEMENT segue IN_PROGRESS; CONVERGE permanece NOT_STARTED.
 - **Decisões/dependências pendentes:** Nenhuma decisão arquitetural pendente. D-02 passou para `impl/.workspace` nesta resolução; o fallback não foi avaliado nem declarado utilizável.
-- **Bloqueios:** Nenhum bloqueio material para TASK-011. ANALYZE-03 permanece PASS para os hashes registrados; IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
-- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-011 antes de autorizar TASK-012.
+- **Bloqueios:** Nenhum bloqueio material para TASK-012. ANALYZE-03 permanece PASS para os hashes registrados; IMPLEMENT segue IN_PROGRESS e CONVERGE permanece NOT_STARTED.
+- **Próxima autorização necessária:** Revisar implementação e evidências de TASK-012 antes de autorizar TASK-013.
 
 ## Validade do ANALYZE anterior
 
@@ -983,3 +984,37 @@ O registro acima encerra a evidência da correção de D-03 anterior à execuç�
 - Limitação ambiental: tentativas sandboxadas falharam em criar/limpar fixtures temporárias com WinError 5. As execuções finais foram repetidas com elevação autorizada e passaram; a elevação não é requisito do produto. Uma execução elevada inicial revelou que `ANALYZE: PASS` ainda escapava; a regex foi corrigida e a suíte TASK-011 repetida com sucesso antes das regressões.
 - Debug: nenhum documento sintético, ANL ou DOC foi criado; a evidência Debug anterior não foi repetida nem modificada. Sem rede, Git externo, Release, CONVERGE ou push.
 - Estado corrente: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. TASK-001 a TASK-011 executadas; TASK-012 e TASK-013 pendentes. Próximo passo: revisar TASK-011 corrigida antes de autorizar TASK-012.
+
+## IMPLEMENT TASK-012 — evidência
+
+### Escopo, gate e estado
+
+- Data: 2026-10-11. Executada somente TASK-012 como verificação por testes; nenhum módulo runtime, artefato normativo, manifesto, pacote ou saída de Release foi criado ou alterado.
+- Gate preservado: `ANALYZE-2026-10-10-SPEC-0000000001-03`, PASS para SPEC SHA-256 `A6B14A3ED433C06BE4E470F1579E580C0C93379BDFACAE71E28DD0ACB623D60C`, PLAN SHA-256 `32F659539BF611C80D9A9F28983902A5B54C45673333158AB4595CCC1141F6BB` e TASKS SHA-256 `D0ADC15B82ADE7455584057CB5F9DA6C95DBF6C8BB4BBD58CDBAE8C1DE0049B6`.
+- Estado final: SPEC/PLAN/TASKS COMPLETE; ANALYZE PASS; IMPLEMENT IN_PROGRESS; CONVERGE NOT_STARTED. TASK-001 a TASK-012 executadas; TASK-013 pendente. Último gate válido permanece ANALYZE-03.
+- Ambiente observado: Python 3.12.9; Windows 11 10.0.26200-SP0 (`sys.platform=win32`). Nenhuma dependência externa foi adicionada.
+
+### Teste de fronteiras e evidência
+
+- Criado `impl/tests/test_release_boundaries.py`, SHA-256 `811026537E3B41D238D7EF2F656ADFAA9990B1D54552474655995F2210FB97B4`. A lógica de inventário permanece dentro do arquivo de teste e usa allowlist positiva determinística; não foi adicionada ferramenta de empacotamento ao runtime.
+- O fixture contém arquivos estáticos, testes, especificações, políticas, ferramenta Debug, `meu.workspace.txt`, workspace preferencial fora de `RickCraftRoot` e fallback em `RickCraftRoot/.workspace`. O inventário reteve somente os arquivos estáticos permitidos, excluiu o componente exato `.workspace` mesmo quando allowlisted, rejeitou traversal/caminho externo e manteve válido o nome que apenas contém a substring `workspace`. A ordenação ficou determinística.
+- Em outra fixture isolada, o publicador existente persistiu um único documento `evidence` no workspace preferencial controlado. A leitura por `parsear_documento` preservou título e corpo UTF-8 pt-BR (`Evidência`, `análise`, `decisão`); somente a pasta de tipo e esse DOC foram adicionados. O fallback permaneceu byte a byte inalterado. Nenhum documento `_en` ou tradução paralela foi produzido.
+- Spies bloquearam qualquer tentativa de `subprocess`/shell, conexão de socket e `urllib`; inspeção focal de AST nos módulos runtime não encontrou imports/chamadas dessas integrações, Git, upload ou sincronização. A validação usou somente o resolvedor injetado para a fixture e não executou D-02.
+- Snapshot somente leitura das raízes Debug antes das regressões: `impl/.workspace` continha os cinco diretórios ANL históricos e o único `evidence/DOC-e94fe576-a13a-422a-bd12-406629018cec.md` com SHA-256 `3ba0bd73651d5c0493ffaa7b5557b858a6f5f7ef781df175c51aa3b6dea11771`; `impl/src/RickCraft/.workspace` estava ausente. Snapshot após as regressões permaneceu idêntico. Nenhum ANL/DOC real foi criado ou alterado.
+- TASK-001 a TASK-011 e seus artefatos runtime/teste permaneceram inalterados. Nenhum Release, diretório de pacote, arquivo compactado, upload, ação Git externa, CONVERGE ou push foi produzido/executado.
+
+### Testes e regressões
+
+- TASK-012: `python -B -m unittest discover -s impl/tests -p test_release_boundaries.py -v` — 5 testes executados, 5 aprovados (`OK`). A primeira tentativa sandboxada falhou antes das verificações por WinError 5 ao criar/limpar fixtures em `%TEMP%`; a repetição pelo mecanismo elevado autorizado passou. Uma repetição elevada identificou e corrigiu uma asserção do próprio allowlist do teste; os testes finais foram repetidos após a correção.
+- TASK-011: `python -B -m unittest discover -s impl/tests -p test_gap_handling.py -v` — 89/89 PASS.
+- TASK-010: `python -B -m unittest discover -s impl/tests -p test_document_search.py -v` — 73/73 PASS.
+- TASK-008: `python -B -m unittest discover -s impl/tests -p test_document_publisher.py -v` — 47/47 PASS.
+- TASK-003: `python -B -m unittest discover -s impl/tests -p test_workspace_probe.py -v` — 17/17 PASS.
+- TASK-001: `python -B -m unittest discover -s impl/tests -p test_rickcraft_root.py -v` — 13/13 PASS.
+- Suíte completa final: `python -B -m unittest discover -s impl/tests -v` — 430 testes executados, 429 aprovados e 1 SKIP; resultado `OK (skipped=1)`. O skip histórico de symlink real permanece devido à limitação de privilégio Windows; a proteção determinística continua coberta.
+- Os cinco diretórios `rickcraft-release-boundary-*` deixados pela tentativa sandboxada foram identificados como filhos diretos de `%TEMP%`, verificados pelo prefixo exclusivo e removidos com elevação. Nenhum fixture permaneceu. Elevação é limitação ambiental, não requisito do produto.
+
+### Limites e estado corrente
+
+- TASK-013 não foi iniciada. Nenhum Release foi gerado; o eventual conteúdo em inglês permanece condicionado a autorização explícita de Release conforme POL-0000000003.
+- Nenhum bloqueio material para TASK-012. IMPLEMENT permanece IN_PROGRESS; CONVERGE permanece NOT_STARTED. Próximo passo: revisar exclusivamente TASK-012 antes de autorizar TASK-013.

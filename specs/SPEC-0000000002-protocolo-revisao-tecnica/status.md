@@ -62,7 +62,7 @@ Nenhuma documentação externa foi necessária.
 |---|---|
 | `spec.md` | COMPLETE e aprovada; SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` |
 | `plan.md` | COMPLETE e aprovado; SHA-256 `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; blob Git `0c28cf63a68e09365e1fb3ead7a02e609b60fcfa` |
-| `tasks.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `23CB09014D3DCD14D3330B4C8542BB83EFFB9170A77F2F400913349C426425CE` |
+| `tasks.md` | COMPLETE, pronta para revisão e não aprovada; SHA-256 `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172` |
 | `status.md` | Estado corrente desta unidade; UTF-8 |
 
 O registro autoritativo da alocação permanece em `registries/specifications.md`.
@@ -242,3 +242,26 @@ TASKS retornou a COMPLETE, pronta para revisão e não aprovada. SHA-256 complet
 ### HANDOFF PARA REVISÃO — TASKS
 
 TASKS está COMPLETE e aguarda aprovação explícita. Revisar `tasks.md` e esta evidência em `status.md`. A aprovação não inicia ANALYZE automaticamente; exige autorização separada. Nenhuma implementação ou teste foi executado.
+
+## Correção pontual de TASKS — TASK-006
+
+Uma revisão externa encontrou contradição material na descrição de TASK-006: o texto dizia que conflito normativo sem precedência mantinha uma fonte vencedora, embora a SPEC/PLAN exijam conflito não resolvido sem precedência autorizada. TASKS foi reaberta e passou temporariamente a IN_PROGRESS para esta correção. Nenhuma SPEC ou PLAN mudou; ANALYZE permaneceu NOT_STARTED; nenhuma implementação ocorreu.
+
+A TASK-006 agora declara que nenhuma fonte vencedora é escolhida sem `AuthorizedPrecedence`. `required_authority` continua ausente/`None` quando não foi validamente fornecida; uma autoridade competente já conhecida pode constar como requisito de resolução sem decidir qual fonte vence. Os testes planejados exigem explicitamente: (A) conflito incompatível sem vencedor; (B) ausência de autoridade não preenchida; (C) autoridade válida registrada sem precedência implícita; (D) referência normativa aplicável versus workspace operacional sem autoridade concorrente; e (E) bloqueio localizado/transitivo e continuidade de escopo independente via `avaliar_continuidade_localizada`.
+
+As matrizes RF-013, CA-013, D-04/D-08 e o cenário E já expressavam corretamente ausência de vencedor/precedência autorizada; foram preservadas sem alteração. TASKS retornou a COMPLETE, pronta para revisão e não aprovada. Hash anterior preservado como histórico: `23CB09014D3DCD14D3330B4C8542BB83EFFB9170A77F2F400913349C426425CE`. Novo SHA-256 completo de `tasks.md`, relido em UTF-8 estrito e confirmado: `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+
+SPEC e PLAN permanecem COMPLETE e aprovados. Etapa atual = TASKS; ANALYZE = NOT_STARTED; IMPLEMENT = NOT_STARTED; CONVERGE = NOT_STARTED; último gate válido = nenhum. Runtime/testes, SPEC e PLAN não foram alterados. Nenhum teste foi criado/executado, nenhum Release foi produzido e nenhum push foi feito.
+
+### CHECKPOINT RICKCRAFT — correção pontual TASK-006
+
+- **Estado:** AGUARDANDO_APROVAÇÃO.
+- **Arquivos alterados:** `tasks.md` e `status.md`.
+- **TASKS anterior:** `23CB09014D3DCD14D3330B4C8542BB83EFFB9170A77F2F400913349C426425CE`.
+- **TASKS corrigida:** `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+- **Próximo passo:** revisar exclusivamente TASKS corrigida antes de autorizar ANALYZE.
+- **Não executar ainda:** ANALYZE, IMPLEMENT, CONVERGE ou Release.
+
+### HANDOFF PARA REVISÃO — correção pontual TASK-006
+
+Revisar exclusivamente a semântica de conflito da TASK-006 e o registro desta correção. TASKS está COMPLETE, pronta para revisão e não aprovada. É necessária autorização explícita separada antes de ANALYZE.

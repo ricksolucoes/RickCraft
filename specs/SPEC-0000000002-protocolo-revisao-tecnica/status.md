@@ -1117,3 +1117,52 @@ Aprovacao explicita da TASK-009 antes de qualquer TASK-010.
 - `impl/src/RickCraft/review_protocol.py`
 - `impl/tests/test_review_protocol.py`
 - `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`
+
+## IMPLEMENT - correcao pontual TASK-009 - ambiguidade D-14 - 2026-10-11
+
+A publicacao `a26d30721bf5ba1d17dcaa36910f7aca10e8d48d` foi revisada externamente e TASK-009 nao foi aprovada porque `evaluate_review` aplicava uma chave secundaria baseada em evidence/conclusao/impacto/recomendacao para desempatar findings com a mesma chave canonica D-14. TASK-010 permaneceu nao autorizada. A baseline local correspondia exatamente ao commit; hashes de runtime, teste, status publicado, SPEC, PLAN, TASKS e SPEC1 conferiram antes da edicao, e a arvore estava limpa.
+
+TASK-009 foi reaberta temporariamente para esta correcao localizada. Nenhum artefato normativo, SPEC1 ou outro contrato da TASK-009 foi alterado. Em `evaluate_review`, findings exatos duplicados continuam rejeitados; findings distintos com a mesma `ReviewFinding.sort_key` agora geram `ReviewInputError`. Findings com chaves D-14 distintas seguem diretamente por `sort_review_findings`; nao ha desempate pelo conteudo divergente. `_finding_sort_key` permanece somente no contexto de ordenacao interna de propostas que referenciam finding, nao na canonicalizacao da colecao de findings.
+
+### Testes e verificacoes
+
+- Primeira execucao `python -B -m unittest -v impl.tests.test_review_protocol`: 214 testes, um erro no novo teste de chaves distintas porque sua fixture manteve `NO_FINDING_IN_SCOPE` apesar de fornecer findings. A fixture foi corrigida para fornecer conclusao BLOCKED; nenhuma regra do runtime foi relaxada.
+- Reexecucao `python -B -m unittest -v impl.tests.test_review_protocol`: 214 testes, OK; 214 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- Primeira execucao sandboxada `python -B -m unittest -v impl.tests.test_gap_handling`: 89 testes, FAILED com 178 erros `WinError 5` em fixtures temporarios `%TEMP%\rickcraft-gap-*`.
+- Repeticao autorizada pelo mecanismo elevado do mesmo comando: 89 testes, OK; 89 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+- `git diff --check`: passou. `git status --short`: somente runtime, teste e este status.
+- SPEC/PLAN/TASKS e `gap_handling.py`/`test_gap_handling.py` reconfirmados nos hashes congelados. Nenhuma persistencia ou externalidade ocorreu.
+
+### Resultado e hashes
+
+TASK-009 = COMPLETE - aguardando nova revisao. TASK-001 a TASK-008 permanecem aprovadas; TASK-010 a TASK-013 nao executadas. IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; Release nao autorizado. A correcao nao aprova TASK-009.
+
+Hashes finais SHA-256, apos leitura UTF-8 estrita e confirmacao: `review_protocol.py` = `8F5CF692C241C2A3F26A54C303932AF1F31ADAC8FAD438D54E13BD53F8F9D44F`; `test_review_protocol.py` = `46FAD2D1FF9B7B59160ADBDF88C4DBB22119033217B868CF4F19ADD1A3607E78`.
+
+### CHECKPOINT RICKCRAFT - correcao TASK-009
+
+**Fase:** IMPLEMENT - correcao pontual TASK-009 - SPEC-0000000002.
+**Objetivo:** rejeitar findings distintos com a mesma chave D-14 sem desempate de conteudo.
+**Estado:** CONCLUIDO / AGUARDANDO_APROVACAO.
+**Arquivos criados:** nenhum.
+**Arquivos alterados:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, este `status.md`.
+**Decisao formalizada:** chave D-14 igual com finding nao identico e ambiguidade estrutural; a ordenacao continua delegada a `sort_review_findings`.
+**Decisoes pendentes:** nova revisao read-only da publicacao corrigida.
+**Questoes em aberto:** nenhuma identificada.
+**Bloqueios:** nenhum. A tentativa sandboxada da regressao SPEC1 falhou com WinError 5, e a repeticao elevada autorizada passou.
+**Riscos:** TASK-009 aguarda nova revisao; nao esta aprovada.
+**Testes:** suite focal 214/214 PASS; regressao gap_handling 89/89 PASS na repeticao elevada; `git diff --check` passou.
+**Proximo passo:** usuario publicar manualmente somente os tres arquivos autorizados e informar exatamente `Atualizei o GitHub do RickCraft.` para nova revisao read-only.
+**Nao fazer ainda:** nao iniciar TASK-010, nao executar CONVERGE, nao gerar Release e nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT - correcao TASK-009
+
+**Fase:** IMPLEMENT - correcao pontual TASK-009 - SPEC-0000000002.
+**Estado:** AGUARDANDO_APROVACAO.
+**Objetivo:** corrigir somente a ambiguidade D-14 na canonicalizacao integrada de findings.
+**Fontes internas:** SPEC, PLAN, TASKS, APIs existentes de ReviewFinding e sort_review_findings, status e regressao SPEC1 read-only.
+**Documentacao externa relevante:** nenhuma.
+**Artefatos alterados:** runtime, teste focal e status; nenhum arquivo novo.
+**Evidencias:** hashes finais acima, 214/214 testes focais e 89/89 regressao SPEC1 na repeticao autorizada.
+**Pendencia:** revisao externa read-only do estado publicado. TASK-010 requer autorizacao explicita separada.
+**Arquivos para revisar:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.

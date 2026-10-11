@@ -1419,6 +1419,7 @@ def evaluate_review(
         raise ReviewInputError("findings deve conter somente ReviewFinding.")
     if len(set(findings_input)) != len(findings_input):
         raise ReviewInputError("findings não pode conter duplicatas.")
+    findings_by_key: dict[tuple[str, int, str, str, str], ReviewFinding] = {}
     for finding in findings_input:
         if finding.scope not in scope_ids:
             raise ReviewInputError("ReviewFinding aponta para scope fora do request.")
@@ -1426,9 +1427,11 @@ def evaluate_review(
         if any(item.target not in artifacts or item.target not in scope_artifacts
                for item in finding.evidence):
             raise ReviewInputError("EvidenceReference do finding excede o artefato autorizado no scope.")
-    canonical_findings = tuple(sorted(
-        sort_review_findings(findings_input), key=_finding_sort_key
-    ))
+        previous = findings_by_key.get(finding.sort_key)
+        if previous is not None and previous != finding:
+            raise ReviewInputError("findings possuem chave D-14 ambigua.")
+        findings_by_key[finding.sort_key] = finding
+    canonical_findings = sort_review_findings(findings_input)
 
     for assessment in dimensions:
         scope_artifacts = set(scopes[assessment.scope].artifacts)

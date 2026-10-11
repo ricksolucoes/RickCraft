@@ -2176,6 +2176,40 @@ class IntegratedReviewTests(unittest.TestCase):
         self.assertEqual(a.findings, b.findings)
         self.assertEqual(a, b)
 
+    def test_findings_com_mesma_chave_d14_e_conteudo_distinto_sao_rejeitados(self) -> None:
+        base = ReviewFinding("S", TechnicalDimension.SOLID, "Mesma condicao",
+                             (self.evidence(reference="evidence:a"),), "rule",
+                             "Conclusao", "Impacto", "Recomendacao")
+        variants = (
+            ReviewFinding("S", TechnicalDimension.SOLID, "Mesma condicao",
+                          (self.evidence(reference="evidence:b"),), "rule",
+                          "Conclusao", "Impacto", "Recomendacao"),
+            ReviewFinding("S", TechnicalDimension.SOLID, "Mesma condicao",
+                          base.evidence, "rule", "Outra conclusao", "Impacto", "Recomendacao"),
+            ReviewFinding("S", TechnicalDimension.SOLID, "Mesma condicao",
+                          base.evidence, "rule", "Conclusao", "Outro impacto", "Recomendacao"),
+            ReviewFinding("S", TechnicalDimension.SOLID, "Mesma condicao",
+                          base.evidence, "rule", "Conclusao", "Impacto", "Outra recomendacao"),
+        )
+        self.assertTrue(all(item.sort_key == base.sort_key for item in variants))
+        for variant in variants:
+            for findings in ((base, variant), (variant, base)):
+                with self.subTest(variant=variant), self.assertRaisesRegex(
+                        ReviewInputError, "chave D-14 ambigua"):
+                    self.evaluate(findings=findings)
+
+    def test_findings_com_chaves_d14_distintas_usam_sort_review_findings(self) -> None:
+        first = ReviewFinding("S", TechnicalDimension.SOLID, "A condicao",
+                              (self.evidence(reference="evidence:a"),), "rule", "c1", "impact")
+        second = ReviewFinding("S", TechnicalDimension.PATTERNS, "B condicao",
+                               (self.evidence(reference="evidence:b"),), "rule", "c2", "impact")
+        blocked = self.conclusion(state=ConclusionState.BLOCKED,
+                                  sources=("evidence:a", "evidence:b"), evidence=(), claims=())
+        with patch.object(protocol, "sort_review_findings", wraps=sort_review_findings) as sorter:
+            result = self.evaluate(findings=(first, second), conclusion=blocked)
+        sorter.assert_called_once_with((first, second))
+        self.assertEqual(result.findings, sort_review_findings((first, second)))
+
     def test_proposta_funcional_sem_grant_fica_nao_autorizada_e_bloqueia_scope(self) -> None:
         proposal = ChangeProposal(
             ChangeKind.FUNCTIONAL, "S", ("a.py",), "proposal:1", "motivo",

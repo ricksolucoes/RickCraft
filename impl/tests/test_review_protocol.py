@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -10,6 +12,8 @@ RUNTIME_DIRECTORY = Path(__file__).resolve().parents[1] / "src" / "RickCraft"
 sys.path.insert(0, str(RUNTIME_DIRECTORY))
 
 import gap_handling as gaps  # noqa: E402
+import provenance as provenance_api  # noqa: E402
+import document_format as document_format_api  # noqa: E402
 import review_protocol as protocol  # noqa: E402
 from review_protocol import (  # noqa: E402
     AuthorizationGrant,
@@ -29,6 +33,8 @@ from review_protocol import (  # noqa: E402
     EvidenceKind,
     EvidenceReference,
     RequestedEffect,
+    PersistenceIntent,
+    PersistedReviewEvaluation,
     ReviewConclusion,
     ReviewFinding,
     ReviewEvaluationResult,
@@ -46,6 +52,7 @@ from review_protocol import (  # noqa: E402
     evaluate_scope_continuity,
     evaluate_source_conflict,
     evaluate_review,
+    persist_review_evaluation,
     renderizar_resposta,
     sort_review_findings,
 )
@@ -2390,6 +2397,211 @@ class IntegratedReviewTests(unittest.TestCase):
         )
         self.assertIs(result.dimension_assessments[0].specialist_assessment.character,
                       AssessmentCharacter.AUTHORITATIVE)
+
+
+class PersistenceIntentTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory(prefix="rickcraft-review-persistence-")
+        self.addCleanup(self.temporary.cleanup)
+        base = Path(self.temporary.name)
+        self.root = base / "impl" / "src" / "RickCraft"
+        self.root.mkdir(parents=True)
+        self.workspace = base / "impl" / ".workspace"
+        self.workspace.mkdir(parents=True)
+
+    @staticmethod
+    def evaluated(*, grants=(AuthorizationGrant.REVIEW, AuthorizationGrant.LOCAL_PERSISTENCE),
+                  effects=(RequestedEffect.LOCAL_PERSISTENCE,)) -> ReviewEvaluationResult:
+        request = IntegratedReviewTests.request(grants=grants, effects=effects)
+        return IntegratedReviewTests.evaluate(request=request)
+
+    def intent(self, **kwargs: object) -> PersistenceIntent:
+        return PersistenceIntent(self.root, "Continuidade e rastreabilidade da revisao", **kwargs)
+
+    @staticmethod
+    def fixed_clock() -> datetime:
+        return datetime(2026, 10, 11, 12, 30, tzinfo=timezone.utc)
+
+    def test_intent_e_imutavel_copia_proveniencia_aninhada(self) -> None:
+        original = {"kind": "versioned_source", "locator": "source://a", "extra": {"tags": ["x"]}}
+        intent = self.intent(provenance_inputs=[original])
+        original["extra"]["tags"].append("mutado")
+        self.assertEqual(intent.provenance_inputs[0]["extra"]["tags"], ("x",))
+        with self.assertRaises(TypeError):
+            intent.provenance_inputs[0]["kind"] = "changed"  # type: ignore[index]
+        with self.assertRaises(FrozenInstanceError):
+            intent.purpose = "alterado"  # type: ignore[misc]
+
+    def test_ausencia_de_grant_rejeita_antes_de_qualquer_api_workspace(self) -> None:
+        result = self.evaluated(grants=(AuthorizationGrant.REVIEW,))
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise") as lifecycle:
+            with self.assertRaises(ReviewInputError):
+                persist_review_evaluation(result, self.intent())
+        lifecycle.assert_not_called()
+        self.assertEqual(tuple(self.workspace.iterdir()), ())
+
+    def test_effect_sem_grant_rejeita_antes_do_lifecycle(self) -> None:
+        result = self.evaluated(grants=(AuthorizationGrant.REVIEW,),
+                                effects=(RequestedEffect.LOCAL_PERSISTENCE,))
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise") as lifecycle:
+            with self.assertRaises(ReviewInputError):
+                persist_review_evaluation(result, self.intent())
+        lifecycle.assert_not_called()
+
+    def test_grant_sem_requested_effect_nao_persiste(self) -> None:
+        result = self.evaluated(effects=())
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise") as lifecycle:
+            with self.assertRaises(ReviewInputError):
+                persist_review_evaluation(result, self.intent())
+        lifecycle.assert_not_called()
+
+    def test_evaluate_review_permanece_puro_sem_intent(self) -> None:
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise") as lifecycle, \
+             patch.object(protocol.document_publisher, "publicar_documento") as publisher, \
+             patch.object(protocol.document_recovery, "recuperar_documento") as recovery, \
+             patch.object(protocol.document_search, "pesquisar_documentos") as search:
+            result = IntegratedReviewTests.evaluate()
+        self.assertIsInstance(result, ReviewEvaluationResult)
+        lifecycle.assert_not_called()
+        publisher.assert_not_called()
+        recovery.assert_not_called()
+        search.assert_not_called()
+        self.assertEqual(tuple(self.workspace.iterdir()), ())
+
+    def test_persistencia_real_reusa_lifecycle_publisher_recovery_e_schema_v1(self) -> None:
+        result = self.evaluated()
+        inputs = [{"kind": "versioned_source", "locator": "source://modulo",
+                   "version_kind": "git_commit", "version": "abc123",
+                   "sha256": "a" * 64, "verification": "MATCHED"}]
+        intent = self.intent(provenance_inputs=inputs)
+        with patch.object(protocol.document_search, "pesquisar_documentos",
+                          wraps=protocol.document_search.pesquisar_documentos) as search:
+            persisted = persist_review_evaluation(result, intent, clock=self.fixed_clock)
+        self.assertIsInstance(persisted, PersistedReviewEvaluation)
+        self.assertEqual(persisted.publication.document_type, "analysis")
+        self.assertEqual(persisted.publication.analysis_id, persisted.analysis.analysis_id)
+        self.assertEqual(persisted.recovered_document.parsed.corpo, result.rendered)
+        self.assertEqual(persisted.recovered_document.parsed.metadata["schema_version"], 1)
+        self.assertEqual(persisted.recovered_document.parsed.metadata["type_catalog_version"], 1)
+        self.assertEqual(persisted.recovered_document.parsed.metadata["inputs"], inputs)
+        self.assertIn(persisted.publication.document_id,
+                      {item.document_id for item in persisted.recovered_analysis.documents})
+        self.assertIsNone(persisted.search_result)
+        search.assert_not_called()
+
+    def test_nova_ocorrencia_e_append_only_e_resume_reusa_id_explicito(self) -> None:
+        result = self.evaluated()
+        first = persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+        old_bytes = first.publication.destination.read_bytes()
+        old_digest = first.publication.sha256
+        resumed_intent = self.intent(resume_analysis_id=first.analysis.analysis_id)
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise",
+                          wraps=protocol.analysis_lifecycle.criar_ou_retomar_analise) as lifecycle:
+            second = persist_review_evaluation(result, resumed_intent, clock=self.fixed_clock)
+        lifecycle.assert_called_once_with(self.root, first.analysis.analysis_id)
+        self.assertEqual(second.analysis.analysis_id, first.analysis.analysis_id)
+        self.assertNotEqual(second.publication.document_id, first.publication.document_id)
+        self.assertEqual(first.publication.destination.read_bytes(), old_bytes)
+        self.assertEqual(first.publication.sha256, old_digest)
+        self.assertEqual(second.recovered_document.parsed.corpo, result.rendered)
+
+    def test_nova_analise_delega_geracao_de_identidade_ao_lifecycle(self) -> None:
+        result = self.evaluated()
+        with patch.object(protocol.analysis_lifecycle, "criar_ou_retomar_analise",
+                          wraps=protocol.analysis_lifecycle.criar_ou_retomar_analise) as lifecycle:
+            persisted = persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+        lifecycle.assert_called_once_with(self.root, None)
+        self.assertTrue(persisted.analysis.analysis_id.startswith("ANL-"))
+
+    def test_evidence_separada_exige_observacao_executada_e_relaciona_supports(self) -> None:
+        result = self.evaluated()
+        selected = result.claims[0].evidence[0]
+        persisted = persist_review_evaluation(
+            result, self.intent(evidence_to_persist=[selected]), clock=self.fixed_clock
+        )
+        self.assertEqual(len(persisted.evidence_publications), 1)
+        evidence_doc = protocol.document_recovery.recuperar_documento(
+            self.root, persisted.evidence_publications[0].document_id
+        )
+        self.assertEqual(evidence_doc.document_type, "evidence")
+        self.assertEqual(evidence_doc.relations[0].relation_type, "supports")
+        self.assertEqual(evidence_doc.relations[0].document_id, persisted.publication.document_id)
+
+    def test_token_de_relacao_invalido_e_rejeitado_pelo_formato_spec1(self) -> None:
+        result = self.evaluated()
+        relation = {"relation_type": "invented", "document_id":
+                    "DOC-12345678-1234-4234-8234-123456789abc"}
+        with self.assertRaises(protocol.document_publisher.DocumentPublicationError) as caught:
+            persist_review_evaluation(result, self.intent(relations=(relation,)),
+                                      clock=self.fixed_clock)
+        self.assertIsInstance(caught.exception.cause, document_format_api.DocumentFormatError)
+
+    def test_provenance_nao_e_observada_automaticamente(self) -> None:
+        result = self.evaluated()
+        with patch.object(provenance_api, "observar_arquivo_local",
+                          side_effect=AssertionError("observacao automatica")) as observe_file, \
+             patch.object(provenance_api, "observar_documento_workspace",
+                          side_effect=AssertionError("observacao automatica")) as observe_doc, \
+             patch.object(provenance_api, "observar_fonte_versionada",
+                          side_effect=AssertionError("observacao automatica")) as observe_version:
+            persisted = persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+        self.assertEqual(persisted.recovered_document.parsed.metadata["inputs"], [])
+        observe_file.assert_not_called()
+        observe_doc.assert_not_called()
+        observe_version.assert_not_called()
+
+    def test_falha_de_recovery_propaga_excecao_real_sem_resultado(self) -> None:
+        result = self.evaluated()
+        failure = protocol.document_recovery.DocumentRecoveryError("falha de recovery")
+        with patch.object(protocol.document_recovery, "recuperar_documento", side_effect=failure):
+            with self.assertRaises(protocol.document_recovery.DocumentRecoveryError) as caught:
+                persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+        self.assertIs(caught.exception, failure)
+
+    def test_reported_inference_ou_evidence_nao_associada_nao_pode_ser_persistida(self) -> None:
+        result = self.evaluated()
+        reported = EvidenceReference(EvidenceKind.REPORTED, "host", "report:1", "a.py", "v1")
+        for item in (reported, self.evidence_not_in_result()):
+            with self.subTest(item=item), self.assertRaises(ReviewInputError):
+                persist_review_evaluation(result, self.intent(evidence_to_persist=(item,)),
+                                           clock=self.fixed_clock)
+
+    @staticmethod
+    def evidence_not_in_result() -> EvidenceReference:
+        return EvidenceReference(EvidenceKind.INFERENCE, "host", "inference:1", "a.py", "v1")
+
+    def test_search_somente_quando_query_explicita(self) -> None:
+        result = self.evaluated()
+        query = protocol.document_search.SearchQuery(document_type="analysis")
+        with patch.object(protocol.document_search, "pesquisar_documentos",
+                          wraps=protocol.document_search.pesquisar_documentos) as search:
+            persisted = persist_review_evaluation(result, self.intent(search_query=query),
+                                                  clock=self.fixed_clock)
+        search.assert_called_once()
+        self.assertIsNotNone(persisted.search_result)
+        self.assertTrue(all(item.document_type == "analysis"
+                            for item in persisted.search_result.matches))
+
+    def test_intent_nao_pode_mutar_query_ou_provenance_original(self) -> None:
+        nested = {"nested": [1, {"x": "y"}]}
+        query_mapping = {"purpose": "Continuidade", "nested": ["original"]}
+        query = protocol.document_search.SearchQuery(metadata_equals=query_mapping)
+        intent = self.intent(provenance_inputs=[nested], search_query=query)
+        nested["nested"].append(2)
+        query_mapping["nested"].append("mutated")
+        self.assertEqual(intent.provenance_inputs[0]["nested"][1]["x"], "y")
+        self.assertEqual(intent.search_query.metadata_equals["nested"], ("original",))
+
+    def test_search_terms_invalidos_nao_sao_coagidos_silenciosamente(self) -> None:
+        with self.assertRaises(ReviewInputError):
+            self.intent(search_query=protocol.document_search.SearchQuery(text_terms="abc"))  # type: ignore[arg-type]
+
+    def test_falha_do_publisher_propaga_sem_receipt_ficticio(self) -> None:
+        result = self.evaluated()
+        failure = RuntimeError("falha de publicacao")
+        with patch.object(protocol.document_publisher, "publicar_documento", side_effect=failure):
+            with self.assertRaisesRegex(RuntimeError, "falha de publicacao"):
+                persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
 
 
 if __name__ == "__main__":

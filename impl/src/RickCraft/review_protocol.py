@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Mapping, Sequence
+import json
+import math
+from pathlib import Path
+from types import MappingProxyType
+from typing import Any, Callable, Mapping, Sequence
 
+import analysis_lifecycle
+import document_publisher
+import document_recovery
+import document_search
 import gap_handling
 
 
@@ -1639,4 +1648,263 @@ def evaluate_review(
         conclusion=conclusion,
         response=response,
         rendered=rendered,
+    )
+
+
+def _freeze_json_value(value: object, name: str) -> object:
+    if value is None or type(value) in {str, bool, int}:
+        return value
+    if type(value) is float:
+        if math.isfinite(value):
+            return value
+        raise ReviewInputError(f"{name} nao aceita numero nao finito.")
+    if isinstance(value, Mapping):
+        frozen: dict[str, object] = {}
+        for key, item in value.items():
+            if type(key) is not str:
+                raise ReviewInputError(f"{name} requer chaves textuais.")
+            frozen[key] = _freeze_json_value(item, name)
+        return MappingProxyType(frozen)
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_json_value(item, name) for item in value)
+    raise ReviewInputError(f"{name} deve conter somente dados JSON explicitos.")
+
+
+def _thaw_json_value(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {key: _thaw_json_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw_json_value(item) for item in value]
+    return value
+
+
+def _freeze_json_records(value: object, name: str) -> tuple[Mapping[str, object], ...]:
+    entries = _sequencia(value, name)
+    result: list[Mapping[str, object]] = []
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            raise ReviewInputError(f"Cada item de {name} deve ser um objeto explicitamente fornecido.")
+        frozen = _freeze_json_value(entry, name)
+        assert isinstance(frozen, Mapping)
+        result.append(frozen)
+    return tuple(result)
+
+
+@dataclass(frozen=True)
+class PersistenceIntent:
+    """Intencao explicita e opt-in de continuidade documental local."""
+
+    rickcraft_root: str | Path
+    purpose: str
+    resume_analysis_id: str | None = None
+    provenance_inputs: tuple[Mapping[str, object], ...] = ()
+    relations: tuple[Mapping[str, object], ...] = ()
+    evidence_to_persist: tuple[EvidenceReference, ...] = ()
+    search_query: document_search.SearchQuery | None = None
+    title: str = "Revisao tecnica RickCraft"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.rickcraft_root, (str, Path)):
+            raise ReviewInputError("rickcraft_root deve ser fornecido explicitamente.")
+        if isinstance(self.rickcraft_root, str) and not self.rickcraft_root.strip():
+            raise ReviewInputError("rickcraft_root nao pode ser vazio.")
+        _texto_obrigatorio(self.purpose, "purpose")
+        _texto_obrigatorio(self.title, "title")
+        if self.resume_analysis_id is not None:
+            _texto_obrigatorio(self.resume_analysis_id, "resume_analysis_id")
+
+        object.__setattr__(self, "provenance_inputs",
+                           _freeze_json_records(self.provenance_inputs, "provenance_inputs"))
+        frozen_relations = _freeze_json_records(self.relations, "relations")
+        object.__setattr__(self, "relations", frozen_relations)
+
+        evidence = _sequencia(self.evidence_to_persist, "evidence_to_persist")
+        if any(not isinstance(item, EvidenceReference) for item in evidence):
+            raise ReviewInputError("evidence_to_persist deve conter EvidenceReference.")
+        if len(set(evidence)) != len(evidence):
+            raise ReviewInputError("evidence_to_persist nao pode conter duplicatas.")
+        object.__setattr__(self, "evidence_to_persist",
+                           tuple(sorted(evidence, key=_evidence_sort_key)))
+
+        query = self.search_query
+        if query is not None:
+            if not isinstance(query, document_search.SearchQuery):
+                raise ReviewInputError("search_query deve ser SearchQuery explicita.")
+            frozen_mappings = {}
+            for field_name in ("metadata_equals", "input_equals", "relation_equals"):
+                mapping = getattr(query, field_name)
+                if mapping is not None and not isinstance(mapping, Mapping):
+                    raise ReviewInputError(f"search_query.{field_name} deve ser um Mapping.")
+                frozen_mappings[field_name] = (
+                    None if mapping is None else _freeze_json_value(mapping, field_name)
+                )
+            terms = query.text_terms
+            if terms is not None:
+                if not isinstance(terms, (tuple, list)) or not terms:
+                    raise ReviewInputError("search_query.text_terms deve ser uma sequencia explicita nao vazia.")
+                if any(type(term) is not str or not term.strip() for term in terms):
+                    raise ReviewInputError("search_query.text_terms deve conter texto nao vazio.")
+            object.__setattr__(self, "search_query", document_search.SearchQuery(
+                analysis_id=query.analysis_id,
+                document_type=query.document_type,
+                document_id=query.document_id,
+                metadata_equals=frozen_mappings["metadata_equals"],  # type: ignore[arg-type]
+                input_equals=frozen_mappings["input_equals"],  # type: ignore[arg-type]
+                relation_equals=frozen_mappings["relation_equals"],  # type: ignore[arg-type]
+                text_terms=None if terms is None else tuple(terms),
+            ))
+
+
+@dataclass(frozen=True)
+class PersistedReviewEvaluation:
+    """Confirmacoes reais SPEC1 de uma revisao persistida."""
+
+    analysis: analysis_lifecycle.AnalysisDirectory
+    publication: document_publisher.PublicationResult
+    evidence_publications: tuple[document_publisher.PublicationResult, ...]
+    recovered_document: document_recovery.RecoveredDocument
+    recovered_analysis: document_recovery.RecoveryResult
+    search_result: document_search.SearchResult | None = None
+
+
+def _persisted_evidence_body(
+    evidence: EvidenceReference,
+    claims: Sequence[VerificationClaim],
+) -> str:
+    records = []
+    for claim in sorted(claims, key=_claim_sort_key):
+        records.append({
+            "assertion": claim.assertion,
+            "target": claim.target,
+            "version": claim.version,
+            "status": claim.status.value,
+        })
+    record = {
+        "kind": evidence.kind.value,
+        "origin": evidence.origin,
+        "reference": evidence.reference,
+        "target": evidence.target,
+        "version": evidence.version,
+        "digest": evidence.digest,
+        "limitation": evidence.limitation,
+        "verifiability": evidence.verifiability,
+        "claims": records,
+    }
+    return json.dumps(record, ensure_ascii=False, allow_nan=False, sort_keys=True, indent=2)
+
+
+def persist_review_evaluation(
+    result: ReviewEvaluationResult,
+    intent: PersistenceIntent,
+    *,
+    clock: Callable[[], datetime] | None = None,
+) -> PersistedReviewEvaluation:
+    """Persiste, recupera e opcionalmente pesquisa apos autorizacao explicita."""
+    if not isinstance(result, ReviewEvaluationResult):
+        raise ReviewInputError("result deve ser ReviewEvaluationResult ja avaliado.")
+    if not isinstance(intent, PersistenceIntent):
+        raise ReviewInputError("PersistenceIntent valido e obrigatorio para persistir.")
+
+    grants = result.request.authorization_grants
+    effects = result.request.requested_effects
+    has_grant = AuthorizationGrant.LOCAL_PERSISTENCE in grants
+    has_effect = RequestedEffect.LOCAL_PERSISTENCE in effects
+    if not has_grant:
+        raise ReviewInputError("Persistencia requer grant LOCAL_PERSISTENCE explicito.")
+    if not has_effect:
+        raise ReviewInputError("Persistencia requer RequestedEffect.LOCAL_PERSISTENCE explicito.")
+
+    selected_evidence = intent.evidence_to_persist
+    evidence_claims: dict[EvidenceReference, tuple[VerificationClaim, ...]] = {}
+    for evidence in selected_evidence:
+        if evidence.kind is not EvidenceKind.DIRECT_OBSERVATION:
+            raise ReviewInputError("Somente DIRECT_OBSERVATION pode ser persistida como evidence.")
+        matching = tuple(
+            claim for claim in result.claims
+            if claim.status is VerificationStatus.EXECUTED_OBSERVED
+            and evidence in claim.evidence
+        )
+        if not matching:
+            raise ReviewInputError("Evidence selecionada deve pertencer a claim EXECUTED_OBSERVED do resultado.")
+        evidence_claims[evidence] = matching
+
+    query = intent.search_query
+    if query is not None:
+        query = document_search.SearchQuery(
+            analysis_id=query.analysis_id,
+            document_type=query.document_type,
+            document_id=query.document_id,
+            metadata_equals=None if query.metadata_equals is None else _thaw_json_value(query.metadata_equals),  # type: ignore[arg-type]
+            input_equals=None if query.input_equals is None else _thaw_json_value(query.input_equals),  # type: ignore[arg-type]
+            relation_equals=None if query.relation_equals is None else _thaw_json_value(query.relation_equals),  # type: ignore[arg-type]
+            text_terms=query.text_terms,
+        )
+
+    instante = (clock or (lambda: datetime.now(timezone.utc)))()
+    if not isinstance(instante, datetime) or instante.tzinfo is None:
+        raise ReviewInputError("clock deve fornecer datetime com fuso horario.")
+    created_at = instante.astimezone(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
+
+    analysis = analysis_lifecycle.criar_ou_retomar_analise(
+        intent.rickcraft_root, intent.resume_analysis_id
+    )
+    metadata = {
+        "schema_version": 1,
+        "type_catalog_version": 1,
+        "created_at_utc": created_at,
+        "purpose": intent.purpose,
+        "origin": {"kind": "task_execution", "reference": "SPEC-0000000002 TASK-010"},
+        "inputs": [_thaw_json_value(item) for item in intent.provenance_inputs],
+        "relations": [_thaw_json_value(item) for item in intent.relations],
+    }
+    publication = document_publisher.publicar_documento(
+        intent.rickcraft_root,
+        analysis.analysis_id,
+        "analysis",
+        intent.title,
+        result.rendered,
+        metadata,
+    )
+    recovered_document = document_recovery.recuperar_documento(
+        intent.rickcraft_root, publication.document_id
+    )
+    if recovered_document.parsed.corpo != result.rendered:
+        raise RuntimeError("Documento recuperado nao preservou o render publicado.")
+    recovered_analysis = document_recovery.recuperar_analise(
+        intent.rickcraft_root, analysis.analysis_id
+    )
+    if not any(item.document_id == publication.document_id for item in recovered_analysis.documents):
+        raise RuntimeError("Documento principal nao aparece na recuperacao da analysis_id.")
+
+    evidence_publications: list[document_publisher.PublicationResult] = []
+    for evidence in selected_evidence:
+        evidence_metadata = {
+            **metadata,
+            "purpose": f"Evidencia observavel: {intent.purpose}",
+            "relations": [{
+                "relation_type": "supports",
+                "document_id": publication.document_id,
+                "analysis_id": analysis.analysis_id,
+            }],
+        }
+        evidence_publications.append(document_publisher.publicar_documento(
+            intent.rickcraft_root,
+            analysis.analysis_id,
+            "evidence",
+            f"Evidencia observavel - {evidence.target}",
+            _persisted_evidence_body(evidence, evidence_claims[evidence]),
+            evidence_metadata,
+        ))
+
+    search_result = None
+    if query is not None:
+        search_result = document_search.pesquisar_documentos(intent.rickcraft_root, query)
+
+    return PersistedReviewEvaluation(
+        analysis=analysis,
+        publication=publication,
+        evidence_publications=tuple(evidence_publications),
+        recovered_document=recovered_document,
+        recovered_analysis=recovered_analysis,
+        search_result=search_result,
     )

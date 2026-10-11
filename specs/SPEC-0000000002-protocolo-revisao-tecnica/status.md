@@ -7,7 +7,7 @@
 - **PLAN:** COMPLETE — aprovada pelo responsável pelo projeto
 - **TASKS:** COMPLETE — aprovada pelo responsável pelo projeto
 - **ANALYZE:** PASS — ANALYZE-2026-10-11-SPEC-0000000002-01
-- **IMPLEMENT:** IN_PROGRESS - TASK-009 concluida, aguardando revisao
+- **IMPLEMENT:** IN_PROGRESS - TASK-010 concluida, aguardando revisao
 - **CONVERGE:** NOT_STARTED
 - **Último gate válido:** ANALYZE-2026-10-11-SPEC-0000000002-01
 - **Execution ID:** ANALYZE-2026-10-11-SPEC-0000000002-01
@@ -1165,4 +1165,68 @@ Hashes finais SHA-256, apos leitura UTF-8 estrita e confirmacao: `review_protoco
 **Artefatos alterados:** runtime, teste focal e status; nenhum arquivo novo.
 **Evidencias:** hashes finais acima, 214/214 testes focais e 89/89 regressao SPEC1 na repeticao autorizada.
 **Pendencia:** revisao externa read-only do estado publicado. TASK-010 requer autorizacao explicita separada.
+**Arquivos para revisar:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
+
+## IMPLEMENT - TASK-010 inicio - 2026-10-11
+
+TASK-009 foi aprovada externamente conforme autorizacao do responsavel. Baseline validada: commit `5943c99c1d75d9bdcc0670a2e0393a4e5d6b5e3b`, arvore limpa, hashes/blobs de runtime, teste, status, SPEC/PLAN/TASKS e dependencias SPEC1 iguais aos valores autorizados. TASK-010 e a unica tarefa autorizada e passa a IN_PROGRESS. IMPLEMENT permanece IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; TASK-011 a TASK-013 nao executadas; Release nao autorizado. Nenhum arquivo de implementacao foi alterado neste registro de inicio.
+
+## IMPLEMENT - TASK-010 - Persistencia optativa e continuidade SPEC1 - 2026-10-11
+
+TASK-009 foi aprovada externamente conforme a confirmacao do responsavel. A execucao TASK-010 partiu da baseline `5943c99c1d75d9bdcc0670a2e0393a4e5d6b5e3b`; HEAD, arvore limpa, hashes/blobs de runtime e teste, status, SPEC/PLAN/TASKS e todas as dependencias SPEC1 conferiram antes da implementacao. A autorizacao cobriu somente TASK-010.
+
+### Implementacao e fronteiras
+
+Adicionados `PersistenceIntent`, `PersistedReviewEvaluation` e `persist_review_evaluation(result, intent, *, clock=None)`. A funcao e separada de `evaluate_review`; avaliacao permanece pura. A fronteira exige resultado previamente avaliado, intent, `LOCAL_PERSISTENCE` grant e requested effect antes de chamar APIs de workspace. Intent preserva root explicito, purpose, resume ID opcional, provenance inputs e relations fornecidas, evidence selecionada e SearchQuery optativa; suas colecoes JSON sao copiadas recursivamente para estrutura imutavel. Search ocorre somente quando a query explicita existe.
+
+APIs SPEC1 efetivamente consumidas: `analysis_lifecycle.criar_ou_retomar_analise`, `document_publisher.publicar_documento`, `document_recovery.recuperar_documento`, `document_recovery.recuperar_analise` e, somente com query, `document_search.pesquisar_documentos`. Publisher/recovery reutilizam transitivamente formato e catalogo v1. Provenance ja fornecida pelo host e preservada em `inputs`; nenhuma observacao automatica de arquivo, workspace ou fonte versionada e chamada. Evidence separada exige selecao explicita de `EvidenceReference` DIRECT_OBSERVATION vinculada a claim EXECUTED_OBSERVED e usa a relacao SPEC1 `supports` para o documento analysis. Nenhum tipo, schema, relacao ou storage paralelo foi criado.
+
+O documento principal e tipo `analysis`, preserva exatamente `ReviewEvaluationResult.rendered`, recebe schema/catalog v1, origin de TASK-010 e timestamp UTC injetavel sem uso em identidade/ordenacao. Lifecycle cria identidade quando resume ID nao foi fornecido ou retoma exatamente a identidade fornecida. Publicacao retorna o `PublicationResult` real; round-trip usa recovery por document ID e por analysis ID. Falhas de publisher/recovery/search propagam sem receipt ficticio. Testes de persistencia e todos os ANL/DOC gerados foram contidos em fixture temporaria; Debug/workspace real do projeto nao foi usado ou alterado. Persistir novamente cria novo document ID sem sobrescrever bytes/hash historicos. Nenhuma rede, Git, subprocess, upload, sync ou Release foi executado.
+
+### Testes e tentativas preservadas
+
+- Primeira suite focal sandboxada `python -B -m unittest -v impl.tests.test_review_protocol`: 227 testes; 26 erros de setup/cleanup por `WinError 5` ao criar/remover `%TEMP%` fixtures. A repeticao focal elevada inicialmente identificou tres assercoes/fixtures de teste incorretas, nao defeito funcional: as verificacoes de ausencia de escrita esperavam que workspace, criado pela fixture, nao existisse; uma assercao de imutabilidade comparava mapping aninhado a tupla de pares. Corrigidas as fixtures/assercoes.
+- Repeticao focal elevada de 227 testes identificou depois um erro no teste de relation token invalido: `DocumentFormatError` e preservado como `cause` de `DocumentPublicationError`, conforme fronteira publisher SPEC1. A verificacao foi ajustada para o contrato real.
+- Suite focal final `python -B -m unittest -v impl.tests.test_review_protocol`: **231 executados, 231 PASS, 0 FAIL, 0 ERROR, 0 SKIP**.
+- Primeira regressao SPEC1 sandboxada com os oito modulos autorizados: 375 testes, 628 erros de fixture por `WinError 5` em `%TEMP%`.
+- Repeticao elevada da regressao SPEC1: **375 executados, 374 PASS, 0 FAIL, 0 ERROR, 1 SKIP**. O skip real foi `DocumentRecoveryTests.test_symlink_de_diretorio_de_tipo_nao_e_seguido`, porque o ambiente nao permite criar symlink real para este usuario.
+- Nenhuma full suite foi executada.
+- A regressao SPEC1 deixou 145 diretorios temporarios de fixtures em `impl/tests` apos cleanup Windows bloqueado; os nomes e conteudo foram verificados como fixtures, todos estavam contidos diretamente nessa pasta e sem reparse points, e foram removidos. Nenhum residuo correspondente permaneceu.
+
+### Estado final e hashes
+
+TASK-001 a TASK-009 = COMPLETE e aprovadas; TASK-010 = COMPLETE - aguardando revisao; TASK-011 a TASK-013 nao executadas. IMPLEMENT = IN_PROGRESS; ANALYZE = PASS em `ANALYZE-2026-10-11-SPEC-0000000002-01`; CONVERGE = NOT_STARTED; Release nao autorizado. TASK-010 ainda nao esta aprovada.
+
+SHA-256 finais calculados duas vezes apos leitura UTF-8 estrita: `review_protocol.py` = `09FAF558EA7652AC7EF24E0EDD4BA164D8D1315A45BA83DEB0A7DDE95A9E6F1A`; `test_review_protocol.py` = `DA673BB17395C4AAE4E562D9C627DE2A4C5F5AE39BD50A567F406D0942B4CB94`. SPEC/PLAN/TASKS e todos os blobs congelados SPEC1 permaneceram iguais. `git diff --check` passou; `git status --short` contem somente runtime SPEC2, teste SPEC2 e este status. Nenhum arquivo SPEC1 foi alterado.
+
+### CHECKPOINT RICKCRAFT - TASK-010
+
+**Fase executada:** IMPLEMENT - TASK-010 - SPEC-0000000002.
+**Objetivo:** conectar persistencia optativa e continuidade as APIs existentes SPEC1 sem alterar seus contratos.
+**Estado:** CONCLUIDO / AGUARDANDO_APROVACAO.
+**O que foi realizado:** intent opt-in, funcao explicita de persistencia e aggregate frozen de confirmacoes reais; criacao/retomada, analysis, recovery por IDs, evidence selecionada, provenance explicita, search solicitada e append-only.
+**Arquivos criados:** nenhum.
+**Arquivos alterados:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, este `status.md`.
+**Decisoes formalizadas:** nenhuma escrita dentro de `evaluate_review`; exige intent + effect + grant + root + purpose; publisher SPEC1 e fronteira unica de escrita documental; evidence separada e supports apenas para evidencia direta observada selecionada.
+**Decisoes pendentes:** revisao externa read-only de TASK-010 publicada.
+**Questoes em aberto:** nenhuma identificada.
+**Bloqueios:** nenhum. Tentativas sandboxadas WinError 5 preservadas acima e superadas por repeticao elevada autorizada.
+**Riscos:** skip ambiental de symlink real na regressao SPEC1; limitacao documentada e nao bloqueante para persistencia implementada.
+**Proximo passo:** usuario publicar manualmente somente os tres arquivos autorizados e informar exatamente `Atualizei o GitHub do RickCraft.`.
+**Motivo:** TASK-010 requer revisao read-only do estado publicado.
+**Nao fazer ainda:** nao iniciar TASK-011, nao executar CONVERGE, nao gerar Release e nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT - TASK-010
+
+**Fase:** IMPLEMENT - TASK-010 - SPEC-0000000002.
+**Estado:** AGUARDANDO_APROVACAO.
+**Objetivo:** persistencia optativa local e continuidade pelas APIs aprovadas SPEC1.
+**Fontes internas:** SPEC/PLAN/TASKS aprovadas, status, runtime SPEC2 TASK-001 a TASK-009 e modulos SPEC1 read-only.
+**APIs SPEC1 usadas:** analysis lifecycle, publisher, recovery por documento/analysis e search apenas quando solicitada; formato/catalogo v1 transitivos. Provenance aceita somente registros explicitamente fornecidos; observadores nao chamados.
+**Artefatos alterados:** `review_protocol.py`, `test_review_protocol.py`, `status.md`; nenhum arquivo novo.
+**Identidades/documentos/hashes produzidos em testes:** somente em fixtures temporarias controladas.
+**Testes:** focal SPEC2 231/231 PASS; regressao SPEC1 375 executados, 374 PASS, 1 SKIP ambiental, 0 FAIL/ERROR; tentativas iniciais WinError 5 e falhas de fixture preservadas acima.
+**Limitacoes:** nao executada full suite, reservada a TASK-013; symlink real indisponivel para um teste SPEC1.
+**Pendencia:** revisao externa read-only da publicacao. TASK-011 requer autorizacao separada.
+**Proximo passo:** publicar manualmente somente os tres arquivos autorizados e informar `Atualizei o GitHub do RickCraft.`.
 **Arquivos para revisar:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.

@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
+import ast
+from contextlib import ExitStack
+from dataclasses import FrozenInstanceError, replace
 from datetime import datetime, timezone
+import hashlib
+import os
 from pathlib import Path
+import socket
 import sys
+import subprocess
 import tempfile
 import unittest
+import urllib.request
 from unittest.mock import patch
 
 RUNTIME_DIRECTORY = Path(__file__).resolve().parents[1] / "src" / "RickCraft"
@@ -2602,6 +2609,174 @@ class PersistenceIntentTests(unittest.TestCase):
         with patch.object(protocol.document_publisher, "publicar_documento", side_effect=failure):
             with self.assertRaisesRegex(RuntimeError, "falha de publicacao"):
                 persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+
+
+class NegativeBoundaryTests(unittest.TestCase):
+    @staticmethod
+    def _snapshot_tree(root: Path) -> tuple[tuple[str, str, str], ...] | None:
+        """Inventaria uma árvore sem seguir links e sem modificá-la."""
+        if not root.exists():
+            return None
+        entries: list[tuple[str, str, str]] = []
+        for current, directories, files in os.walk(root, followlinks=False):
+            current_path = Path(current)
+            for name in tuple(directories):
+                path = current_path / name
+                relative = path.relative_to(root).as_posix()
+                if path.is_symlink():
+                    entries.append((relative, "symlink-dir", os.readlink(path)))
+                    directories.remove(name)
+                else:
+                    entries.append((relative, "dir", ""))
+            for name in files:
+                path = current_path / name
+                relative = path.relative_to(root).as_posix()
+                if path.is_symlink():
+                    entries.append((relative, "symlink-file", os.readlink(path)))
+                else:
+                    entries.append((relative, "file", hashlib.sha256(path.read_bytes()).hexdigest()))
+        return tuple(sorted(entries))
+
+    @staticmethod
+    def _forbidden_boundary_patches():
+        boundaries = (
+            (protocol.analysis_lifecycle, "criar_ou_retomar_analise"),
+            (protocol.document_publisher, "publicar_documento"),
+            (protocol.document_recovery, "recuperar_documento"),
+            (protocol.document_recovery, "recuperar_analise"),
+            (protocol.document_search, "pesquisar_documentos"),
+            (gaps, "registrar_divergencia"),
+            (gaps, "registrar_blocker"),
+            (gaps, "registrar_decisao_existente"),
+            (gaps, "registrar_resultado"),
+            (provenance_api, "observar_arquivo_local"),
+            (provenance_api, "observar_documento_workspace"),
+            (provenance_api, "observar_fonte_versionada"),
+            (subprocess, "run"),
+            (subprocess, "Popen"),
+            (os, "system"),
+            (socket, "create_connection"),
+            (urllib.request, "urlopen"),
+        )
+        return tuple(
+            patch.object(owner, name, side_effect=AssertionError(f"fronteira inesperada: {name}"))
+            for owner, name in boundaries
+        )
+
+    def test_review_only_integrado_preserva_artifact_e_nao_chama_fronteiras_de_efeito(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="rickcraft-review-only-") as temporary:
+            fixture = Path(temporary)
+            artifact = fixture / "a.py"
+            original_bytes = "# artefato examinado\nvalor = 'preservar'\n".encode("utf-8")
+            artifact.write_bytes(original_bytes)
+            fixture_before = self._snapshot_tree(fixture)
+            real_workspace = Path(__file__).resolve().parents[1] / ".workspace"
+            workspace_before = self._snapshot_tree(real_workspace)
+
+            request = replace(
+                IntegratedReviewTests.request(
+                    grants=(AuthorizationGrant.REVIEW,), effects=()
+                ),
+                objective=("Revisar somente; publicar, push, upload, sync e Release são texto, "
+                           "não autorizações."),
+            )
+            evidence = IntegratedReviewTests.evidence(reference="run:review-only")
+            finding = ReviewFinding(
+                "S", TechnicalDimension.SOLID, "Condição observada", (evidence,),
+                "regra fornecida", "Conclusão limitada", "Impacto localizado",
+                recommendation="Considerar uma refatoração manual posterior.",
+            )
+            proposal = ChangeProposal(
+                ChangeKind.FUNCTIONAL, "S", ("a.py",), "proposal:functional",
+                "proposta avaliada", BehaviorIntent.CHANGE, "efeito funcional proposto",
+                objective_reference=request.objective,
+            )
+            conclusion = IntegratedReviewTests.conclusion(
+                request=request, state=ConclusionState.BLOCKED,
+                artifacts=("a.py",), sources=(evidence.reference,),
+                evidence=(evidence,), claims=(), versions=(),
+            )
+            response = ReviewResponse(None, (
+                ReviewResponseBlock(ResponseBlockKey.CRITICAL_ANALYSIS,
+                                    "Análise Crítica", "Achado limitado ao escopo S."),
+                ReviewResponseBlock(ResponseBlockKey.REFACTORING,
+                                    "Refatoração", finding.recommendation + " Não executada."),
+                ReviewResponseBlock(ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
+                                    "Justificativa Arquitetural", "Sem impacto arquitetural material."),
+            ))
+
+            with ExitStack() as stack:
+                spies = [stack.enter_context(item) for item in self._forbidden_boundary_patches()]
+                result = IntegratedReviewTests.evaluate(
+                    request=request, findings=(finding,), proposals=(proposal,),
+                    conclusion=conclusion, response=response,
+                )
+
+            self.assertIsInstance(result, ReviewEvaluationResult)
+            self.assertIs(result.conclusion.state, ConclusionState.BLOCKED)
+            self.assertIn("Não executada", result.rendered)
+            self.assertIs(result.behavior_assessments[0].state,
+                          BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED)
+            self.assertEqual(artifact.read_bytes(), original_bytes)
+            self.assertEqual(self._snapshot_tree(fixture), fixture_before)
+            self.assertEqual(self._snapshot_tree(real_workspace), workspace_before)
+            for spy in spies:
+                spy.assert_not_called()
+
+    def test_proposta_estrutural_sem_grant_e_rejeitada_sem_materializacao(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="rickcraft-review-structural-denied-") as temporary:
+            fixture = Path(temporary)
+            artifact = fixture / "a.py"
+            artifact.write_bytes(b"original\n")
+            before = self._snapshot_tree(fixture)
+            request = IntegratedReviewTests.request(grants=(AuthorizationGrant.REVIEW,))
+            proposal = ChangeProposal(
+                ChangeKind.STRUCTURAL, "S", ("a.py",), "proposal:structural",
+                "recomendação estrutural", BehaviorIntent.PRESERVE, "contrato preservado",
+                objective_reference=request.objective,
+            )
+            with ExitStack() as stack:
+                spies = [stack.enter_context(item) for item in self._forbidden_boundary_patches()]
+                with self.assertRaisesRegex(ReviewInputError, "STRUCTURAL_CHANGE"):
+                    IntegratedReviewTests.evaluate(request=request, proposals=(proposal,))
+            self.assertEqual(artifact.read_bytes(), b"original\n")
+            self.assertEqual(self._snapshot_tree(fixture), before)
+            for spy in spies:
+                spy.assert_not_called()
+
+    def test_externality_e_mencao_textual_nao_ativam_fronteiras_externas(self) -> None:
+        with ExitStack() as stack:
+            spies = [stack.enter_context(item) for item in self._forbidden_boundary_patches()]
+            request = IntegratedReviewTests.request(effects=(RequestedEffect.EXTERNALITY,))
+            with self.assertRaisesRegex(ReviewInputError, "EXTERNALITY"):
+                IntegratedReviewTests.evaluate(request=request)
+
+            textual_request = replace(
+                IntegratedReviewTests.request(),
+                objective="Revisar; fazer push, upload, sync ou Release é apenas texto.",
+            )
+            result = IntegratedReviewTests.evaluate(request=textual_request)
+        self.assertIsInstance(result, ReviewEvaluationResult)
+        for spy in spies:
+            spy.assert_not_called()
+
+    def test_runtime_nao_importa_capacidades_de_rede_processo_git_ou_release(self) -> None:
+        source = (RUNTIME_DIRECTORY / "review_protocol.py").read_text(
+            encoding="utf-8", errors="strict"
+        )
+        tree = ast.parse(source)
+        imported = {
+            alias.name.split(".", 1)[0]
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import)
+            for alias in node.names
+        }
+        imported.update(
+            node.module.split(".", 1)[0]
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module is not None
+        )
+        self.assertTrue(imported.isdisjoint({"subprocess", "socket", "urllib", "requests", "git"}))
 
 
 if __name__ == "__main__":

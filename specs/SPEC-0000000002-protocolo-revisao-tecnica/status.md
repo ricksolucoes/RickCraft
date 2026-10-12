@@ -1230,3 +1230,55 @@ SHA-256 finais calculados duas vezes apos leitura UTF-8 estrita: `review_protoco
 **Pendencia:** revisao externa read-only da publicacao. TASK-011 requer autorizacao separada.
 **Proximo passo:** publicar manualmente somente os tres arquivos autorizados e informar `Atualizei o GitHub do RickCraft.`.
 **Arquivos para revisar:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py`, `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
+
+## IMPLEMENT - TASK-011 inicio - 2026-10-11
+
+TASK-010 foi aprovada externamente conforme autorizacao do responsavel. Baseline publicada validada no commit `2a3b74e5b471392e2b9de234471f44678ac88a5b`: HEAD correto, arvore limpa, runtime/teste/status e entradas congeladas conferem. TASK-011 e a unica tarefa autorizada e passa a IN_PROGRESS. IMPLEMENT permanece IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; TASK-012/TASK-013 nao executadas; Release nao autorizado. Nenhum arquivo runtime foi alterado no inicio.
+
+## IMPLEMENT - TASK-011 fronteiras negativas e review-only - 2026-10-11
+
+TASK-010 foi aprovada externamente conforme autorizacao do responsavel. A execucao partiu da baseline publicada `2a3b74e5b471392e2b9de234471f44678ac88a5b`, com arvore limpa e hashes autorizados conferidos. TASK-011 foi a unica tarefa executada; TASK-012/TASK-013 nao foram iniciadas. Nenhuma capacidade nova foi adicionada.
+
+### Evidencias de fronteira negativa
+
+Adicionados quatro testes focais. O fluxo integrado com grant somente `REVIEW` produziu `ReviewEvaluationResult`, conclusao limitada, finding e recommendation textual; proposta funcional permaneceu `FUNCTIONAL_CHANGE_UNAUTHORIZED`. O artifact `a.py` de fixture permaneceu byte-identical e o inventario da fixture nao mudou. Proposta estrutural sem `STRUCTURAL_CHANGE` foi rejeitada por `ReviewInputError` antes de qualquer materializacao. `EXTERNALITY` foi rejeitada; mencoes textuais a push/upload/sync/Release nao ativaram operacao. Inspecao AST confirmou ausencia de imports de `subprocess`, `socket`, `urllib`, `requests` e `git` no runtime.
+
+Spies instalados sobre `analysis_lifecycle.criar_ou_retomar_analise`, `document_publisher.publicar_documento`, recovery, search, quatro funcoes `gap_handling.registrar_*`, tres provenance observers, `subprocess.run/Popen`, `os.system`, `socket.create_connection` e `urllib.request.urlopen` nao foram chamados durante os cenarios negativos. O snapshot read-only do workspace real `impl/.workspace` (um arquivo, 602 bytes no inicio) permaneceu igual; os snapshots da fixture tambem permaneceram iguais. Nenhum residuo temporario foi identificado.
+
+### Testes, limitacao ambiental e hashes
+
+Primeira execucao `python -B -m unittest -v impl.tests.test_review_protocol`: 235 testes, 199 passaram e 36 terminaram em ERROR de ambiente durante criacao/limpeza de fixtures `%TEMP%`, com `WinError 5`/`WinError 3`; nenhum FAIL foi reportado. A tentativa foi preservada neste historico. Repeticao pelo mecanismo elevado autorizado: 235 executados, 235 PASS, 0 FAIL, 0 ERROR, 0 SKIP. Nao foi executada a suite SPEC1, pois runtime e integracao SPEC1 permaneceram inalterados; nenhuma full suite foi executada.
+
+SHA-256 final, lido como UTF-8 estrito e calculado duas vezes: `test_review_protocol.py` = `FA12E5D684D89749D283A60AD71C44A63931ACC877EF98527DCA15B8EC7ED5B6`. `review_protocol.py` permaneceu byte a byte inalterado: `09FAF558EA7652AC7EF24E0EDD4BA164D8D1315A45BA83DEB0A7DDE95A9E6F1A`. SPEC, PLAN, TASKS, `gap_handling.py`, `test_gap_handling.py` e os sete modulos SPEC1 consumidos pela TASK-010 foram reconfirmados inalterados. Nenhuma persistencia ou externalidade ocorreu.
+
+TASK-011 = COMPLETE - aguardando revisao. IMPLEMENT = IN_PROGRESS; ANALYZE = PASS em `ANALYZE-2026-10-11-SPEC-0000000002-01`; CONVERGE = NOT_STARTED; Release nao autorizado. TASK-012/TASK-013 permanecem nao executadas.
+
+### CHECKPOINT RICKCRAFT - TASK-011
+
+**Fase:** IMPLEMENT - TASK-011 - SPEC-0000000002.
+**Objetivo:** consolidar provas negativas para review-only, grants, persistencia opt-in e externalidade.
+**Estado:** CONCLUIDO / AGUARDANDO_APROVACAO.
+**Arquivos criados:** nenhum.
+**Arquivos alterados:** `impl/tests/test_review_protocol.py` e este `status.md`; runtime inalterado.
+**Decisoes formalizadas:** ausencia de grant de estrutural/funcional nao concede mudanca; externalidade explicitamente rejeitada e recomendacao permanece texto.
+**Decisoes pendentes:** revisao externa read-only de TASK-011 publicada.
+**Questoes em aberto:** nenhuma identificada.
+**Bloqueios:** nenhum. A primeira tentativa teve erros de acesso ao `%TEMP%`; repeticao elevada autorizada passou integralmente.
+**Riscos:** limitado ao erro ambiental registrado da primeira tentativa; persistencia autorizada TASK-010 continua coberta pela regressao focal.
+**Testes e verificacoes:** suite focal 235/235 PASS na repeticao; `git diff --check` passou; `git status --short` mostra apenas os dois arquivos autorizados.
+**Hashes finais:** runtime `09FAF558EA7652AC7EF24E0EDD4BA164D8D1315A45BA83DEB0A7DDE95A9E6F1A`; teste `FA12E5D684D89749D283A60AD71C44A63931ACC877EF98527DCA15B8EC7ED5B6`.
+**Proximo passo:** usuario publicar manualmente somente os arquivos autorizados e informar exatamente `Atualizei o GitHub do RickCraft.` para revisao read-only.
+**Nao fazer ainda:** nao iniciar TASK-012, nao executar CONVERGE, nao gerar Release e nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - RICKCRAFT - TASK-011
+
+**Fase:** IMPLEMENT - TASK-011 - SPEC-0000000002.
+**Estado:** AGUARDANDO_APROVACAO.
+**Objetivo executado:** consolidar evidencias negativas integradas sem alterar runtime.
+**Baseline:** commit `2a3b74e5b471392e2b9de234471f44678ac88a5b`; SPEC/PLAN/TASKS e dependencias congeladas mantidas.
+**Artefatos alterados:** `test_review_protocol.py` e `status.md`.
+**Testes/evidencias:** 235/235 testes PASS na repeticao elevada; snapshot da fixture e `impl/.workspace` real inalterados; spies de fronteiras nao chamados; hashes acima.
+**Limitacoes:** primeira tentativa em sandbox falhou ao criar/limpar fixtures em `%TEMP%` com `WinError 5`/`WinError 3`, preservada acima; repeticao elevada passou.
+**Pendencia:** revisao externa read-only de TASK-011. TASK-012 requer autorizacao separada.
+**Proximo passo:** publicar manualmente somente os arquivos autorizados e informar `Atualizei o GitHub do RickCraft.`.
+**Arquivos para revisar:** `impl/tests/test_review_protocol.py` e `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.

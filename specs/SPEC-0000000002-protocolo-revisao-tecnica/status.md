@@ -1282,3 +1282,43 @@ TASK-011 = COMPLETE - aguardando revisao. IMPLEMENT = IN_PROGRESS; ANALYZE = PAS
 **Pendencia:** revisao externa read-only de TASK-011. TASK-012 requer autorizacao separada.
 **Proximo passo:** publicar manualmente somente os arquivos autorizados e informar `Atualizei o GitHub do RickCraft.`.
 **Arquivos para revisar:** `impl/tests/test_review_protocol.py` e `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
+
+## Correcao pontual TASK-011 - sem acesso ao workspace real - 2026-10-12
+
+A publicacao `07bdadf3515f0f7ff5146ec2e3a3fff71973dbad` foi revisada externamente. TASK-011 nao foi aprovada porque `test_review_only_integrado_preserva_artifact_e_nao_chama_fronteiras_de_efeito` acessava `impl/.workspace` real usando caminho do projeto, `exists`, `os.walk` e leitura/hash de arquivos, contrariando PLAN §10. TASK-012 permaneceu nao autorizada. O registro anterior que documentou essa leitura foi preservado como historico; nao se afirma que a tentativa anterior deixou de acessar o workspace.
+
+A correcao removeu a resolucao e o snapshot do caminho real. O teste agora cria `fixture/.workspace/sentinel.txt` dentro de `TemporaryDirectory`, confirma que esse caminho e filho direto da fixture, e compara os snapshots somente dessa arvore temporaria e do artifact temporario. Spies negativos, assertions review-only, recommendation, propostas funcional/estrutural, rejeicao de EXTERNALITY e inspecao AST foram preservados. `review_protocol.py` permaneceu inalterado; nenhum arquivo SPEC1 foi modificado.
+
+### Testes e verificacoes da correcao
+
+Primeira tentativa focal sandboxada: `python -B -m unittest -v impl.tests.test_review_protocol`, 235 executados; 199 passaram e 36 deram ERROR com `WinError 5`/`WinError 3` no `%TEMP%`. Primeira repeticao elevada: 235 executados, 234 passaram e 1 FAIL, devido ao sentinel esperado com LF enquanto `write_text` produziu CRLF no Windows. A fixture foi corrigida para gravar bytes explicitos. Repeticao elevada final: 235 executados, 235 PASS, 0 FAIL, 0 ERROR, 0 SKIP. Estas tentativas permanecem registradas; nao foi executada full suite nem regressao SPEC1, pois runtime e integracao SPEC1 permaneceram inalterados.
+
+Inspecao do teste confirmou que nao ha mais resolucao/inspecao do `.workspace` do projeto: o unico snapshot relacionado a workspace usa o caminho `workspace_fixture` derivado da fixture temporaria. `git diff --check` passou; `git status --short` mostrou somente o teste e este status. Frozen inputs SPEC/PLAN/TASKS, runtime e SPEC1 permaneceram byte-identical. Nenhuma persistencia, externalidade ou acesso ao workspace real ocorreu nesta correcao.
+
+SHA-256 UTF-8 estrito do teste corrigido, calculado e confirmado: `8A413B59EFAB6D714D2D05AB1DECEEDD4F026B95C7182167C350ABB000F11B41`. Runtime inalterado: `09FAF558EA7652AC7EF24E0EDD4BA164D8D1315A45BA83DEB0A7DDE95A9E6F1A`.
+
+TASK-011 = COMPLETE - aguardando nova revisao. TASK-012/TASK-013 nao executadas; IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; Release nao autorizado.
+
+### CHECKPOINT RICKCRAFT - correcao TASK-011
+
+**Fase:** IMPLEMENT - correcao pontual TASK-011 - SPEC-0000000002.
+**Objetivo:** remover acesso do teste ao `.workspace` real mantendo as provas negativas em fixture temporaria.
+**Estado:** CONCLUIDO / AGUARDANDO_APROVACAO.
+**O que foi realizado:** snapshot do workspace real removido e substituido por `.workspace` sintetico dentro da fixture; sentinel usa bytes explicitos; assertions e spies anteriores preservados.
+**Arquivos criados:** nenhum.
+**Arquivos alterados:** `impl/tests/test_review_protocol.py` e este `status.md`.
+**Runtime alterado?:** nao.
+**Prova de nao acesso ao workspace real:** inspecao do teste nao encontrou referencia/caminho ao `.workspace` real; `_snapshot_tree` recebe apenas fixture e subdiretorio controlado. A leitura anterior, rejeitada na revisao, permanece descrita honestamente no historico.
+**Testes e verificacoes:** tentativa sandboxada 235 testes, 36 ERROR ambientais; repeticao elevada teve 1 falha de newline da fixture, corrigida; repeticao elevada final 235/235 PASS, 0 FAIL/ERROR/SKIP. `git diff --check` passou.
+**Hashes finais:** teste `8A413B59EFAB6D714D2D05AB1DECEEDD4F026B95C7182167C350ABB000F11B41`; runtime `09FAF558EA7652AC7EF24E0EDD4BA164D8D1315A45BA83DEB0A7DDE95A9E6F1A`.
+**Proximo passo:** publicar manualmente somente `impl/tests/test_review_protocol.py` e `status.md` e informar exatamente `Atualizei o GitHub do RickCraft.` para revisao read-only.
+**Nao fazer ainda:** nao iniciar TASK-012/TASK-013, nao executar CONVERGE, nao gerar Release e nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO - correcao TASK-011
+
+**Estado:** AGUARDANDO_APROVACAO; TASK-011 nao esta aprovada.
+**Objetivo:** corrigir somente o acesso proibido do teste ao workspace real.
+**Artefatos alterados:** `test_review_protocol.py` e `status.md`; runtime e SPEC1 inalterados.
+**Evidencias:** hash do teste acima; 235/235 PASS na ultima execucao; snapshot limitado a fixture temporaria; spies negativos mantidos; diff check passou.
+**Proxima acao:** revisao externa read-only da correcao publicada. TASK-012 continua sem autorizacao.
+**Arquivos para revisar:** `impl/tests/test_review_protocol.py` e `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.

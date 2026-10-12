@@ -2669,9 +2669,12 @@ class NegativeBoundaryTests(unittest.TestCase):
             artifact = fixture / "a.py"
             original_bytes = "# artefato examinado\nvalor = 'preservar'\n".encode("utf-8")
             artifact.write_bytes(original_bytes)
+            workspace_fixture = fixture / ".workspace"
+            workspace_fixture.mkdir()
+            sentinel_bytes = b"workspace temporario controlado\n"
+            (workspace_fixture / "sentinel.txt").write_bytes(sentinel_bytes)
+            self.assertEqual(workspace_fixture.parent, fixture)
             fixture_before = self._snapshot_tree(fixture)
-            real_workspace = Path(__file__).resolve().parents[1] / ".workspace"
-            workspace_before = self._snapshot_tree(real_workspace)
 
             request = replace(
                 IntegratedReviewTests.request(
@@ -2719,7 +2722,8 @@ class NegativeBoundaryTests(unittest.TestCase):
                           BehaviorAssessmentState.FUNCTIONAL_CHANGE_UNAUTHORIZED)
             self.assertEqual(artifact.read_bytes(), original_bytes)
             self.assertEqual(self._snapshot_tree(fixture), fixture_before)
-            self.assertEqual(self._snapshot_tree(real_workspace), workspace_before)
+            self.assertEqual(self._snapshot_tree(workspace_fixture),
+                             (("sentinel.txt", "file", hashlib.sha256(sentinel_bytes).hexdigest()),))
             for spy in spies:
                 spy.assert_not_called()
 

@@ -1752,3 +1752,31 @@ As provas negativas existentes incluem snapshots somente em fixtures nos testes 
 SPEC, PLAN e TASKS permanecem nos hashes normativos listados acima. Runtime continua SHA-256 `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`, blob `55f18d3f0156aa2fae454ad00ee052127546f189`. Teste continua SHA-256 `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`, blob `516d01f43f1531dea7181b996f811285641588d4`. Somente este `status.md` foi alterado pelos registros da TASK-013; hashes finais dos arquivos efetivamente alterados sao reportados no checkpoint desta execucao.
 
 TASK-013 = BLOCKED. TASK-012 permanece COMPLETE - APROVADA; TASK-013 nao pode ser declarada COMPLETE ate decisao do responsavel sobre a incompatibilidade entre full-suite e nao acesso ao workspace real e uma forma autorizada de obter evidencia conforme. CONVERGE = NOT_STARTED; Release nao autorizado.
+
+## Retomada controlada TASK-013 — evidência em mirror temporário isolado
+
+Revisão externa do bloqueio publicado em `3814e36413dea0e6933ad45c1f69f8fae30442b8`: a causa foi localizada no ambiente de execução das suítes. A retomada foi autorizada exclusivamente para repetir as validações em mirror temporário; runtime, testes, SPEC, PLAN e TASKS não foram alterados. A causa histórica e as execuções anteriores permanecem registradas acima, sem reclassificação.
+
+### Isolamento e identidade
+
+A primeira tentativa de preparação recebeu `WinError 5` ao criar a pasta temporária; nenhum teste foi executado nessa tentativa. A limpeza automática também recebeu `WinError 5`; o resíduo temporário foi removido depois por limpeza direcionada e validada sob a raiz TEMP.
+
+As suítes foram então executadas em espelhos temporários descartáveis, fora da árvore canônica. A rodada final validada usou `C:\Users\Develop\AppData\Local\Temp\RickCraft-task013-mirror-verified-1wnkdrox\RickCraft`. O `copytree` excluiu explicitamente `.workspace`, `.git`, `__pycache__` e caches, sem percorrer o `.workspace` canônico. Antes dos testes, os hashes no mirror foram confirmados para SPEC, PLAN, TASKS, `review_protocol.py`, `test_review_protocol.py`, `gap_handling.py` e `test_gap_handling.py`; todos coincidiram com a baseline autorizada.
+
+O import de `impl.tests.test_gap_handling` apontou para `...mirror...\RickCraft\impl\tests\test_gap_handling.py`. O caminho que o teste deriva, `...mirror...\RickCraft\impl\.workspace`, estava dentro do mirror e não existia antes das suítes. O working directory e o único `PYTHONPATH` usados apontaram ao mirror. Portanto `test_72_nao_cria_sinteticos_no_workspace_debug_real` observou somente o caminho do mirror. Nenhum comando desta retomada consultou o `.workspace` canônico.
+
+Houve uma primeira rodada completa no mirror elevado: SPEC2 248/248, gap handling 89/89 e full suite 682 testes com um skip. Após ela, foi feita a rodada final com verificação explícita dos hashes dentro do mirror e ausência de `impl/.workspace`; os resultados foram idênticos e são os resultados finais abaixo. Os dois espelhos bem-sucedidos foram removidos ao encerrar; o resíduo da tentativa inicial também foi removido. Nenhum artefato do mirror permaneceu no repositório.
+
+### Resultados das suítes no mirror validado
+
+- `python -B -m unittest -v impl.tests.test_review_protocol` — 248 testes; 248 OK, 0 FAIL, 0 ERROR, 0 SKIP.
+- `python -B -m unittest -v impl.tests.test_gap_handling` — 89 testes; 89 OK, 0 FAIL, 0 ERROR, 0 SKIP. O teste `test_72_nao_cria_sinteticos_no_workspace_debug_real` foi executado e passou.
+- `python -B -m unittest discover -s impl/tests -v` — 682 testes; 681 OK, 0 FAIL, 0 ERROR, 1 SKIP. Foram descobertos os 14 módulos: `test_analysis_lifecycle`, `test_document_catalog`, `test_document_format`, `test_document_publisher`, `test_document_recovery`, `test_document_search`, `test_gap_handling`, `test_provenance`, `test_release_boundaries`, `test_review_protocol`, `test_rickcraft_root`, `test_workspace_integration`, `test_workspace_probe` e `test_workspace_resolver`. `test_72_nao_cria_sinteticos_no_workspace_debug_real` passou também na full suite. O único skip foi `test_symlink_de_diretorio_de_tipo_nao_e_seguido`, pois o ambiente Windows não permite criar symlink real para este usuário.
+
+### Revalidação e estado
+
+As matrizes RF-001–RF-021, CA-001–CA-021, D-01–D-15 e cenários A–O já registrados permanecem sustentadas: a suíte SPEC2, a regressão SPEC1 pertinente e a full suite foram executadas com os mesmos resultados funcionais, agora a partir do mirror isolado. REF-0000000001, REF-0000000002 e REF-0000000003 continuam não materiais para esta tarefa; não foram consultados PDFs nem conteúdo externo.
+
+Hashes confirmados nesta retomada: SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; runtime `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`; teste SPEC2 `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`; `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `test_gap_handling.py` `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`.
+
+Com a evidência conforme no mirror, TASK-013 passa de `BLOCKED` para `COMPLETE — aguardando revisão externa`; não está aprovada. TASK-012 permanece aprovada, TASK-013 não inicia CONVERGE, TASK-001–TASK-013 não são declaradas CONVERGED, Release continua não autorizado. ANALYZE-02 permanece `PASS`. Somente este `status.md` foi alterado nesta retomada.

@@ -8,7 +8,7 @@
 - **Decision Owner:** Delphi Engineering Specialist, limitado às decisões de linguagem delegadas ao grupo.
 - **SPEC aprovada:** SHA-256 `62251E2D0533F2AFA31D0B56928F1F7F69DC1E72D3EC52BB17B23513696D7962`; Git blob `13fdb7aa0324b08bd145b69d0e7d844ff6d1c534`.
 - **Data:** 2026-10-12
-- **Estado do PLAN:** COMPLETE — aguardando revisão externa.
+- **Estado corrente do PLAN:** BLOCKED — revisão externa `PLAN-REV-001`.
 
 Este PLAN define uma arquitetura para satisfazer a SPEC aprovada. Não autoriza nem executa TASKS, ANALYZE, IMPLEMENT, CONVERGE ou Release.
 
@@ -137,11 +137,11 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** “Único” não pode ser alegado sobre projeto ou universo não examinado.
 - **Alternativas:** Alegar unicidade global; validar formato somente; verificar formato e duplicatas em todos os contratos fornecidos e completamente reconhecidos.
-- **Decisão:** Validar forma do GUID segundo a sintaxe explicitamente aceita pela regra interna vigente e procurar duplicatas apenas entre declarações de interface completas, reconhecidas e fornecidas dentro do escopo autorizado da mesma avaliação. O resultado sempre identifica esse universo. Se o pedido requer unicidade mais ampla que o material fornecido, declarar limitação; não ampliar busca.
+- **Decisão candidata:** A SPEC exige GUID válido e único. Procurar duplicatas somente entre declarações de interface completas, reconhecidas e fornecidas dentro do escopo autorizado da mesma avaliação; identificar esse universo e nunca alegar unicidade mais ampla. O critério técnico para validade sintática do GUID não está suficientemente definido nas fontes internas e depende de fonte técnica Delphi/Object Pascal adequada. Até resolver `DEP-DEL-001`, esta parte da decisão permanece bloqueada; não definir a sintaxe com base em conhecimento implícito.
 - **Justificativa:** Prova somente o que foi observado.
 - **Impacto:** Não há afirmação de unicidade global do repositório.
 - **RF/CA:** RF-001–003, RF-007, RF-012, RF-018; CA-001–003, CA-008, CA-013, CA-015.
-- **Dependências/owner:** Artefatos autorizados e contrato fornecidos.
+- **Dependências/owner:** Artefatos autorizados e contrato fornecidos; critério de validade sintática depende de `DEP-DEL-001`.
 
 ### D-12 — Regra de `New` baseada em declaração explícita
 
@@ -256,7 +256,26 @@ Uma limitação aplica-se à conclusão que depende do dado ausente; não amplia
 - **Internas:** nenhuma nova infraestrutura transversal; registros privados de token/span/declaração/observação pertencem ao módulo Delphi.
 - **Externas:** nenhuma biblioteca, toolchain, serviço ou API externa.
 - **Não materiais:** REF-0000000001 (Patterns), REF-0000000002 (Refactoring) e REF-0000000003 (índice externo) permanecem não materiais: decisões aqui são de reconhecimento de linguagem, proveniência e limite de autoridade. Nenhum PDF/site foi consultado.
-- **Pendências:** nenhuma para a arquitetura delimitada. Detalhes de sintaxe Delphi que não estejam fundamentados pelas fontes internas devem ser limitados durante implementação/revisão, não preenchidos por suposição; eventual dependência técnica material nova volta ao owner e ao processo aplicável.
+- **Pendência bloqueante:** `DEP-DEL-001` — fonte técnica governada Delphi/Object Pascal adequada para fundamentar as regras lexicais, sintáticas e semânticas materiais necessárias ao tokenizer e reconhecimento estrutural. Afeta D-02, D-03, D-04, D-11, D-13 e D-15. A arquitetura permanece candidata, mas essas decisões não têm fundamento técnico rastreável suficiente para alimentar TASKS. Detalhes não podem ser preenchidos por suposição ou conhecimento implícito do modelo.
+
+## Dependência técnica bloqueante — referência Delphi/Object Pascal
+
+A revisão externa registrou `PLAN-REV-001 = BLOCKING`: falta uma Technical Reference Delphi/Object Pascal vigente e adequada para decisões técnicas materiais da arquitetura. O desenho não foi rejeitado; permanece proposta candidata até que a base técnica seja resolvida.
+
+Materialidade por decisão:
+
+- **D-02 — Tokenização:** distinguir corretamente comentários, strings, diretivas, identificadores e pontuação exige regras lexicais Delphi não especificadas com suficiência nas fontes internas.
+- **D-03 — Reconhecimento estrutural:** reconhecer classes, interfaces, declarações, parâmetros, atributos, visibilidade e assinaturas exige fundamentação sintática Delphi rastreável.
+- **D-04 — Diretivas:** tratar diretivas, condições e regiões exige conhecimento técnico não substituível por exemplos internos.
+- **D-11 — GUID:** a SPEC exige GUID válido e único; a unicidade continua limitada ao universo fornecido, mas a sintaxe técnica de validade permanece indefinida até haver fonte adequada.
+- **D-13 — `[weak]`:** interpretar sua semântica Delphi exige referência técnica rastreável e contexto suficiente.
+- **D-15 — Compatibilidade:** versões, compiladores, targets e diretivas podem afetar conclusões; fatos específicos de compatibilidade exigem fonte técnica quando usados.
+
+REF-0000000001 (Design Patterns), REF-0000000002 (Refactoring) e REF-0000000003 (índice externo de Pattern) continuam vigentes para seus domínios, mas não cobrem esta lacuna Delphi. Não são reinterpretadas como referências Delphi nem foram consultadas para tentar resolvê-la.
+
+Enquanto `DEP-DEL-001` estiver aberta, não iniciar TASKS. A implementação não deve substituir a consulta a uma fonte adequada por conhecimento implícito do modelo. A proposta ou adoção de nova Technical Reference requer autorização separada do responsável pelo projeto. Após eventual adoção e consulta, reavaliar somente as decisões materialmente dependentes e atualizar as estratégias de validação afetadas; não reabrir decisões independentes sem motivo.
+
+As matrizes RF/CA/cenários permanecem como rastreabilidade do trabalho proposto, mas estratégias que dependem de D-02/D-03/D-04/D-11/D-13/D-15 não estão tecnicamente prontas para decomposição em TASKS. A cobertura listada não representa prontidão executável enquanto `DEP-DEL-001` não for resolvida.
 
 ## 7. Segurança, determinismo e efeitos
 
@@ -358,4 +377,4 @@ As verificações abaixo são planejamento para TASKS/IMPLEMENT futuros; nenhum 
 
 A arquitetura deriva da SPEC aprovada, não altera requisitos e não escolhe parser, biblioteca ou ferramenta externa por preferência. Reconhecimento lexical/estrutural está limitado às construções necessárias; ambiguidades e sintaxe não suportada não são promovidas a conformidade. Read-only, integração Core sem duplicação, determinismo, fronteiras de Decision Owner e exclusão da medição Method Toxicity estão tratados explicitamente. As matrizes vinculam RF-001–018, CA-001–021 e cenários A–P às decisões e estratégias futuras. Technical References permanecem não materiais e não consultadas.
 
-Nenhum teste, código, compilação, gate ou Release foi executado ou criado nesta etapa. PLAN fica `COMPLETE — aguardando revisão externa`; isso não significa aprovação externa. TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem `NOT_STARTED`.
+Nenhum teste, código, compilação, gate ou Release foi executado ou criado nesta etapa. O PLAN foi submetido à revisão externa na versão SHA-256 `4F0A986BCFF38DE67AE3EAFE8E303FF08DB59AA855C0514E2436880EB783587E` e não foi aprovado devido a `PLAN-REV-001`. Estado corrente: `PLAN = BLOCKED`, não `FAILED`; a arquitetura permanece candidata e o impedimento é resolvível. `DEP-DEL-001` precisa ser resolvida antes de iniciar TASKS. SPEC permanece `COMPLETE — APROVADA`; TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem `NOT_STARTED`; último gate válido = nenhum; Release = `NÃO AUTORIZADO`.

@@ -1607,3 +1607,148 @@ POL4 agora distingue a adocao inicial controlada das adocoes futuras: REF-000000
 Os PDFs nao foram abertos nem modificados; hashes binarios e Git blobs permaneceram identicos aos registrados. Runtime e testes da TASK-012 permaneceram byte-identical. A implementacao D-14 nao depende materialmente do conteudo das referencias de Design Patterns ou Refactoring; portanto ANALYZE-2026-10-12-SPEC-0000000002-02 permanece valido para TASK-012, sem alteracao de suas entradas normativas ou semantica. TASK-012 continua COMPLETE - aguardando revisao externa; TASK-013 nao iniciada; CONVERGE = NOT_STARTED; Release nao autorizado.
 
 Esta correcao documental esta concluida localmente e aguarda nova revisao externa. Nao declara aprovacoes adicionais, nao retoma TASK-012, nao inicia TASK-013 e nao autoriza CONVERGE ou Release.
+
+## IMPLEMENT ? TASK-013 ? SPEC-0000000002 ? inicio
+
+Baseline publicada confirmada antes do trabalho: HEAD `af24808a03d1dd3adf890eaa13fb19156b4f129e`, arvore limpa, SPEC/PLAN/TASKS e runtime/testes TASK-012 iguais aos hashes e blobs aprovados. Gate de entrada: `ANALYZE-2026-10-12-SPEC-0000000002-02 = PASS`, para as versoes normativas congeladas registradas neste status.
+
+Revisoes externas de entrada confirmadas: correcao estrutural da Base Tecnica de Referencia APROVADA; TASK-012 APROVADA. D-14 version-aware foi aceita. Os 248/248 testes sao evidencia historica da execucao TASK-012, nao resultado desta tarefa. Os tres documentos `docs/` pertencem ao escopo de governanca separado e nao constituem defeito de escopo da TASK-012. ANALYZE-02 permanece valido.
+
+TASK-013 = IN_PROGRESS. A avaliacao inicial de materialidade para TASK-013 e: REF-0000000001, REF-0000000002 e REF-0000000003 nao sao materialmente necessarias ao trabalho planejado de validacao do protocolo; nenhuma foi consultada ou alegada como consultada. Essa avaliacao sera revista se surgir defeito que dependa substantivamente do conteudo de uma referencia.
+
+
+### Tentativa focal inicial ? falha ambiental preservada
+
+Comando: `python -B -m unittest -v impl.tests.test_review_protocol`. Resultado real: 248 testes executados, 39 ERROR. Os tracebacks apontaram falhas WinError 5 (acesso negado) e WinError 3 (caminho inexistente) ao criar ou limpar fixtures em `%TEMP%`, incluindo `TemporaryDirectory`; nenhuma falha de assertion foi observada. A tentativa foi preservada e o mesmo comando sera repetido com permissao elevada para separar limitacao ambiental de resultado funcional.
+
+
+### Regressao SPEC1 inicial ? falha ambiental preservada
+
+Comando: `python -B -m unittest -v impl.tests.test_gap_handling`. Resultado real: 89 testes descobertos; 178 ERROR apresentados durante a tentativa (erros espelhados de setup/cleanup), com WinError 5/3 em `%TEMP%` (`rickcraft-gap-*`). Os tracebacks mostram falha ao criar ou remover fixtures temporarias, nao divergencia funcional de assertions. A tentativa permanece registrada; a mesma regressao sera repetida com permissao elevada.
+
+
+## IMPLEMENT - TASK-013 - evidencias, cobertura e bloqueio
+
+### Aprovacoes, materialidade e entradas
+
+Revisao externa da correcao estrutural da Base Tecnica de Referencia: APROVADA no estado publicado em `af24808a03d1dd3adf890eaa13fb19156b4f129e`. TASK-012: COMPLETE - APROVADA. D-14 version-aware foi aceita; `248/248` e resultado historico da TASK-012, nao desta execucao. Os tres documentos `docs/` pertencem ao escopo de governanca separado e nao constituem defeito da TASK-012. ANALYZE-02 permanece PASS para SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1` e TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+
+REF-0000000001, REF-0000000002 e REF-0000000003 foram avaliadas como nao materiais para a validacao do protocolo, integracao, determinismo e suites. Nenhuma foi consultada; nao se alega consulta. A avaliacao nao mudou durante o trabalho.
+
+### Tentativas e resultados reais
+
+1. `python -B -m unittest -v impl.tests.test_review_protocol` no sandbox: 248 executados, 39 ERROR em criacao/limpeza de fixtures `%TEMP%`, com WinError 5 e WinError 3. Nenhuma falha de assertion funcional foi observada. Tentativa preservada.
+2. Mesmo comando com permissao elevada: 248 executados, 248 OK, 0 FAIL, 0 ERROR, 0 SKIP.
+3. `python -B -m unittest -v impl.tests.test_gap_handling` no sandbox: 89 testes, 178 ERROR espelhados de setup/cleanup de fixtures `%TEMP%`, com WinError 5/3. Tentativa preservada.
+4. Mesmo comando com permissao elevada: 89 executados, 89 OK, 0 FAIL, 0 ERROR, 0 SKIP.
+5. `python -B -m unittest discover -s impl/tests -v` com permissao elevada: 682 executados, 681 OK, 0 FAIL, 0 ERROR, 1 SKIP; resultado `OK (skipped=1)`. O skip foi `test_document_recovery.DocumentRecoveryTests.test_symlink_de_diretorio_de_tipo_nao_e_seguido`, com justificativa do teste: o ambiente nao permite criar symlink real neste usuario. Uma captura auxiliar do log encontrou primeiro limitacao de stderr do PowerShell e depois erro de codificacao do terminal apos o processo da suite; nova captura ASCII-safe repetiu o comando e confirmou 682/OK (skipped=1).
+
+### Bloqueio descoberto na suite completa
+
+A instrucao TASK-013 proibe tocar `.workspace` real. A suite completa obrigatoria inclui `impl.tests.test_gap_handling.GapHandlingTests.test_72_nao_cria_sinteticos_no_workspace_debug_real` (89-testes de `test_gap_handling.py`), que o codigo do teste implementa como snapshot de `Path(__file__).resolve().parents[1] / ".workspace"` antes e depois. A execucao integral passou por esse teste; portanto houve acesso de leitura ao `.workspace` real durante a suite, embora o teste apenas compare snapshots. A proibicao e de acesso, nao somente de escrita. O acesso ja ocorreu e nao pode ser desfeito. Nenhuma leitura adicional do workspace sera feita nesta execucao.
+
+Esse contrato SPEC1 e read-only nesta TASK, e a suite completa foi explicitamente exigida. Nao e permitido alterar o teste SPEC1 para remover o acesso. Essa incompatibilidade entre full-suite obrigatoria e a fronteira de nao acesso impede declarar TASK-013 COMPLETE. Resultado: TASK-013 = BLOCKED aguardando decisao do responsavel sobre reconciliacao da fronteira de teste/SPEC1 e o comando integral. Nao houve alteracao de runtime ou testes.
+
+### Matriz RF-001-RF-021 - implementacao e evidencia executada
+
+| RF | Contrato implementado | Evidencia concreta | Resultado |
+|---|---|---|---|
+| RF-001 | ReviewRequest/ReviewScope e limites de input | `ReviewRequestTests.test_request_valido_somente_review`; `ReviewScopeTests.test_scope_valido_preserva_valores_e_canonicaliza_colecoes`; `IntegratedReviewTests.test_request_valido_produz_resultado_integrado_limitado_em_memoria` | Evidencia PASS |
+| RF-002 | EvidenceReference e VerificationClaim tipados | `EvidenceAndClaimTests.test_quatro_evidence_kinds_sao_distintos`; `test_executed_observed_requer_evidence_direta_alvo_versao_compativeis` | Evidencia PASS |
+| RF-003 | Finding separado de resposta/recomendacao, tres blocos ordenados | `ReviewFindingTests.test_finding_e_recomendacao_opcional_preservam_rastreabilidade`; `ReviewResponseTests.test_blocos_sao_renderizados_na_ordem_semantica_fixa` | Evidencia PASS |
+| RF-004 | Grants distintos e ChangeProposal validada | `ChangeProposalTests.test_mudanca_estrutural_sem_grant_e_rejeitada`; `test_mudanca_funcional_sem_grant_fica_explicitamente_nao_autorizada` | Evidencia PASS |
+| RF-005 | Review-only nao aplica mudanca | `NegativeBoundaryTests.test_review_only_integrado_preserva_artifact_e_nao_chama_fronteiras_de_efeito` | Evidencia PASS |
+| RF-006 | Exatamente tres blocos canonicos | `ReviewResponseTests.test_response_possui_exatamente_tres_chaves_canonicas`; `test_bloco_ausente_adicional_duplicado_ou_fora_de_ordem_e_rejeitado` | Evidencia PASS |
+| RF-007 | Finding liga condicao, referencia, evidence e dimensao | `ReviewFindingTests.test_finding_e_recomendacao_opcional_preservam_rastreabilidade`; `test_sort_key_aplica_scope_rank_referencia_casefold_e_desempate` | Evidencia PASS |
+| RF-008 | Proposta vinculada ao objetivo e preservacao delimitada | `ChangeProposalTests.test_objetivo_da_proposta_deve_corresponder_ao_pedido`; `test_preservacao_exige_cobertura_de_cada_target_e_versao` | Evidencia PASS |
+| RF-009 | Claim positivo requer execucao/evidence/versao compativeis | `EvidenceAndClaimTests.test_executed_observed_sem_evidence_e_rejeitado`; `D14DeterminismTests.test_claims_usam_status_rank_normativo_e_version_ref_na_chave_d14` | Evidencia PASS |
+| RF-010 | Ausencia de autoridade/evidence nao e inferida | `AuthorityContextTests.test_contexto_vazio_e_valido_sem_owner_inventado`; `GapHandlingIntegrationTests.test_falha_de_cada_criterio_preserva_razao_spec1` | Evidencia PASS |
+| RF-011 | AuthorityContext e precedencia explicitos | `AuthorityContextTests.test_sem_precedencia_nao_existe_fonte_vencedora`; `test_autoridade_competente_no_escopo_valida_relacao` | Evidencia PASS |
+| RF-012 | TechnicalDimension e estados sem regra substantiva Core | `TechnicalDimensionTests.test_estados_de_dimensao_validos_sem_inferir_resultado`; `test_multiplas_dimensoes_coexistem_sem_regra_substantiva` | Evidencia PASS |
+| RF-013 | Conflito sem precedencia preservado | `GapHandlingIntegrationTests.test_duas_normativas_sem_precedencia_preservam_conflito_sem_vencedor`; `IntegratedReviewTests.test_precedencia_explicita_permanece_resultado_da_fronteira_existente` | Evidencia PASS |
+| RF-014 | Continuidade direta/transitiva delegada a SPEC1 | `GapHandlingIntegrationTests.test_dependencia_desconhecida_permanece_nao_avaliada`; `test_propagacao_transitiva_e_delegada_a_gap_handling` | Evidencia PASS |
+| RF-015 | Core coeso, sem capacidade externa/imports proibidos | `NegativeBoundaryTests.test_runtime_nao_importa_capacidades_de_rede_processo_git_ou_release`; `ReviewResponseTests.test_renderizador_nao_acessa_io_rede_processos_ou_persistencia` | Evidencia PASS |
+| RF-016 | Persistencia opt-in, externalidade fora do protocolo | `PersistenceIntentTests.test_ausencia_de_grant_rejeita_antes_de_qualquer_api_workspace`; `NegativeBoundaryTests.test_externality_e_mencao_textual_nao_ativam_fronteiras_externas` | Evidencia PASS |
+| RF-017 | Idioma preservado sem traducao | `ReviewRequestTests.test_language_none_e_default_semantico_ptbr`; `ReviewResponseTests.test_idioma_explicito_e_textos_localizados_sao_preservados_sem_traducao` | Evidencia PASS |
+| RF-018 | Applicabilidade especializada sem tomar autoridade | `TechnicalDimensionTests.test_authoritative_corresponde_a_referencia_explicita_no_contexto`; `test_specialist_consultative_nao_e_promovida` | Evidencia PASS |
+| RF-019 | Preservacao exige claims base/candidata ou comparacao explicita | `ChangeProposalTests.test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada`; `test_comparacao_explicitamente_identificada_sustenta_preservacao_limitada` | Evidencia PASS |
+| RF-020 | ReviewConclusion limitada a scope/fonte/versao/evidence | `ReviewConclusionTests.test_conclusao_de_classe_permanece_limitada_a_classe`; `IntegratedReviewTests.test_conclusao_com_scope_artifact_ou_versao_fora_do_request_e_rejeitada` | Evidencia PASS |
+| RF-021 | Persistencia e continuidade usam APIs SPEC1 | `PersistenceIntentTests.test_persistencia_real_reusa_lifecycle_publisher_recovery_e_schema_v1`; suites `test_analysis_lifecycle`, `test_document_publisher`, `test_document_recovery`, `test_document_search`, `test_document_catalog`, `test_document_format` | Evidencia PASS; observar bloqueio de acesso descrito acima |
+
+### Matriz CA-001-CA-021 - comportamento, evidencia e resultado
+
+| CA | Comportamento verificado | Evidencia concreta | Resultado |
+|---|---|---|---|
+| CA-001 | Request e scope explicitos; entradas vazias/duplicadas invalidas | `ReviewRequestTests.test_scopes_vazio_e_rejeitado`; `ReviewScopeTests.test_ids_de_scope_duplicados_no_request_sao_rejeitados` | Evidencia PASS |
+| CA-002 | Classes de evidence distintas e claim positivo compativel | `EvidenceAndClaimTests.test_quatro_evidence_kinds_sao_distintos`; `test_reported_sozinho_nao_sustenta_executed_observed` | Evidencia PASS |
+| CA-003 | Analise/findings e recomendacao permanecem campos distintos; resposta ordenada | `ReviewFindingTests.test_finding_e_recomendacao_opcional_preservam_rastreabilidade`; `ReviewResponseTests.test_blocos_sao_renderizados_na_ordem_semantica_fixa` | Evidencia PASS |
+| CA-004 | Review-only preserva artefato e nao chama efeitos | `NegativeBoundaryTests.test_review_only_integrado_preserva_artifact_e_nao_chama_fronteiras_de_efeito` | Evidencia PASS |
+| CA-005 | Refatoracao sem grant/necessidade nao e materializada | `ChangeProposalTests.test_recommendation_nao_concede_grant`; `NegativeBoundaryTests.test_proposta_estrutural_sem_grant_e_rejeitada_sem_materializacao` | Evidencia PASS |
+| CA-006 | Tres secoes, ordem fixa, texto N/A preservado | `ReviewResponseTests.test_response_possui_exatamente_tres_chaves_canonicas`; `test_na_permanece_nos_tres_blocos_sem_codigo_ou_recomendacao_inventada` | Evidencia PASS |
+| CA-007 | Finding liga fato, evidence, regra e owner quando aplicavel | `ReviewFindingTests.test_finding_e_recomendacao_opcional_preservam_rastreabilidade`; `test_owner_nao_e_inferido_por_dimension` | Evidencia PASS |
+| CA-008 | Proposta identifica objetivo/impacto e nao amplia alvo | `ChangeProposalTests.test_objetivo_da_proposta_deve_corresponder_ao_pedido`; `test_target_fora_da_allowlist_e_rejeitado` | Evidencia PASS |
+| CA-009 | Claim positivo exige status/evidence/versao; ordenacao version-aware | `EvidenceAndClaimTests.test_executed_observed_requer_evidence_direta_alvo_versao_compativeis`; `D14DeterminismTests.test_claims_version_none_e_versao_explicita_coexistem_e_none_tie_e_ambiguo` | Evidencia PASS |
+| CA-010 | Falta de evidence/authority gera outcome localizado | `GapHandlingIntegrationTests.test_falha_de_cada_criterio_preserva_razao_spec1`; `IntegratedReviewTests.test_readiness_precisa_cobrir_cada_scope_com_cinco_bools` | Evidencia PASS |
+| CA-011 | Texto de agent/workspace nao vira authority | `AuthorityContextTests.test_executor_agent_ou_auditor_nao_e_promovido_a_owner`; `test_textos_de_nome_data_ou_especificidade_nao_criam_precedencia` | Evidencia PASS |
+| CA-012 | Consulta especializada nao vira decisao; authoritative exige contexto | `TechnicalDimensionTests.test_specialist_consultative_nao_e_promovida`; `test_authoritative_requer_owner_competencia_authority_evidence` | Evidencia PASS |
+| CA-013 | Conflito sem relacao autorizada nao tem vencedor | `GapHandlingIntegrationTests.test_duas_normativas_sem_precedencia_preservam_conflito_sem_vencedor`; `test_precedencia_de_outro_scope_nao_resolve_conflito` | Evidencia PASS |
+| CA-014 | Dependencia desconhecida/transitiva bloqueia apenas ramo pertinente | `GapHandlingIntegrationTests.test_dependencia_desconhecida_permanece_nao_avaliada`; `test_scope_independente_continua_apesar_de_outro_ramo_bloqueado` | Evidencia PASS |
+| CA-015 | Renderer/modelos sem framework extra e sem IO | `ReviewResponseTests.test_response_e_blocos_sao_frozen_e_copiam_colecao_de_entrada`; `test_renderizador_nao_acessa_io_rede_processos_ou_persistencia`; revisao do modulo `review_protocol.py` | Evidencia PASS |
+| CA-016 | Persistencia somente com intent/grant/effect; externalidade rejeitada | `PersistenceIntentTests.test_effect_sem_grant_rejeita_antes_do_lifecycle`; `test_grant_sem_requested_effect_nao_persiste`; `IntegratedReviewTests.test_effect_externality_e_rejeitado_sem_tentar_executar` | Evidencia PASS |
+| CA-017 | Idioma request/response preservado; sem traducao automatica | `IntegratedReviewTests.test_response_language_divergente_e_none_default_sao_validados`; `D14DeterminismTests.test_idioma_e_input_repetido_preserva_locale_dos_textos_do_host` | Evidencia PASS |
+| CA-018 | Assessment especializado e autoridade explicitamente ligados | `TechnicalDimensionTests.test_authoritative_corresponde_a_referencia_explicita_no_contexto`; `ReviewFindingTests.test_specialist_assessment_preserva_carater_e_requer_correspondencia` | Evidencia PASS |
+| CA-019 | Preservacao limitada por target/caso/base/candidata e comparacao | `ChangeProposalTests.test_preservacao_exige_cobertura_de_cada_target_e_versao`; `test_multiplos_targets_e_casos_exigem_comparacao_para_cada_combinacao` | Evidencia PASS |
+| CA-020 | Conclusao nao excede classe/escopo examinado | `ReviewConclusionTests.test_conclusao_de_classe_permanece_limitada_a_classe`; `IntegratedReviewTests.test_conclusao_com_scope_artifact_ou_versao_fora_do_request_e_rejeitada` | Evidencia PASS |
+| CA-021 | Persistencia reutiliza schema e fronteiras SPEC1; search explicita | `PersistenceIntentTests.test_persistencia_real_reusa_lifecycle_publisher_recovery_e_schema_v1`; `test_search_somente_quando_query_explicita` | Evidencia PASS, com o bloqueio SPEC1 acima |
+
+### Matriz D-01-D-15 - decisao, implementacao e testes
+
+| D | Implementacao/decisao | Evidencia concreta | Resultado |
+|---|---|---|---|
+| D-01 | Modulo coeso, funcoes puras, sem orquestrador/IO implicito | `IntegratedReviewTests.test_pipeline_nao_chama_io_rede_processos_ou_persistencia`; `NegativeBoundaryTests.test_runtime_nao_importa_capacidades_de_rede_processo_git_ou_release` | Evidencia PASS |
+| D-02 | ReviewRequest/Scope, idioma e colecoes canonicas | `ReviewRequestTests.test_request_valido_somente_review`; `D14DeterminismTests.test_scopes_dependencias_e_continuidade_nao_dependem_da_permutacao` | Evidencia PASS |
+| D-03 | Grants separados; ausencia nega; EXTERNALITY rejeitada | `ReviewRequestTests.test_ausencia_de_grants_de_mudanca_nao_autoriza_mudanca`; `PersistenceIntentTests.test_grant_sem_requested_effect_nao_persiste` | Evidencia PASS |
+| D-04 | AuthorityContext/AuthorizedPrecedence explicitos | `AuthorityContextTests.test_precedencia_direcionada_valida_entre_fontes_distintas`; `GapHandlingIntegrationTests.test_precedencia_de_outro_scope_nao_resolve_conflito` | Evidencia PASS |
+| D-05 | TechnicalDimension sem conclusao substantiva Core | `TechnicalDimensionTests.test_multiplas_dimensoes_coexistem_sem_regra_substantiva`; `test_specialist_consultative_nao_e_promovida` | Evidencia PASS |
+| D-06 | EvidenceReference/VerificationClaim e status observados | `EvidenceAndClaimTests.test_executed_observed_sem_evidence_e_rejeitado`; `D14DeterminismTests.test_claims_usam_status_rank_normativo_e_version_ref_na_chave_d14` | Evidencia PASS |
+| D-07 | Finding rastreavel e D-14 sem desempate de conteudo | `ReviewFindingTests.test_sort_key_aplica_scope_rank_referencia_casefold_e_desempate`; `IntegratedReviewTests.test_findings_com_mesma_chave_d14_e_conteudo_distinto_sao_rejeitados` | Evidencia PASS |
+| D-08 | Avaliadores puros existentes de gap_handling reutilizados | `GapHandlingIntegrationTests.test_adaptadores_nao_chamam_persistencia`; suite read-only `test_gap_handling.py` 89/89 | Evidencia PASS com bloqueio de acesso real descrito acima |
+| D-09 | ChangeProposal/BehaviorAssessment sem editor e preservacao provada | `ChangeProposalTests.test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada`; `test_comparacao_explicitamente_identificada_sustenta_preservacao_limitada` | Evidencia PASS |
+| D-10 | ReviewConclusion limitada a base, escopo e evidencia | `ReviewConclusionTests.test_limited_valida_com_bases_explicitas`; `test_conclusao_de_classe_permanece_limitada_a_classe` | Evidencia PASS |
+| D-11 | Resposta em tres blocos e idioma preservado | `ReviewResponseTests.test_blocos_sao_renderizados_na_ordem_semantica_fixa`; `test_idioma_explicito_e_textos_localizados_sao_preservados_sem_traducao` | Evidencia PASS |
+| D-12 | PersistenceIntent opt-in sobre SPEC1 | `PersistenceIntentTests.test_persistencia_real_reusa_lifecycle_publisher_recovery_e_schema_v1`; suites publisher/recovery/search/catalog/format | Evidencia PASS com bloqueio de acesso real descrito acima |
+| D-13 | Erro estrutural separado de outcome e erro operacional propagado | `IntegratedReviewTests.test_readiness_precisa_cobrir_cada_scope_com_cinco_bools`; `PersistenceIntentTests.test_falha_do_publisher_propaga_sem_receipt_ficticio` | Evidencia PASS |
+| D-14 | Chaves normativas, permutacoes, ties, version_ref, status_rank, clock | `D14DeterminismTests.test_conclusao_permutacoes_canonizam_todas_as_colecoes_e_claims`; `test_claims_com_mesma_chave_completa_e_evidence_divergente_sao_ambiguos`; `PersistenceIntentTests.test_clocks_distintos_nao_alteram_avaliacao_ou_ordem_logica` | Evidencia PASS |
+| D-15 | Locale/textos do host preservados; externalidade/Release sem capacidade | `ReviewResponseTests.test_renderizador_nao_acessa_io_rede_processos_ou_persistencia`; `NegativeBoundaryTests.test_runtime_nao_importa_capacidades_de_rede_processo_git_ou_release`; suite `test_release_boundaries.py` | Evidencia PASS |
+
+### Matriz de cenarios A-O
+
+| Cenario | Evidencia concreta executada | Resultado |
+|---|---|---|
+| A - review-only | `NegativeBoundaryTests.test_review_only_integrado_preserva_artifact_e_nao_chama_fronteiras_de_efeito` | PASS |
+| B - evidence insuficiente | `EvidenceAndClaimTests.test_executed_observed_sem_evidence_e_rejeitado`; `GapHandlingIntegrationTests.test_falha_de_cada_criterio_preserva_razao_spec1` | PASS |
+| C - refatoracao autorizada | `ChangeProposalTests.test_proposta_estrutural_valida_com_grants_suficientes`; `test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada` | PASS; Core nao aplica patch |
+| D - decisao especializada | `TechnicalDimensionTests.test_authoritative_corresponde_a_referencia_explicita_no_contexto`; `test_specialist_consultative_nao_e_promovida` | PASS |
+| E - conflito normativo | `GapHandlingIntegrationTests.test_duas_normativas_sem_precedencia_preservam_conflito_sem_vencedor` | PASS |
+| F - bloqueio transitivo | `GapHandlingIntegrationTests.test_propagacao_transitiva_e_delegada_a_gap_handling`; suite `test_gap_handling.py` | PASS |
+| G - validacao alegada | `EvidenceAndClaimTests.test_historical_identified_permanece_distinto_de_executed_observed`; `ChangeProposalTests.test_historico_identificado_nao_prova_preservacao_atual` | PASS |
+| H - pedido amplo limitado | `IntegratedReviewTests.test_finding_e_dimension_nao_podem_ampliar_artifacts_do_scope`; `ReviewConclusionTests.test_conclusao_de_classe_permanece_limitada_a_classe` | PASS |
+| I - recomendacao sem necessidade | `ReviewResponseTests.test_na_permanece_nos_tres_blocos_sem_codigo_ou_recomendacao_inventada` | PASS |
+| J - continuidade/persistencia | `GapHandlingIntegrationTests.test_scope_independente_continua_apesar_de_outro_ramo_bloqueado`; `PersistenceIntentTests.test_nova_ocorrencia_e_append_only_e_resume_reusa_id_explicito` | PASS |
+| K - Release/acao externa | `NegativeBoundaryTests.test_externality_e_mencao_textual_nao_ativam_fronteiras_externas`; `test_runtime_nao_importa_capacidades_de_rede_processo_git_ou_release` | PASS |
+| L - Pattern sem necessidade concreta | `TechnicalDimensionTests.test_multiplas_dimensoes_coexistem_sem_regra_substantiva`; `ReviewResponseTests.test_na_permanece_nos_tres_blocos_sem_codigo_ou_recomendacao_inventada`; nao ha avaliacao de Pattern especifico | PASS na fronteira; REF-0000000001 nao material |
+| M - risco comportamental | `ChangeProposalTests.test_claims_observados_nas_duas_versoes_sustentam_preservacao_limitada`; `test_comparacao_explicitamente_identificada_sustenta_preservacao_limitada` | PASS |
+| N - revisao parcial | `ReviewConclusionTests.test_conclusao_de_classe_permanece_limitada_a_classe`; `IntegratedReviewTests.test_conclusao_com_scope_artifact_ou_versao_fora_do_request_e_rejeitada` | PASS |
+| O - teste nao executado | `EvidenceAndClaimTests.test_not_executed_pode_ser_registrado_sem_evidence_e_nao_e_positivo`; `ChangeProposalTests.test_not_executed_unavailable_e_inconclusive_nao_provam_preservacao` | PASS |
+
+### Integracao SPEC1, fronteiras e suite completa
+
+A regressao direta `impl.tests.test_gap_handling` passou 89/89 com permissao elevada. A suite completa executou 14 modulos, total 682: `test_analysis_lifecycle` 29; `test_document_catalog` 15; `test_document_format` 49; `test_document_publisher` 47; `test_document_recovery` 28; `test_document_search` 73; `test_gap_handling` 89; `test_provenance` 45; `test_release_boundaries` 5; `test_review_protocol` 248; `test_rickcraft_root` 13; `test_workspace_integration` 4; `test_workspace_probe` 17; `test_workspace_resolver` 20. Resultado 681 OK, 0 FAIL, 0 ERROR e 1 SKIP ambiental documentado. Apesar do resultado funcional positivo, a execucao tocou o workspace real pelo teste SPEC1 identificado acima; por isso nao satisfaz a fronteira TASK-013.
+
+As provas negativas existentes incluem snapshots somente em fixtures nos testes TASK-011 de `test_review_protocol`, spies de lifecycle/publisher/recovery/search, `gap_handling.registrar_*`, provenance, subprocess, `os.system`, socket e urllib. A suite completa tambem inclui as regressoes dos modulos SPEC1 listados. Nenhum arquivo SPEC1 foi alterado. Runtime `review_protocol.py` permaneceu inalterado. Nenhuma dependencia de Technical Reference passou a ser material. Nenhuma outra externalidade, persistencia ou Release foi executado pelo agente.
+
+### Hashes e estado final desta execucao
+
+SPEC, PLAN e TASKS permanecem nos hashes normativos listados acima. Runtime continua SHA-256 `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`, blob `55f18d3f0156aa2fae454ad00ee052127546f189`. Teste continua SHA-256 `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`, blob `516d01f43f1531dea7181b996f811285641588d4`. Somente este `status.md` foi alterado pelos registros da TASK-013; hashes finais dos arquivos efetivamente alterados sao reportados no checkpoint desta execucao.
+
+TASK-013 = BLOCKED. TASK-012 permanece COMPLETE - APROVADA; TASK-013 nao pode ser declarada COMPLETE ate decisao do responsavel sobre a incompatibilidade entre full-suite e nao acesso ao workspace real e uma forma autorizada de obter evidencia conforme. CONVERGE = NOT_STARTED; Release nao autorizado.

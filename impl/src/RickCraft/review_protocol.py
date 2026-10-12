@@ -366,6 +366,7 @@ class VerificationClaim:
             )
         if len(set(references)) != len(references):
             raise ReviewInputError("evidence não pode conter referências duplicadas.")
+        _validar_chaves_evidence(references, "evidence")
 
         for reference in references:
             if reference.target != self.target:
@@ -402,19 +403,7 @@ class VerificationClaim:
                     "HISTORICAL_IDENTIFIED requer referência PERSISTED_EVIDENCE compatível."
                 )
 
-        ordered = tuple(sorted(
-            references,
-            key=lambda item: (
-                item.kind.value,
-                item.origin,
-                item.reference,
-                item.target,
-                item.version or "",
-                item.digest or "",
-                item.limitation or "",
-                item.verifiability or "",
-            ),
-        ))
+        ordered = tuple(sorted(references, key=_evidence_sort_key))
         object.__setattr__(self, "evidence", ordered)
 
 
@@ -544,11 +533,10 @@ class ChangeProposal:
             raise ReviewInputError("claims deve conter somente VerificationClaim.")
         if len(set(claims)) != len(claims):
             raise ReviewInputError("claims não pode conter duplicatas.")
+        _validar_chaves_claims(claims, "proposal claims")
         if any(claim.target not in targets for claim in claims):
             raise ReviewInputError("Cada claim deve apontar para um target da proposta.")
-        object.__setattr__(self, "claims", tuple(sorted(claims, key=lambda item: (
-            item.target, item.status.value, item.assertion, item.version or ""
-        ))))
+        object.__setattr__(self, "claims", tuple(sorted(claims, key=_claim_sort_key)))
         comparisons = _sequencia(self.comparisons, "proposal comparisons")
         if any(not isinstance(item, BehaviorComparison) for item in comparisons):
             raise ReviewInputError("comparisons deve conter somente BehaviorComparison.")
@@ -738,22 +726,29 @@ class AssessmentCharacter(Enum):
     AUTHORITATIVE = "AUTHORITATIVE"
 
 
+def _evidence_sort_key(item: EvidenceReference) -> tuple[str, str, str, str]:
+    """Chave D-14: kind, source_ref (origin), version_ref, locator (reference)."""
+    return (item.kind.value, item.origin, item.version or "", item.reference)
+
+
+def _validar_chaves_evidence(items: Sequence[EvidenceReference], field: str) -> None:
+    by_key: dict[tuple[str, str, str, str], EvidenceReference] = {}
+    for item in items:
+        key = _evidence_sort_key(item)
+        previous = by_key.get(key)
+        if previous is not None and previous != item:
+            raise ReviewInputError(f"{field} possui chave D-14 ambígua.")
+        by_key[key] = item
+
+
 def _evidencias_unicas(value: object, field: str) -> tuple[EvidenceReference, ...]:
     items = _sequencia(value, field)
     if any(not isinstance(item, EvidenceReference) for item in items):
         raise ReviewInputError(f"{field} deve conter somente EvidenceReference.")
     if len(set(items)) != len(items):
         raise ReviewInputError(f"{field} não pode conter evidências duplicadas.")
-    return tuple(sorted(items, key=lambda item: (
-        item.kind.value,
-        item.origin,
-        item.reference,
-        item.target,
-        item.version or "",
-        item.digest or "",
-        item.limitation or "",
-        item.verifiability or "",
-    )))
+    _validar_chaves_evidence(items, field)
+    return tuple(sorted(items, key=_evidence_sort_key))
 
 
 @dataclass(frozen=True)
@@ -973,12 +968,8 @@ class ReviewConclusion:
             raise ReviewInputError("claims deve conter somente VerificationClaim.")
         if len(set(claims)) != len(claims):
             raise ReviewInputError("claims não pode conter duplicatas.")
-        claims = tuple(sorted(claims, key=lambda item: (
-            item.target,
-            item.status.value,
-            item.assertion,
-            item.version or "",
-        )))
+        _validar_chaves_claims(claims, "conclusion claims")
+        claims = tuple(sorted(claims, key=_claim_sort_key))
         limitation = _texto_opcional(self.limitation, "limitation")
         bases = set(artifacts) | set(sources)
         if self.state is ConclusionState.BLOCKED:
@@ -1274,14 +1265,19 @@ class ReviewEvaluationResult:
         _texto_obrigatorio(self.rendered, "result.rendered")
 
 
-def _evidence_sort_key(item: EvidenceReference) -> tuple[str, ...]:
-    return (item.reference, item.target, item.version or "", item.kind.value,
-            item.origin, item.digest or "", item.limitation or "", item.verifiability or "")
-
-
 def _claim_sort_key(item: VerificationClaim) -> tuple[object, ...]:
-    return (item.target, item.version or "", item.status.value, item.assertion,
-            tuple(_evidence_sort_key(evidence) for evidence in item.evidence))
+    """Chave D-14 de claim: target, rank declarado do estado e assertion."""
+    return (item.target, tuple(VerificationStatus).index(item.status), item.assertion)
+
+
+def _validar_chaves_claims(items: Sequence[VerificationClaim], field: str) -> None:
+    by_key: dict[tuple[object, ...], VerificationClaim] = {}
+    for item in items:
+        key = _claim_sort_key(item)
+        previous = by_key.get(key)
+        if previous is not None and previous != item:
+            raise ReviewInputError(f"{field} possui chave D-14 ambígua.")
+        by_key[key] = item
 
 
 def _finding_sort_key(item: ReviewFinding) -> tuple[object, ...]:
@@ -1404,6 +1400,7 @@ def evaluate_review(
             proposal_versions.setdefault(target, set()).add(version)
     if len(set(claims_list)) != len(claims_list):
         raise ReviewInputError("claims integrados não podem conter duplicatas.")
+    _validar_chaves_claims(claims_list, "claims integrados")
     canonical_claims = tuple(sorted(claims_list, key=_claim_sort_key))
     version_map = dict(request.source_versions)
     for claim in canonical_claims:
@@ -1723,6 +1720,7 @@ class PersistenceIntent:
             raise ReviewInputError("evidence_to_persist deve conter EvidenceReference.")
         if len(set(evidence)) != len(evidence):
             raise ReviewInputError("evidence_to_persist nao pode conter duplicatas.")
+        _validar_chaves_evidence(evidence, "evidence_to_persist")
         object.__setattr__(self, "evidence_to_persist",
                            tuple(sorted(evidence, key=_evidence_sort_key)))
 

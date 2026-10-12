@@ -1322,3 +1322,33 @@ TASK-011 = COMPLETE - aguardando nova revisao. TASK-012/TASK-013 nao executadas;
 **Evidencias:** hash do teste acima; 235/235 PASS na ultima execucao; snapshot limitado a fixture temporaria; spies negativos mantidos; diff check passou.
 **Proxima acao:** revisao externa read-only da correcao publicada. TASK-012 continua sem autorizacao.
 **Arquivos para revisar:** `impl/tests/test_review_protocol.py` e `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
+
+## IMPLEMENT - TASK-012 inicio - 2026-10-12
+
+TASK-011 foi aprovada externamente conforme autorizacao do responsavel. Baseline publicada validada no commit `422e035393339c721e2597fa76086df4781d5736`: HEAD correto, arvore limpa, hashes/blobs de runtime, teste, status e inputs congelados conferem. TASK-012 e a unica tarefa autorizada e passa a IN_PROGRESS. IMPLEMENT permanece IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; TASK-013 nao executada; Release nao autorizado. Nenhum runtime foi alterado no inicio.
+
+## IMPLEMENT - TASK-012 - resultado bloqueado - 2026-10-12
+
+TASK-012 foi executada sobre a baseline aprovada `422e035393339c721e2597fa76086df4781d5736`. Antes das alteracoes, foram adicionados testes D-14 sem editar runtime. A suite integral focal, antes da correcao de runtime, rodou 244 testes e teve 7 failures D-14 e 38 errors ambientais `WinError 5/3` em `%TEMP%`. O primeiro run isolado D14 rodou 9 testes e teve 7 failures e 1 error; o error era fixture incorreta da conclusao, corrigida, e o rerun da classe confirmou 7 failures reais sem errors. Apos as correcoes e com os testes adicionais, a primeira suite focal no sandbox rodou 246 testes e terminou com 0 failures e 54 errors ambientais. A repeticao autorizada elevada removeu o impedimento ambiental, mas terminou com 246 testes, 0 failures e 15 errors funcionais.
+
+Os testes D-14 isolados antes da correcao mostraram 7 falhas reais: ordenacao de evidence nao seguia `(kind, source_ref, version_ref, locator)`; claims nao usavam `status_rank` pela ordem declarada de `VerificationStatus`; e evidence distintas com a mesma chave D-14 eram aceitas em cinco colecoes. Uma primeira fixture de permutacao de conclusao tambem falhou por usar artifacts diferentes dos alvos das evidencias; a fixture foi corrigida antes de classificar falhas de runtime. Apos a correcao, `D14DeterminismTests` passou 10/10; o teste isolado de clocks distintos passou 1/1.
+
+Foram aplicadas correcoes minimas no runtime: ordenacao canonica de evidence pela chave D-14, rejeicao de colisao de evidence com conteudo diferente, status rank explicito por posicao do enum, rejeicao de claims com chave D-14 igual e conteudo diferente, e validacao dessas colisoes em ChangeProposal, ReviewConclusion, agregacao integrada e PersistenceIntent. A chave D-14 de findings permaneceu intacta. Nenhuma alteracao foi feita em SPEC1 ou em seus adapters.
+
+Bloqueio material: os 15 errors funcionais restantes sao testes de regressao aprovados das TASK-007/TASK-009 que criam ChangeProposal com duas claims `EXECUTED_OBSERVED` de mesmo `target`, mesma `assertion`/caso e mesmo status, mas com `version` base e candidata diferentes. A regra D-14 aprovada define a chave de claim como `(target_ref, status_rank, claim)` e proibe usar `version`/evidence como desempate, exigindo rejeitar essa chave repetida com conteudo divergente. TASK-007, por sua vez, usa precisamente claims por versao para demonstrar preservacao entre base e candidata. Aplicar D-14 estritamente rejeita inputs exigidos pelo contrato/testes anteriores; afrouxa-la para aceitar esses casos viola D-14. Sao incompatibilidades normativas entre PLAN D-14 e ?6/contrato aprovado, nao falhas de ambiente nem fixtures que possam ser corrigidas localmente sem alterar semantica aprovada. Requer decisao do owner no PLAN/governanca antes de retomada. TASK-012 = BLOCKED; nao declarar COMPLETE nem iniciar TASK-013.
+
+Coverage executada: scopes e dependencias permutados com propagacao direta/transitiva/desconhecida e scope independente; rank de dimensoes e desempate por scope; findings e sua chave D-14 via regressao existente; evidence em claims, assessments, findings, conclusions e pipeline, incluindo colisao; todos os estados de claims/status rank e colisao por versao; permutacao de colecoes em ReviewConclusion; conflitos independentes; relations com ordem declarada e mappings; idioma/default preservados; clocks distintos sem alterar avaliacao/render/logica. Os testes focais D-14 novos passaram 10/10 e clock 1/1. A regressao integral elevada permaneceu 246 executados, 231 ok, 0 failures, 15 errors, 0 skipped. Nao foi executada `test_gap_handling`: nenhuma fronteira/adaptador SPEC1 foi alterado. Nao houve acesso ao `.workspace` real.
+
+Entradas congeladas permanecem nos hashes aprovados: SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `test_gap_handling.py` `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`. Outros modulos SPEC1 inspecionados permaneceram inalterados. IMPLEMENT = IN_PROGRESS; ANALYZE = PASS; CONVERGE = NOT_STARTED; TASK-013 nao executada; Release nao autorizado.
+
+## CHECKPOINT RICKCRAFT - TASK-012
+
+**Fase/objetivo:** IMPLEMENT TASK-012 - validar D-14 e estabilidade estrutural.
+**Estado:** BLOQUEADO por incompatibilidade normativa descrita acima.
+**Arquivos alterados:** `review_protocol.py`, `test_review_protocol.py`, `status.md`; nenhum arquivo criado. SPEC1 intacta.
+**Determinismo provado nos testes focais:** scopes/dependencias, dimensoes, evidence/chaves, claims/status rank, findings via regressao, conclusoes, conflitos, idioma, clock e ordem semantica de relations. Nao foi possivel aprovar a integracao completa porque 15 testes preexistentes falham com o enforcement literal da chave D-14 de claims.
+**Proximo passo:** decisao do responsavel normativo sobre a compatibilidade entre D-14 e claims base/candidata em ?6; depois retomar TASK-012. Nao iniciar TASK-013, CONVERGE ou Release; nao fazer push.
+
+## HANDOFF PARA REVISAO - TASK-012
+
+Revisar o bloqueio e decidir a semantica proprietaria no PLAN/governanca antes de qualquer nova alteracao. Os testes e runtime mostram os dois lados: os casos D-14 passam; 15 regressoes anteriores nao passam porque usam versoes como dimensao substantiva de claims que colidem pela chave prescrita. Artefatos modificados: `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este `status.md`. TASK-013 continua nao executada.

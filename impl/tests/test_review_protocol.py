@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 from contextlib import ExitStack
 from dataclasses import FrozenInstanceError, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import os
 from pathlib import Path
@@ -2496,6 +2496,30 @@ class PersistenceIntentTests(unittest.TestCase):
         self.assertIsNone(persisted.search_result)
         search.assert_not_called()
 
+    def test_clocks_distintos_nao_alteram_avaliacao_ou_ordem_logica(self) -> None:
+        first_result = self.evaluated()
+        second_result = self.evaluated()
+        first_time = self.fixed_clock()
+        second_time = first_time + timedelta(hours=1)
+        first = persist_review_evaluation(
+            first_result, self.intent(), clock=lambda: first_time
+        )
+        second = persist_review_evaluation(
+            second_result, self.intent(), clock=lambda: second_time
+        )
+
+        self.assertEqual(first_result, second_result)
+        self.assertEqual(first_result.request.scopes, second_result.request.scopes)
+        self.assertEqual(first_result.dimension_assessments,
+                         second_result.dimension_assessments)
+        self.assertEqual(first_result.findings, second_result.findings)
+        self.assertEqual(first_result.claims, second_result.claims)
+        self.assertEqual(first_result.rendered, second_result.rendered)
+        self.assertEqual(first.recovered_document.parsed.corpo,
+                         second.recovered_document.parsed.corpo)
+        self.assertNotEqual(first.recovered_document.parsed.metadata["created_at_utc"],
+                            second.recovered_document.parsed.metadata["created_at_utc"])
+
     def test_nova_ocorrencia_e_append_only_e_resume_reusa_id_explicito(self) -> None:
         result = self.evaluated()
         first = persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
@@ -2609,6 +2633,277 @@ class PersistenceIntentTests(unittest.TestCase):
         with patch.object(protocol.document_publisher, "publicar_documento", side_effect=failure):
             with self.assertRaisesRegex(RuntimeError, "falha de publicacao"):
                 persist_review_evaluation(result, self.intent(), clock=self.fixed_clock)
+
+
+class D14DeterminismTests(unittest.TestCase):
+    def test_scopes_dependencias_e_continuidade_nao_dependem_da_permutacao(self) -> None:
+        scopes_a = (
+            ReviewScope("A", "A", (), ("a.py",)),
+            ReviewScope("B", "B depende de A", ("A",), ("b.py",)),
+            ReviewScope("C", "C depende de B", ("B",), ("c.py",)),
+            ReviewScope("D", "independente", (), ("d.py",)),
+            ReviewScope("E", "E depende de B e D", ("D", "B"), ("e.py",)),
+        )
+        scopes_b = (scopes_a[4].__class__("E", "E depende de B e D", ("B", "D"), ("e.py",)),
+                    scopes_a[3], scopes_a[2], scopes_a[1], scopes_a[0])
+
+        def evaluate(scopes):
+            request = IntegratedReviewTests.request(scopes=scopes, versions=())
+            artifacts = tuple(item.artifacts[0] for item in request.scopes)
+            conclusion = IntegratedReviewTests.conclusion(
+                request=request, state=ConclusionState.BLOCKED,
+                scopes=tuple(item.scope_id for item in scopes), artifacts=artifacts,
+                sources=("a.py",), evidence=(), claims=(), versions=(),
+            )
+            readiness = {item.scope_id: (True, True, True, True, True) for item in scopes}
+            readiness["A"] = (False, True, True, True, True)
+            return IntegratedReviewTests.evaluate(
+                request=request, claims=(), conclusion=conclusion, readiness=readiness
+            )
+
+        first, second = evaluate(scopes_a), evaluate(scopes_b)
+        self.assertEqual(first, second)
+        self.assertEqual(tuple(item.scope_id for item in first.request.scopes),
+                         ("A", "B", "C", "D", "E"))
+        self.assertEqual(first.continuity.continuable_scopes, ("D",))
+        self.assertEqual(first.request.scopes[-1].depends_on, ("B", "D"))
+
+    def test_dimensoes_seguem_rank_canonico_e_scope_desempata_explicitamente(self) -> None:
+        scopes = (
+            ReviewScope("Z", "scope Z", (), ("z.py",)),
+            ReviewScope("A", "scope A", (), ("a.py",)),
+            ReviewScope("M", "scope M", (), ("m.py",)),
+        )
+        request = IntegratedReviewTests.request(scopes=scopes, versions=())
+        dimensions = (
+            DimensionAssessment(TechnicalDimension.DELPHI_OBJECT_PASCAL, "Z",
+                                DimensionAssessmentState.NOT_APPLICABLE),
+            DimensionAssessment(TechnicalDimension.SOLID, "Z",
+                                DimensionAssessmentState.NOT_APPLICABLE),
+            DimensionAssessment(TechnicalDimension.PATTERNS, "M",
+                                DimensionAssessmentState.NOT_APPLICABLE),
+            DimensionAssessment(TechnicalDimension.PATTERNS, "Z",
+                                DimensionAssessmentState.NOT_APPLICABLE),
+            DimensionAssessment(TechnicalDimension.PATTERNS, "A",
+                                DimensionAssessmentState.NOT_APPLICABLE),
+        )
+        conclusion = IntegratedReviewTests.conclusion(
+            request=request, state=ConclusionState.BLOCKED,
+            scopes=("A", "M", "Z"), artifacts=("a.py",), sources=("a.py",),
+            evidence=(), claims=(), versions=(),
+        )
+        result = IntegratedReviewTests.evaluate(
+            request=request, dimensions=dimensions, conclusion=conclusion, claims=()
+        )
+        self.assertEqual(tuple((item.dimension, item.scope) for item in result.dimension_assessments), (
+            (TechnicalDimension.PATTERNS, "A"),
+            (TechnicalDimension.PATTERNS, "M"),
+            (TechnicalDimension.PATTERNS, "Z"),
+            (TechnicalDimension.SOLID, "Z"),
+            (TechnicalDimension.DELPHI_OBJECT_PASCAL, "Z"),
+        ))
+
+    def test_chave_evidence_d14_ordena_kind_source_version_locator_em_todos_os_modelos(self) -> None:
+        source_b_v0 = EvidenceReference(
+            EvidenceKind.DIRECT_OBSERVATION, "source-b", "a-locator", "a.py", version="v0"
+        )
+        source_a_v1 = EvidenceReference(
+            EvidenceKind.DIRECT_OBSERVATION, "source-a", "a-locator", "a.py", version="v1"
+        )
+        source_a_v0 = EvidenceReference(
+            EvidenceKind.DIRECT_OBSERVATION, "source-a", "z-locator", "a.py", version="v0"
+        )
+        expected = (source_a_v0, source_a_v1, source_b_v0)
+        claim = VerificationClaim("verificação", "a.py", VerificationStatus.EXECUTED_OBSERVED,
+                                  (source_b_v0, source_a_v1, source_a_v0))
+        specialist = SpecialistAssessment(
+            TechnicalDimension.SOLID, "S", "avaliação recebida",
+            (source_b_v0, source_a_v1, source_a_v0),
+            AssessmentCharacter.CONSULTATIVE,
+        )
+        dimension = DimensionAssessment(
+            TechnicalDimension.SOLID, "S", DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE,
+            (source_b_v0, source_a_v1, source_a_v0),
+        )
+        finding = ReviewFinding(
+            "S", TechnicalDimension.SOLID, "condição", (source_b_v0, source_a_v1, source_a_v0),
+            "rule", "conclusão", "impacto",
+        )
+        conclusion = ReviewConclusion(
+            ConclusionState.BLOCKED, ("S",), artifacts=("a.py",), sources=("a.py",),
+            evidence=(source_b_v0, source_a_v1, source_a_v0),
+            limitation="limitação explícita",
+        )
+        self.assertEqual(claim.evidence, expected)
+        self.assertEqual(specialist.evidence, expected)
+        self.assertEqual(dimension.evidence, expected)
+        self.assertEqual(finding.evidence, expected)
+        self.assertEqual(conclusion.evidence, expected)
+
+        request = IntegratedReviewTests.request(versions=())
+        pipeline_conclusion = IntegratedReviewTests.conclusion(
+            request=request, state=ConclusionState.BLOCKED, artifacts=("a.py",),
+            sources=("z-locator", "a-locator"), evidence=expected, claims=(claim,), versions=(),
+        )
+        result = IntegratedReviewTests.evaluate(request=request, claims=(claim,),
+                                                conclusion=pipeline_conclusion)
+        self.assertEqual(result.claims[0].evidence, expected)
+
+    def test_evidence_kind_usa_token_explicito_da_chave_d14(self) -> None:
+        evidence = tuple(
+            EvidenceReference(kind, "host", f"locator:{kind.name}", "a.py")
+            for kind in reversed(tuple(EvidenceKind))
+        )
+        claim = VerificationClaim("evidência ordenada", "a.py",
+                                  VerificationStatus.EXECUTED_OBSERVED, evidence)
+        self.assertEqual(tuple(item.kind.value for item in claim.evidence),
+                         tuple(sorted(item.value for item in EvidenceKind)))
+
+    def test_evidence_com_chave_d14_igual_e_conteudo_distinto_e_rejeitada(self) -> None:
+        first = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "locator", "a.py",
+                                  version="v1", digest="a" * 64)
+        second = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "locator", "a.py",
+                                   version="v1", digest="b" * 64)
+        factories = (
+            lambda: VerificationClaim("executado", "a.py", VerificationStatus.EXECUTED_OBSERVED,
+                                      (first, second)),
+            lambda: ReviewFinding("S", TechnicalDimension.SOLID, "condição", (first, second),
+                                  "rule", "conclusão", "impacto"),
+            lambda: DimensionAssessment(
+                TechnicalDimension.SOLID, "S",
+                DimensionAssessmentState.NOT_ASSESSED_INSUFFICIENT_EVIDENCE, (first, second),
+            ),
+            lambda: SpecialistAssessment(TechnicalDimension.SOLID, "S", "conclusão",
+                                         (first, second), AssessmentCharacter.CONSULTATIVE),
+            lambda: ReviewConclusion(ConclusionState.BLOCKED, ("S",), artifacts=("a.py",),
+                                     sources=("locator",), evidence=(first, second),
+                                     limitation="limitação"),
+        )
+        for factory in factories:
+            with self.subTest(factory=factory), self.assertRaises(ReviewInputError):
+                factory()
+
+    def test_claims_usam_status_rank_normativo_e_colisao_nao_tem_desempate(self) -> None:
+        statuses = tuple(VerificationStatus)
+        claims = tuple(
+            VerificationClaim(
+                "mesma afirmação", "a.py", status,
+                (EvidenceReference(
+                    EvidenceKind.DIRECT_OBSERVATION if status is VerificationStatus.EXECUTED_OBSERVED
+                    else EvidenceKind.PERSISTED_EVIDENCE,
+                    "host", f"ref:{status.name}", "a.py",
+                ),) if status in (VerificationStatus.EXECUTED_OBSERVED,
+                                  VerificationStatus.HISTORICAL_IDENTIFIED) else (),
+            )
+            for status in statuses
+        )
+        conclusion = ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
+                                      claims=claims)
+        self.assertEqual(tuple(item.status for item in conclusion.claims), statuses)
+        request = IntegratedReviewTests.request(versions=())
+        integrated_conclusion = IntegratedReviewTests.conclusion(
+            request=request, state=ConclusionState.BLOCKED, artifacts=("a.py",),
+            sources=("a.py",), evidence=(), claims=claims, versions=(),
+        )
+        result = IntegratedReviewTests.evaluate(request=request, claims=claims,
+                                                conclusion=integrated_conclusion)
+        self.assertEqual(tuple(item.status for item in result.claims), statuses)
+
+        same_key_different_version = (
+            VerificationClaim("mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED,
+                              version="v1"),
+            VerificationClaim("mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED,
+                              version="v2"),
+        )
+        with self.assertRaises(ReviewInputError):
+            ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
+                             claims=same_key_different_version)
+        blocked = IntegratedReviewTests.conclusion(
+            request=request, state=ConclusionState.BLOCKED, artifacts=("a.py",),
+            sources=("a.py",), evidence=(), claims=(), versions=(),
+        )
+        with self.assertRaises(ReviewInputError):
+            IntegratedReviewTests.evaluate(request=request, claims=same_key_different_version,
+                                           conclusion=blocked)
+
+    def test_conclusao_permutacoes_canonizam_todas_as_colecoes_e_claims(self) -> None:
+        evidence_a = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "a", "a.py")
+        evidence_b = EvidenceReference(EvidenceKind.PERSISTED_EVIDENCE, "host", "b", "b.py")
+        claims = (
+            VerificationClaim("z claim", "b.py", VerificationStatus.NOT_EXECUTED),
+            VerificationClaim("a claim", "a.py", VerificationStatus.NOT_EXECUTED),
+        )
+        first = ReviewConclusion(
+            ConclusionState.BLOCKED, ("Z", "A"), ("b.py", "a.py"), ("z-ref", "a-ref"),
+            (("b.py", "v2"), ("a.py", "v1")), (evidence_b, evidence_a), claims,
+            limitation="bloqueio localizado",
+        )
+        second = ReviewConclusion(
+            ConclusionState.BLOCKED, ("A", "Z"), ("a.py", "b.py"), ("a-ref", "z-ref"),
+            (("a.py", "v1"), ("b.py", "v2")), (evidence_a, evidence_b), tuple(reversed(claims)),
+            limitation="bloqueio localizado",
+        )
+        self.assertEqual(first, second)
+
+    def test_conflitos_independentes_permutados_produzem_mesmo_resultado(self) -> None:
+        request = IntegratedReviewTests.request(
+            scopes=(ReviewScope("A", "A", (), ("a.py",)),
+                    ReviewScope("B", "B", (), ("b.py",))),
+            versions=(),
+        )
+        conflicts = (
+            (gaps.SourceReference("normative", "POL-A", "a", "authority A"),
+             gaps.SourceReference("normative", "POL-B", "b", "authority B"),
+             "A", "impact A", "resume A", True, None),
+            (gaps.SourceReference("normative", "POL-C", "c", "authority C"),
+             gaps.SourceReference("normative", "POL-D", "d", "authority D"),
+             "B", "impact B", "resume B", True, None),
+        )
+        conclusion = IntegratedReviewTests.conclusion(
+            request=request, state=ConclusionState.BLOCKED, scopes=("A", "B"),
+            artifacts=("a.py", "b.py"), sources=("POL-A", "POL-B", "POL-C", "POL-D"),
+            evidence=(), claims=(), versions=(),
+        )
+        a = IntegratedReviewTests.evaluate(request=request, conflicts=conflicts, conclusion=conclusion,
+                                           claims=())
+        b = IntegratedReviewTests.evaluate(request=request, conflicts=tuple(reversed(conflicts)),
+                                           conclusion=conclusion, claims=())
+        self.assertEqual(a, b)
+
+    def test_idioma_e_input_repetido_preserva_locale_dos_textos_do_host(self) -> None:
+        request = IntegratedReviewTests.request(language="en")
+        response = ReviewResponse("en", (
+            ReviewResponseBlock(ResponseBlockKey.CRITICAL_ANALYSIS, "Critical Analysis", "Observed scope."),
+            ReviewResponseBlock(ResponseBlockKey.REFACTORING, "Refactoring", "No change recommended."),
+            ReviewResponseBlock(ResponseBlockKey.ARCHITECTURAL_JUSTIFICATION,
+                                "Architectural Justification", "No material impact."),
+        ))
+        result_a = IntegratedReviewTests.evaluate(request=request, response=response)
+        result_b = IntegratedReviewTests.evaluate(request=request, response=response)
+        self.assertEqual(result_a, result_b)
+        self.assertEqual(result_a.response.language, "en")
+        self.assertEqual(result_a.rendered, result_b.rendered)
+        self.assertIn("Critical Analysis", result_a.rendered)
+        self.assertNotIn("Análise Crítica", result_a.rendered)
+        self.assertIsNone(IntegratedReviewTests.evaluate().response.language)
+
+    def test_mapping_insertion_nao_altera_intent_e_relations_preservam_ordem_declarada(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="rickcraft-d14-relations-") as temporary:
+            root = Path(temporary) / "impl" / "src" / "RickCraft"
+            relation_a = {"relation_type": "supports", "document_id": "DOC-A"}
+            relation_b = {"relation_type": "derived_from", "document_id": "DOC-B"}
+            first_input = {"kind": "versioned_source", "locator": "source://a"}
+            second_input = {"locator": "source://a", "kind": "versioned_source"}
+            first = PersistenceIntent(root, "purpose", provenance_inputs=(first_input,),
+                                      relations=(relation_a, relation_b))
+            second = PersistenceIntent(root, "purpose", provenance_inputs=(second_input,),
+                                       relations=(relation_a, relation_b))
+            reversed_relations = PersistenceIntent(root, "purpose", relations=(relation_b, relation_a))
+            self.assertEqual(first, second)
+            self.assertEqual(tuple(item["relation_type"] for item in first.relations),
+                             ("supports", "derived_from"))
+            self.assertEqual(tuple(item["relation_type"] for item in reversed_relations.relations),
+                             ("derived_from", "supports"))
 
 
 class NegativeBoundaryTests(unittest.TestCase):

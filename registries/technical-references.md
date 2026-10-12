@@ -7,6 +7,10 @@
 
 IDs `REF-` têm dez dígitos, são únicos e não reutilizáveis. Hashes locais identificam os bytes registrados; Git blob/revision identifica o objeto correspondente no histórico Git. Para URL mutável, o Registry identifica o índice mantido localmente, não uma versão imutável do conteúdo remoto.
 
+### Adoção inicial
+
+`REF-0000000001`–`REF-0000000003` constituem o conjunto inicial aprovado simultaneamente à entrada em vigor da POL-0000000004, por decisão explícita do responsável pelo projeto. Essa adoção controlada não torna automaticamente referências oficiais outros arquivos já existentes no repositório.
+
 | ID | Título | Estado | Tipo | Caminho | Domínio(s) | Finalidade | Autoridade de adoção | SHA-256 | Git blob/revision | Observações |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `REF-0000000001` | Referência — Padrões de Projeto | VIGENTE | `TECHNICAL_REFERENCE` | [`docs/Referencia Padrões de Projeto.pdf`](../docs/Referencia%20Padr%C3%B5es%20de%20Projeto.pdf) | Design Patterns | Base técnica conceitual conforme o conteúdo efetivamente consultado; não presumir conteúdo sem leitura. | Responsável pelo projeto | `4A76222990FFC2C5932D968F531512E116AFEFED5C5A68E7BEF07AC11E921F99` | `a1b658539ac8a173a785c9b2990141b501817832` | Cópia local binária preservada. |

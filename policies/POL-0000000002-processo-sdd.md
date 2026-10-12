@@ -108,10 +108,6 @@ A unidade SDD deve permitir seguir a cadeia:
 
 O vínculo deve ser verificável nos artefatos e evidências pertinentes. Uma declaração de conclusão sem evidência suficiente não satisfaz CONVERGE.
 
-### Referências Técnicas
-
-Decisões técnicas que dependam materialmente de Technical Reference vigente devem identificar REF ID e versão/identidade aplicável quando necessário à rastreabilidade. Em PLAN, declarar a referência quando uma decisão depender dela. Em ANALYZE, verificar quando materialmente relevante se falta referência necessária, se a fonte é incompatível, se um exemplo foi extrapolado para regra, se adaptação entre linguagens carece de justificativa ou se há conflito não resolvido. Em IMPLEMENT, consultar somente as referências necessárias à tarefa autorizada, sem leitura indiscriminada da base. Em CONVERGE, conferir rastreabilidade à versão pertinente quando a conformidade alegada depender materialmente de uma referência. Isso não cria etapa adicional: o pipeline permanece `SPEC → PLAN → TASKS → ANALYZE → IMPLEMENT → CONVERGE`. A governança detalhada consta em [POL-0000000004 — Fontes Técnicas de Referência e Base Conceitual](POL-0000000004-fontes-tecnicas-referencia.md).
-
 ## 7. Referência metodológica externa
 
 GitHub Spec Kit é referência metodológica externa, não autoridade normativa do RickCraft. Sua documentação oficial descreve artefatos e etapas semelhantes e um comando de análise que reporta conflitos, lacunas e ambiguidades para correção na etapa de origem. O RickCraft adota somente as regras explicitadas nesta Policy; comandos, templates, arquivos opcionais e convenções específicas do Spec Kit não são importados automaticamente.

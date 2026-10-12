@@ -41,7 +41,11 @@ Se uma Technical Reference conflitar materialmente com regra normativa vigente d
 
 ## 6. Identidade e rastreabilidade
 
-`registries/technical-references.md` é o índice persistente e fonte de identidade das referências. Cada entrada possui ID `REF-` de largura fixa de dez dígitos, título, estado, tipo/classificação, caminho ou URL, domínio, finalidade, autoridade de adoção, identidade verificável (SHA-256, Git blob/revision ou equivalente) e observações. IDs são únicos, não reutilizados e não atribuídos retroativamente.
+`registries/technical-references.md` é o índice persistente e fonte de identidade das referências. Cada entrada possui ID `REF-` de largura fixa de dez dígitos, título, estado, tipo/classificação, caminho ou URL, domínio, finalidade, autoridade de adoção, identidade verificável (SHA-256, Git blob/revision ou equivalente) e observações. IDs são únicos e não reutilizados; lacunas consumidas não são preenchidas arbitrariamente. Após a adoção inicial desta Policy, uma nova Technical Reference deve ser registrada antes ou na mesma alteração autorizada que a incorpora como referência oficial. A mera presença de um arquivo no repositório não o torna Technical Reference; a adoção posterior de arquivo existente exige decisão explícita e registro rastreável.
+
+### Adoção inicial
+
+A entrada em vigor desta Policy formaliza, por decisão explícita do responsável pelo projeto, o conjunto inicial `REF-0000000001`, `REF-0000000002` e `REF-0000000003`. Esses arquivos já estavam presentes no commit imediatamente anterior à materialização desta governança e foram confirmados pelo responsável como fontes intencionais. Esta adoção inicial é um bootstrap controlado: não constitui inclusão silenciosa, não cria precedente para converter automaticamente arquivos existentes em referências e não autoriza retroatividade implícita futura.
 
 Quando uma decisão material depender de uma fonte, registrar proporcionalmente seu REF ID, versão/hash, seção/página/locator disponível, conceito utilizado, adaptação de linguagem relevante e eventual divergência em relação ao exemplo. Não impor burocracia desproporcional a uso trivial sem impacto decisório.
 
@@ -51,3 +55,22 @@ Uma fonte registrada não pode mudar silenciosamente mantendo aparência de mesm
 
 Inclusão, alteração de finalidade/domínio, mudança de estado ou retirada de uma Technical Reference requer autoridade do responsável pelo projeto e atualização rastreável do Registry. A aprovação da categoria não torna todo conteúdo da fonte uma regra RickCraft. A manutenção da lista de URLs em `docs/Site_REF.MD` segue esta Policy e não autoriza descoberta ou inclusão autônoma de sites.
 
+## Integração com o processo SDD
+
+Esta seção especializa o uso de Technical References dentro do processo governado pela POL-0000000002; não redefine nem cria etapa. O pipeline permanece `SPEC → PLAN → TASKS → ANALYZE → IMPLEMENT → CONVERGE`.
+
+### PLAN
+
+Quando uma decisão técnica depender materialmente de Technical Reference, identificar o REF ID e a versão/identidade aplicável; registrar locator quando proporcionalmente necessário.
+
+### ANALYZE
+
+Quando materialmente relevante, verificar se falta referência necessária, se a fonte é incompatível com a decisão, se um exemplo foi extrapolado para regra, se uma adaptação cross-language carece de justificativa, se há conflito entre referências não resolvido ou se uma dependência material não possui identidade/versionamento rastreável.
+
+### IMPLEMENT
+
+Consultar somente as referências necessárias à tarefa autorizada. Não reler indiscriminadamente toda a Base Técnica nem converter exemplo em autorização de implementação.
+
+### CONVERGE
+
+Quando conformidade ou decisão depender materialmente de Technical Reference, confirmar a rastreabilidade à versão/REF pertinente. Isso não cria nova etapa no pipeline definido pela POL-0000000002.

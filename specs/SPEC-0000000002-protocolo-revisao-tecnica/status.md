@@ -1780,3 +1780,66 @@ As matrizes RF-001–RF-021, CA-001–CA-021, D-01–D-15 e cenários A–O já 
 Hashes confirmados nesta retomada: SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; runtime `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`; teste SPEC2 `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`; `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `test_gap_handling.py` `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`.
 
 Com a evidência conforme no mirror, TASK-013 passa de `BLOCKED` para `COMPLETE — aguardando revisão externa`; não está aprovada. TASK-012 permanece aprovada, TASK-013 não inicia CONVERGE, TASK-001–TASK-013 não são declaradas CONVERGED, Release continua não autorizado. ANALYZE-02 permanece `PASS`. Somente este `status.md` foi alterado nesta retomada.
+
+## CONVERGE-2026-10-12-SPEC-0000000002-01 — início
+
+Baseline publicada confirmada: HEAD `825dd670889c586679f06b3a6f67fe1eebce8ea6`, árvore limpa e execution ID ausente deste histórico antes do início. Conforme autorização do responsável, a revisão externa aprovou TASK-013 e TASK-001–TASK-013; IMPLEMENT está tecnicamente concluído. As entradas normativas e artefatos implementados foram recalculados e coincidem com os hashes/blobs congelados abaixo. ANALYZE usado: `ANALYZE-2026-10-12-SPEC-0000000002-02 = PASS`, ainda vinculado às mesmas versões SPEC/PLAN/TASKS.
+
+- SPEC: SHA-256 `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; blob `97f1a98c4f3b25bf52c0fa71c29502a39e9ca556`.
+- PLAN: SHA-256 `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`; blob `75920de5e6849dca426f5859644b689a2aa850eb`.
+- TASKS: SHA-256 `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`; blob `065c76d6b6c3b0d5236acdd4def6890a1cce0a5a`.
+- Runtime: SHA-256 `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`; blob `55f18d3f0156aa2fae454ad00ee052127546f189`.
+- Teste SPEC2: SHA-256 `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`; blob `516d01f43f1531dea7181b996f811285641588d4`.
+- `gap_handling.py`: SHA-256 `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`.
+- `test_gap_handling.py`: SHA-256 `6D213D565EE2A0F66BFC6857A01822B40184A10AF1641654A45E4575552D8858`.
+
+CONVERGE = `IN_PROGRESS`. Esta execução avalia as matrizes e evidências publicadas; não altera implementação nem executa testes automaticamente.
+
+## CONVERGE-2026-10-12-SPEC-0000000002-01 — resultado
+
+### Avaliação das entradas e da implementação
+
+Foram comparados SPEC, PLAN, TASKS, implementação, testes e resultados publicados. Os hashes e blobs registrados na seção de início continuam exatos; SPEC1 (`gap_handling.py` e `test_gap_handling.py`) também permanece nos hashes avaliados. ANALYZE-02 continua válido para as mesmas entradas. A autorização desta execução confirma a aprovação externa de TASK-001–TASK-013 e a conclusão técnica de IMPLEMENT. Nenhum arquivo de runtime, teste, SPEC, PLAN, TASKS, SPEC1, Policy ou Registry foi alterado.
+
+O runtime materializa os contratos nas fronteiras inspecionadas: `evaluate_review` valida o request e os grants, rejeita `EXTERNALITY`, canonicaliza estruturas e agrega claims versionados; `evaluate_source_conflict` e `evaluate_scope_continuity` delegam aos avaliadores SPEC1 existentes; `renderizar_resposta` preserva os três blocos; `persist_review_evaluation` exige intent, grant e effect explícitos antes das APIs de persistência SPEC1. D-14 está implementada com claims `(target_ref, version_ref, status_rank, claim)`, evidence `(kind, source_ref, version_ref, locator)`, findings `(scope_id, dimension_rank, normative_reference, condition.casefold(), condition)` e blockers `(scope_id, reason_code, dependency_id)`. `status_rank` segue a ordem declarada do enum; `None` é distinto de versão explícita; colisões integrais com conteúdo divergente são rejeitadas.
+
+### Cobertura final
+
+As matrizes concretas de IMPLEMENT/TASK-013 permanecem no histórico, seções `Matriz RF-001-RF-021 - implementacao e evidencia executada`, `Matriz CA-001-CA-021 - comportamento, evidencia e resultado`, `Matriz D-01-D-15 - decisao, implementacao e testes` e `Matriz de cenarios A-O`. Conferi as referências de método contra os arquivos de teste atuais e contra seus hashes aprovados. O inventário estático encontrou 73 referências a métodos de teste; os métodos citados existem. Uma linha da matriz RF-001/CA-001 rotula incorretamente a classe do teste `test_ids_de_scope_duplicados_no_request_sao_rejeitados`: o método existe em `ReviewRequestTests` (`test_review_protocol.py`, linha 132), não em `ReviewScopeTests`. O teste efetivamente rejeita IDs de scope duplicados no request; trata-se de erro de atribuição de classe na matriz, não de ausência de evidência. Esta nota corrige a rastreabilidade sem reescrever o histórico.
+
+- RF: RF-001–RF-021 — **21/21 SATISFIED**; cada linha publicada liga decisão/seção, tarefa, implementação e teste/evidência, com os resultados TASK-013 abaixo.
+- CA: CA-001–CA-021 — **21/21 SATISFIED**; os casos citados verificam inputs inválidos, evidence/claims, grants, review-only, resposta, findings, propostas, authority, conflito, continuidade, persistência, idioma, especialistas, preservação e limites da conclusão.
+- Decisões: D-01–D-15 — **15/15 SATISFIED**; as decisões de grants/effects, authority, specialist boundary, evidence/claims, SPEC1 gap handling, preservação, persistência, D-14 e externalidade estão ligadas às verificações publicadas.
+- Cenários: A–O — **15/15 evidenciados** pelas linhas individuais da matriz publicada; o cenário L comprova a fronteira de não promover Pattern sem necessidade, não a seleção substantiva de Pattern.
+
+D-14 recebeu conferência específica: a suíte cobre versões distintas e `version=None` em claims, colisão verdadeira, rank de status, permutações, dependências, clock e idioma; evidence e findings usam suas chaves próprias e não introduzem desempate arbitrário. A conclusão preserva escopo/artefatos/fontes/versões/evidence e não transforma ausência de finding ou preservação observada em conclusão universal.
+
+### Resultados de IMPLEMENT/TASK-013 usados
+
+Os resultados abaixo são evidência produzida em IMPLEMENT/TASK-013 no mirror temporário validado; **CONVERGE não rerodou as suítes**:
+
+- focal SPEC2: 248 executados, 248 OK, 0 FAIL, 0 ERROR, 0 SKIP;
+- regressão SPEC1 `test_gap_handling`: 89 executados, 89 OK, 0 FAIL, 0 ERROR, 0 SKIP; `test_72_nao_cria_sinteticos_no_workspace_debug_real` passou;
+- full suite: 682 executados em 14 módulos, 681 OK, 0 FAIL, 0 ERROR, 1 SKIP.
+
+A evidência final válida da TASK-013 foi produzida no mirror fora da árvore canônica, com `.workspace` e `.git` não copiados, imports originados do mirror, hashes de runtime/testes confirmados antes das suítes e mirror removido após o uso. O teste `test_72` observou somente o caminho `.workspace` dentro do mirror. A tentativa histórica que acessou o workspace canônico continua preservada como histórica e não é usada como evidência conforme.
+
+O único SKIP foi `test_symlink_de_diretorio_de_tipo_nao_e_seguido`, em `DocumentRecoveryTests`. O próprio teste constatou que este ambiente/usuário Windows não permite criar symlink real. É limitação ambiental explícita, não falha funcional observada. A lógica de rejeição de redirecionamento de tipo tem também teste adjacente `test_redirecionamento_simulado_de_tipo_e_rejeitado_sem_link_real`, e os demais testes de recovery e integração passaram. A SPEC-0000000002 requer recuperação pela API SPEC1, mas não define como critério a criação/seguimento de symlink real do sistema operacional; portanto o skip não bloqueia os critérios desta unidade. Permanece a limitação de que esse comportamento OS-específico não foi exercitado com symlink real neste usuário.
+
+SPEC1 permaneceu read-only. O protocolo reusa os avaliadores e APIs existentes; a persistência publicada é opt-in e usa lifecycle, publisher, recovery, search e estruturas/catalog/format existentes. As evidências negativas sustentam ausência de efeitos implícitos, externalidade, edição review-only e persistência sem intent/grant/effect. Nenhum acesso ao `.workspace` canônico pertence à evidência final válida.
+
+### Build, validação humana e referências técnicas
+
+Build/compilação adicional: **N/A — nenhuma etapa adicional de build/compilação está definida para esta unidade Python**; imports, testes focais, integração e full suite são as verificações aplicáveis previstas/executadas.
+
+Validação humana necessária? **Não.** Os critérios desta unidade são contratos estruturais e comportamentos testáveis mecanicamente, e as evidências disponíveis os exercitam. A autoridade humana para decisões especializadas ou para autorizar efeitos é preservada pelo protocolo e não constitui uma pendência de validação do gate.
+
+REF-0000000001, REF-0000000002 e REF-0000000003 continuam **não materiais** para esta avaliação de conformidade do protocolo. Não foram consultados PDFs ou conteúdo externo; a decisão de conformidade se baseia em SPEC, PLAN, TASKS, Policies, implementação, testes e evidência de execução.
+
+### Resultado e limites
+
+Não foram identificadas lacunas bloqueantes nem critérios relevantes sem evidência suficiente. O erro de rótulo de classe acima não invalida o teste nem o comportamento demonstrado. O skip ambiental está delimitado e não corresponde a requisito desta SPEC. As verificações tecnicamente disponíveis e aplicáveis foram avaliadas. A conclusão é limitada à unidade SPEC-0000000002 e às versões/hash identificados neste gate; não é certeza matemática, garantia universal, declaração de ausência absoluta de defeitos, conformidade de outros projetos ou autorização de Release.
+
+`CONVERGE-2026-10-12-SPEC-0000000002-01 = CONVERGED`.
+
+Estado final: SPEC, PLAN e TASKS = COMPLETE — aprovadas; ANALYZE-02 = PASS; TASK-001–TASK-013 = COMPLETE — aprovadas; IMPLEMENT = COMPLETE; CONVERGE = CONVERGED; Release = NÃO AUTORIZADO. Nenhuma TASK adicional foi executada e nenhum Release foi preparado ou publicado.

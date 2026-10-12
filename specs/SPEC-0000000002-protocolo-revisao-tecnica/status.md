@@ -1352,3 +1352,27 @@ Entradas congeladas permanecem nos hashes aprovados: SPEC `F43B54ACBC1C6D7F4A2B1
 ## HANDOFF PARA REVISAO - TASK-012
 
 Revisar o bloqueio e decidir a semantica proprietaria no PLAN/governanca antes de qualquer nova alteracao. Os testes e runtime mostram os dois lados: os casos D-14 passam; 15 regressoes anteriores nao passam porque usam versoes como dimensao substantiva de claims que colidem pela chave prescrita. Artefatos modificados: `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este `status.md`. TASK-013 continua nao executada.
+
+## PLAN - correcao normativa D-14 - 2026-10-12
+
+Baseline confirmada antes da edicao: commit `aab2a98440c73c60f64be4dfb71dac15679d5062`; a arvore estava limpa. A TASK-012 demonstrou a incompatibilidade entre D-14 e D-06/D-09/§6: 15 regressoes anteriores usavam claims de mesma afirmacao/status para versoes base e candidata distintas.
+
+Decisao normativa do responsavel registrada no PLAN: a chave canonica de VerificationClaim passa a ser `(target_ref, version_ref, status_rank, claim)`. A ausencia de versao continua explicita. O rank segue a sequencia declarada de VerificationStatus. Evidence permanece fora da chave de claim e uma colisao da chave completa com conteudo divergente continua ambigua/rejeitavel. A chave de EvidenceReference permanece `(kind, source_ref, version_ref, locator)`; a chave de ReviewFinding e blockers permanece inalterada. D-14, §9 e §6 foram clarificados somente para explicitar essas relacoes.
+
+SPEC permanece inalterada (`F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`); TASKS permanece inalterada (`4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`). Runtime e testes da execucao bloqueada nao foram alterados nesta correcao documental: runtime `7F947D5390C71D3DB6A906441C71C6A357827831CAA42440DAA07A7C119C5DA6`; testes `E445DAFB9C16E58D946882377C2AAA624E37B6B2871FAE45D5DFE07541FECF36`. SPEC1 permaneceu read-only e byte-identical.
+
+PLAN corrigido SHA-256 UTF-8: `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`. PLAN anterior `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e gate `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS` permanecem apenas como historico; o gate nao valida o novo hash. Nova execucao ANALYZE sera necessaria apos revisao/publicacao do PLAN. ANALYZE nao foi executado nesta correcao. TASK-012 permanece BLOQUEADA ate PLAN revisado/publicado e novo ANALYZE PASS; nao foi retomada. TASK-013 nao iniciada; IMPLEMENT nao avancou; CONVERGE = NOT_STARTED; Release nao autorizado; nenhum teste/runtime foi executado ou modificado nesta execucao.
+
+## CHECKPOINT RICKCRAFT - PLAN D-14
+
+**Fase:** correcao normativa pontual do PLAN.
+**Estado:** CONCLUIDO — aguardando revisao externa.
+**Decisao:** `(target_ref, version_ref, status_rank, claim)`.
+**Arquivos alterados:** `plan.md` e `status.md`.
+**Arquivos inalterados:** SPEC, TASKS, runtime, testes e SPEC1; hashes conferidos.
+**Gate:** ANALYZE anterior historico e nao aplicavel ao novo hash do PLAN. Nenhum ANALYZE novo executado.
+**Proximo passo:** publicar manualmente somente `plan.md` e `status.md` e informar exatamente `Atualizei o GitHub do RickCraft.` para revisao read-only. Nao retomar TASK-012 antes de revisao e novo ANALYZE PASS; nao iniciar TASK-013, CONVERGE ou Release; nao fazer push pelo Codex.
+
+## HANDOFF PARA REVISAO - correcao PLAN D-14
+
+Revisar exclusivamente `plan.md` e este registro. Confirmar a chave ampliada de VerificationClaim e que as chaves de evidence, findings e blockers ficaram intactas. Apos aprovacao/publicacao, executar um novo ANALYZE contra os hashes revisados; TASK-012 continua bloqueada ate autorizacao posterior.

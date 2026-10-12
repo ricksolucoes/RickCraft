@@ -1742,3 +1742,20 @@ Revisar exclusivamente esta reconciliação documental.
 
 ## Autorização necessária
 Nova autorização explícita antes de reexecutar CONVERGE.
+
+
+## CLARIFICAÇÃO DO ESTADO CORRENTE — ordem cronológica dos gates
+
+Esta seção esclarece a leitura do estado efetivo sem alterar os registros históricos anteriores.
+
+- O bloco que declara `CONVERGE = INVALIDATED` pertence à reconciliação CONV-001, registrada no commit `a1b89d87f70643358473199c9d73b102017d9acd`.
+- Posteriormente, o commit filho `05f7de142e40a915687a382e13b9c509e47dc354` executou e registrou `CONVERGE-2026-10-11-SPEC-0000000001-02 = CONVERGED`.
+- O `status.md` atual permaneceu byte-idêntico à versão desse commit posterior; portanto, o estado corrente efetivo é SPEC = COMPLETE, PLAN = COMPLETE, TASKS = COMPLETE, ANALYZE = PASS, IMPLEMENT = COMPLETE e CONVERGE = CONVERGED. O último gate válido é `CONVERGE-2026-10-11-SPEC-0000000001-02`.
+- `CONVERGE-2026-10-11-SPEC-0000000001-01 = NOT_CONVERGED` permanece como resultado histórico. O estado `INVALIDATED` da reconciliação também permanece histórico e foi posteriormente superado pela execução autorizada de CONVERGE-02.
+- Nenhuma nova execução de CONVERGE ocorreu nesta correção documental e nenhuma evidência técnica foi modificada.
+
+### Relação com SPEC-0000000002
+
+Esta clarificação não invalida SPEC-0000000002. CONVERGE-02 da SPEC1 foi publicado antes da elaboração e aprovação das etapas dependentes da SPEC2; o PLAN da SPEC2 declara dependência em SPEC1 convergida; e nenhum contrato, implementação ou teste da SPEC1 mudou após CONVERGE-02. Esta alteração apenas torna explícita a ordem cronológica já registrada.
+
+Nenhum artefato da SPEC2 foi alterado. Nenhuma nova SPEC foi criada ou alocada; `SPEC-0060000001` continua não alocada. Release permanece não autorizado.

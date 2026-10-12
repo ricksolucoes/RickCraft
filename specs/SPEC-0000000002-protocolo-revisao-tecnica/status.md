@@ -1527,3 +1527,59 @@ Nenhum teste de implementacao foi executado. Este ANALYZE nao aprova retomada au
 **Artefato para revisar:** `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
 
 **Proximo passo proposto:** revisao externa read-only deste gate. TASK-012 permanece bloqueada ate essa revisao e autorizacao explicita separada.
+
+## IMPLEMENT — retomada TASK-012 — 2026-10-12
+
+### Autorizacao e baseline
+
+TASK-012 foi retomada exclusivamente apos aprovacao externa do gate `ANALYZE-2026-10-12-SPEC-0000000002-02 = PASS`. Baseline confirmada antes de editar: HEAD `d1374f9d7a5fb91dd4be088652887fa4bc6c9346`, arvore limpa, SPEC/PLAN/TASKS e runtime/teste nos hashes autorizados. O gate utilizado vale somente para SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`, PLAN corrigido `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1` e TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`. O gate `...-01` continua apenas historico. TASK-012 passou a IN_PROGRESS; TASK-013 permaneceu nao iniciada.
+
+### Alteracoes D-14
+
+`_claim_sort_key` agora aplica `(target, version, status_rank, assertion)`, mapeamento de `(target_ref, version_ref, status_rank, claim)`. `version=None` recebe chave interna explicita separada de qualquer versao textual, sem alterar o valor armazenado ou inferir versao. `status_rank` continua sendo `tuple(VerificationStatus).index(item.status)`. `_validar_chaves_claims` e suas chamadas em ChangeProposal, ReviewConclusion e agregacao integrada foram preservados: chave completa igual e conteudo divergente continua rejeitado, sem evidence como desempate.
+
+O teste D-14 anteriormente intitulado `test_claims_usam_status_rank_normativo_e_colisao_nao_tem_desempate` codificava a chave obsoleta ao esperar rejeicao para claims de versoes diferentes. Foi atualizado para provar coexistencia e ordenacao canonica dessas versoes em ReviewConclusion e no resultado integrado. Testes adicionais cobrem coexistencia de `None` e versao explicita, ambiguidade entre claims sem versao com conteudo divergente e colisao verdadeira da chave completa com evidence divergente. O caminho de ChangeProposal/preservacao continua exigindo claims observados e evidence compativel para base e candidata; nao houve relaxamento em `_preservation_is_evidenced` nem no contrato de BehaviorComparison.
+
+Um teste integrado existente acionava implicitamente o helper de claim padrao em adicao aos claims da proposta, criando duplicidade de chave completa com evidence diferente. O caso foi ajustado para enviar `claims=()` e uma ReviewConclusion bloqueada sem claims/evidence implicitos. A regra de colisao foi mantida; nao foi criada excecao por origem do claim.
+
+### Execucoes e falhas preservadas
+
+1. Antes da correcao de runtime, `python -B -m unittest -v impl.tests.test_review_protocol.D14DeterminismTests`: 12 executados, 9 OK, 3 ERROR. Dois erros funcionais confirmaram a colisao de versoes distintas em ReviewConclusion e a colisao de `None` com versao explicita. Um ERROR adicional foi `WinError 5` ao limpar `TemporaryDirectory` em `%TEMP%`.
+2. Apos a alteracao da chave, a mesma classe focal sandboxada: 12 executados; 11 OK e 1 ERROR ambiental `WinError 5` na limpeza da fixture. Repeticao elevada autorizada: 12/12 OK.
+3. Primeira suite integral sandboxada `python -B -m unittest -v impl.tests.test_review_protocol`: 248 executados, 40 ERROR de ambiente ao criar/limpar fixtures em `%TEMP%` (`WinError 5`/`WinError 3`). A tentativa foi preservada.
+4. Primeira repeticao integral elevada: 248 executados, 1 ERROR funcional e nenhum erro ambiental. O erro estava no fixture do teste integrado de proposta: o helper acrescentava outro claim default com mesma chave completa e evidence divergente. O teste isolado passou depois de tornar inputs de claim e conclusao explicitos.
+5. Repeticao integral elevada final, apos corrigir o fixture: `python -B -m unittest -v impl.tests.test_review_protocol` — 248 executados, 248 OK, 0 FAIL, 0 ERROR, 0 SKIP. Os 15 erros funcionais da execucao bloqueada anterior desapareceram com a chave version-aware; a unica falha funcional intermediaria era o fixture descrito acima e foi resolvida sem alterar a regra do produto.
+
+Nao foi executado `test_gap_handling`: nenhuma fronteira/adaptador SPEC1 foi alterado. Nenhuma full suite foi executada. Nenhum `.workspace` real foi acessado. Nenhuma persistencia operacional, rede, subprocesso, Git externo, publicacao ou Release ocorreu.
+
+### Hashes e estado
+
+Hashes finais SHA-256, calculados duas vezes apos as ultimas alteracoes e apos leitura UTF-8 estrita: `review_protocol.py` `60217F69BDC521267D137648A3B38216772A1218D5734D91D3D56E8FFB75E6E6`; `test_review_protocol.py` `D0CC818309DBC8853167D8961BCE782B146669AB922160D4376A46259D9C34B2`. SPEC/PLAN/TASKS permanecem nos hashes acima; nenhum arquivo SPEC1 foi modificado. Verificacao final: `git diff --check` passou; `git status --short` listou somente `review_protocol.py`, `test_review_protocol.py` e este `status.md`.
+
+TASK-001–TASK-011 permanecem COMPLETE — aprovadas. TASK-012 = COMPLETE — aguardando revisao externa. IMPLEMENT = IN_PROGRESS; ANALYZE-02 = PASS; TASK-013 = NAO INICIADA; CONVERGE = NOT_STARTED; Release nao autorizado.
+
+### CHECKPOINT RICKCRAFT
+
+**Fase:** IMPLEMENT — retomada TASK-012 — SPEC-0000000002.
+
+**Gate utilizado:** `ANALYZE-2026-10-12-SPEC-0000000002-02 = PASS`.
+
+**Objetivo:** concluir D-14 usando a chave version-aware aprovada.
+
+**Estado:** CONCLUIDO — aguardando aprovacao/revisao externa.
+
+**Correcao normativa aplicada:** `(target_ref, version_ref, status_rank, claim)`; `None` e versao explicita tem ordenacao distinta; status rank mantido pela sequencia do enum.
+
+**Testes corrigidos/adicionados:** claims versionados distintos aceitos em conclusao/pipeline; `version=None` distinguido; colisao verdadeira, inclusive evidencia divergente, rejeitada. Evidencia, findings, dimensoes, scopes/dependencias, idioma, clock e relations mantiveram as provas anteriores.
+
+**Regressoes anteriormente bloqueadas:** os 15 erros funcionais registrados na tentativa bloqueada anterior nao se reproduziram; suite final completa 248/248 OK. Uma falha funcional intermediaria de fixture foi corrigida e registrada acima.
+
+**Arquivos alterados:** `impl/src/RickCraft/review_protocol.py`, `impl/tests/test_review_protocol.py` e este `status.md`.
+
+**Proximo passo:** publicar manualmente somente os tres arquivos autorizados e informar exatamente `Atualizei o GitHub do RickCraft.` para revisao externa da TASK-012.
+
+**Nao fazer:** nao iniciar TASK-013; nao executar CONVERGE; nao gerar Release; nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO — RICKCRAFT
+
+Revisar exclusivamente a retomada TASK-012 e seus tres arquivos autorizados. Confirmar a chave version-aware, a preservacao de true collisions/evidence requirements e o resultado focal final 248/248 OK. O runtime nao chama SPEC1 de forma nova e nenhum arquivo SPEC1 foi alterado. TASK-012 aguarda revisao; TASK-013 nao esta autorizada.

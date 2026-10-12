@@ -1266,8 +1266,14 @@ class ReviewEvaluationResult:
 
 
 def _claim_sort_key(item: VerificationClaim) -> tuple[object, ...]:
-    """Chave D-14 de claim: target, rank declarado do estado e assertion."""
-    return (item.target, tuple(VerificationStatus).index(item.status), item.assertion)
+    """Chave D-14 de claim: target, version, rank declarado e assertion."""
+    version_key = (0, "") if item.version is None else (1, item.version)
+    return (
+        item.target,
+        version_key,
+        tuple(VerificationStatus).index(item.status),
+        item.assertion,
+    )
 
 
 def _validar_chaves_claims(items: Sequence[VerificationClaim], field: str) -> None:

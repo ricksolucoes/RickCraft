@@ -2248,7 +2248,15 @@ class IntegratedReviewTests(unittest.TestCase):
             behavior_contract="contrato explícito", verified_cases=("verificação executada",),
             claims=(base, candidate), objective_reference=request.objective,
         )
-        result = self.evaluate(request=request, proposals=(proposal,))
+        result = self.evaluate(
+            request=request,
+            claims=(),
+            proposals=(proposal,),
+            conclusion=self.conclusion(
+                request=request, state=ConclusionState.BLOCKED, sources=("a.py",),
+                evidence=(), claims=(),
+            ),
+        )
         self.assertIs(result.behavior_assessments[0].state,
                       BehaviorAssessmentState.PRESERVATION_EVIDENCED)
 
@@ -2783,7 +2791,7 @@ class D14DeterminismTests(unittest.TestCase):
             with self.subTest(factory=factory), self.assertRaises(ReviewInputError):
                 factory()
 
-    def test_claims_usam_status_rank_normativo_e_colisao_nao_tem_desempate(self) -> None:
+    def test_claims_usam_status_rank_normativo_e_version_ref_na_chave_d14(self) -> None:
         statuses = tuple(VerificationStatus)
         claims = tuple(
             VerificationClaim(
@@ -2809,22 +2817,66 @@ class D14DeterminismTests(unittest.TestCase):
                                                 conclusion=integrated_conclusion)
         self.assertEqual(tuple(item.status for item in result.claims), statuses)
 
-        same_key_different_version = (
+        different_versions = (
             VerificationClaim("mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED,
                               version="v1"),
             VerificationClaim("mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED,
                               version="v2"),
         )
-        with self.assertRaises(ReviewInputError):
-            ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
-                             claims=same_key_different_version)
+        conclusion = ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
+                                      claims=tuple(reversed(different_versions)))
+        self.assertEqual(conclusion.claims, different_versions)
         blocked = IntegratedReviewTests.conclusion(
             request=request, state=ConclusionState.BLOCKED, artifacts=("a.py",),
-            sources=("a.py",), evidence=(), claims=(), versions=(),
+            sources=("a.py",), evidence=(), claims=different_versions, versions=(),
+        )
+        integrated = IntegratedReviewTests.evaluate(
+            request=request, claims=tuple(reversed(different_versions)), conclusion=blocked
+        )
+        self.assertEqual(integrated.claims, different_versions)
+
+    def test_claims_version_none_e_versao_explicita_coexistem_e_none_tie_e_ambiguo(self) -> None:
+        unversioned = VerificationClaim(
+            "mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED
+        )
+        versioned = VerificationClaim(
+            "mesma afirmação", "a.py", VerificationStatus.NOT_EXECUTED, version="v1"
+        )
+        conclusion = ReviewConclusion(
+            ConclusionState.LIMITED, ("S",), sources=("a.py",),
+            claims=(versioned, unversioned),
+        )
+        self.assertEqual(conclusion.claims, (unversioned, versioned))
+
+        no_version_collision = (
+            VerificationClaim(
+                "same", "a.py", VerificationStatus.EXECUTED_OBSERVED,
+                (EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "run:a", "a.py",
+                                   digest="a" * 64),),
+            ),
+            VerificationClaim(
+                "same", "a.py", VerificationStatus.EXECUTED_OBSERVED,
+                (EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "run:a", "a.py",
+                                   digest="b" * 64),),
+            ),
         )
         with self.assertRaises(ReviewInputError):
-            IntegratedReviewTests.evaluate(request=request, claims=same_key_different_version,
-                                           conclusion=blocked)
+            ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
+                             claims=no_version_collision)
+
+    def test_claims_com_mesma_chave_completa_e_evidence_divergente_sao_ambiguos(self) -> None:
+        claims = tuple(
+            VerificationClaim(
+                "case:public-api", "a.py", VerificationStatus.EXECUTED_OBSERVED,
+                (EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "run:v1", "a.py",
+                                   version="v1", digest=digest),),
+                version="v1",
+            )
+            for digest in ("a" * 64, "b" * 64)
+        )
+        with self.assertRaises(ReviewInputError):
+            ReviewConclusion(ConclusionState.LIMITED, ("S",), sources=("a.py",),
+                             claims=claims)
 
     def test_conclusao_permutacoes_canonizam_todas_as_colecoes_e_claims(self) -> None:
         evidence_a = EvidenceReference(EvidenceKind.DIRECT_OBSERVATION, "host", "a", "a.py")

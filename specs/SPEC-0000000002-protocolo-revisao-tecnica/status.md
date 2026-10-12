@@ -1376,3 +1376,154 @@ PLAN corrigido SHA-256 UTF-8: `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B
 ## HANDOFF PARA REVISAO - correcao PLAN D-14
 
 Revisar exclusivamente `plan.md` e este registro. Confirmar a chave ampliada de VerificationClaim e que as chaves de evidence, findings e blockers ficaram intactas. Apos aprovacao/publicacao, executar um novo ANALYZE contra os hashes revisados; TASK-012 continua bloqueada ate autorizacao posterior.
+
+## ANALYZE-2026-10-12-SPEC-0000000002-02 — revalidacao D-14
+
+### Identidade, entradas e metodo
+
+Execucao iniciada em 2026-10-12 apos confirmacao de que este execution ID ainda nao existia neste status. HEAD local correspondia ao commit publicado/aprovado `6eebafb29ae3c06ca051a2d6da952f39210944a7`; a arvore estava limpa antes do registro. Os bytes foram lidos como UTF-8 estrito e os SHA-256 foram recalculados:
+
+| Entrada normativa | SHA-256 | Resultado |
+|---|---|---|
+| SPEC `spec.md` | `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC` | Confere |
+| PLAN `plan.md` corrigido | `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1` | Confere |
+| TASKS `tasks.md` | `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172` | Confere |
+
+O gate `ANALYZE-2026-10-11-SPEC-0000000002-01 = PASS` permanece somente historico: suas entradas incluiam o PLAN antigo `8ED06179C5251CCFC534E9E6A4549D0E81F9FFCDA367F567C935894CA9087EDB` e nao o valida. O runtime e o teste publicados bloqueados foram tratados somente como contexto read-only (respectivamente `7F947D5390C71D3DB6A906441C71C6A357827831CAA42440DAA07A7C119C5DA6` e `E445DAFB9C16E58D946882377C2AAA624E37B6B2871FAE45D5DFE07541FECF36`); nao foram executados.
+
+Metodo: comparacao substantiva da SPEC, do PLAN corrigido e das TASKS, das matrizes RF/CA/D/cenarios e dependencias; leitura das Policies, registries, README e artefatos SPEC1 relevantes. Nenhum teste de IMPLEMENT, persistencia operacional, leitura de `.workspace` real, ou operacao externa foi executado.
+
+Fontes internas lidas: `README_PTBr.md`, `README.md`; `policies/POL-0000000001-governanca-documental.md`, `POL-0000000002-processo-sdd.md`, `POL-0000000003-ambientes-runtime-release-workspace.md`; `registries/policies.md`, `registries/spec-groups.md`, `registries/specifications.md`; SPEC/PLAN/TASKS/status da SPEC-0000000002; SPEC/PLAN/TASKS/status da SPEC-0000000001. Os README foram considerados orientacao/contexto, subordinados aos requisitos e decisoes normativas da SPEC/PLAN. As Policies foram consideradas para autoridade, revalidacao de hashes e limites de ambiente/release; os registries confirmam que owners sao governanca conceitual e nao autoridade runtime inferida.
+
+Dependencias SPEC1 consultadas em leitura: `gap_handling.py`, `provenance.py`, `analysis_lifecycle.py`, `document_publisher.py`, `document_recovery.py`, `document_search.py`, `document_catalog.py`, `document_format.py`, `workspace_resolver.py`, `workspace_probe.py`, `rickcraft_root.py`. Suas APIs existentes separam avaliacao de conflito/continuidade, observacao de proveniencia e persistencia/publicacao/recovery/search explicitas. Os hashes SHA-256 UTF-8 estrito foram confirmados nesta execucao; em ordem de arquivos, foram: `gap_handling.py` `EC86AD2290C98C7AA76EEAABE5745A06B3B31D779180C173ADD59A6DB308366A`; `provenance.py` `ACEFF2AE342A53DA36DD60D702B78264DDCED9C59998B079FBE9E2880F2DFCE9`; `analysis_lifecycle.py` `C37ED2FC9E1F947C68AA0C0C9911AF90FF8EE914158D23779C7A87167EEF2C66`; `document_publisher.py` `56E4F43040890875953F44310C8318B226C69EF22AB39F7127CBBE26F30775FA`; `document_recovery.py` `22FC472830DC934392D08D22D23DA1654ADD1E61835D95BADC0B221CC3203FC4`; `document_search.py` `0D2D2A2729DFDD5FC840DDF182AC7BE65CFB778D69429172475B886FA58EA63D`; `document_catalog.py` `7FE3206000E542DEBD4FEA7C369528C1795C50BBAF3A5FDCD4EF891E2CF3D687`; `document_format.py` `22431216DB075EEC65D9960149530C19D23C2FD710205BBC8A0BA348095C0BC7`; `workspace_resolver.py` `634DF3E3ABEABEA358EAAD9911928EDE71A87789D4EC0B87A6C6192599159C5A`; `workspace_probe.py` `696F8EE363BDDB93D8F4A1BD26148DA50A33DCC1513C6F08A2544F34D4DB09E0`; `rickcraft_root.py` `990BF4A64535F55C879FB9958F743BF2923C778AC474843FF227266CAFD56EDF`. SPEC1 nao requer mudanca por causa desta correcao de ordenacao de claims.
+
+### Analise especial D-06 / D-09 / D-14 / §6 / §9
+
+- D-06 define claim com afirmacao, alvo/versao, estado e evidencia. `version_ref` como componente da identidade canonica preserva dado substantivo definido pelo proprio contrato.
+- D-09 e §6 requerem claims observados associados a base e candidata para preservacao positiva (ou comparacao explicitamente identificada, nos limites descritos). Com chave `(target_ref, version_ref, status_rank, claim)`, claims de mesmo alvo/estado/assertion para `base-1` e `candidate-1` coexistem com chaves distintas; versao ausente permanece `None`, nao inferida, e difere de versao presente.
+- `EXECUTED_OBSERVED` continua exigindo evidencia compativel; o ajuste de chave nao transforma historico, relato, inferencia, ausencia de erro ou claim sem evidencia em prova positiva. Evidencia de comparacao explicitamente identificada permanece caminho alternativo sujeito aos requisitos materiais do §6; nao e inferida pela chave.
+- D-14 e §9 agora concordam nas quatro chaves: evidence `(kind, source_ref, version_ref, locator)`; claims `(target_ref, version_ref, status_rank, claim)`; findings `(scope_id, dimension_rank, normative_reference, condition.casefold(), condition)`; blockers `(scope_id, reason_code, dependency_id)`. Evidence nao e desempate de claim. Mesma chave completa com conteudo substantivo divergente permanece ambigua e deve ser rejeitada/bloqueada. Versao distinta nao colide. Nao ha chave secundaria arbitraria.
+- A sequencia normativa de estados esta declarada no contrato D-06 (`EXECUTED_OBSERVED`, `HISTORICAL_IDENTIFIED`, `NOT_EXECUTED`, `UNAVAILABLE`, `INCONCLUSIVE`); portanto `status_rank` e rank pela posicao nessa sequencia declarada, nao ordenacao lexical, locale ou pelo texto de `.value`.
+- §9 nao preserva formulacao contraditoria: repete explicitamente a chave de claims corrigida e deixa intactas as demais chaves e a regra de preservar identidade textual.
+
+Conclusao desta verificacao: a correcao resolve a colisao artificial base/candidata identificada na execucao bloqueada de TASK-012, mantendo a regra de ambiguidade para empate na chave completa e sem relaxar evidencias, grants ou limites de conclusao.
+
+### TASK-007 / TASK-009 / TASK-010 e suficiência de TASK-012
+
+TASK-007 continua coerente: ChangeProposal/BehaviorAssessment identificam base, candidata, contrato/casos e claims; preservation positive ainda depende de observacao/evidencia e continua limitada ao que foi verificado. Versoes distintas agora sao representaveis simultaneamente. TASK-009 recebe/agrega claims de proposta/comparacao conforme os modelos do PLAN; a chave revisada nao infere equivalencia nem altera pipeline semantico. TASK-010 persiste resultado ja avaliado via APIs SPEC1 existentes; ordenar claims por chave ampliada nao muda schema, catalogo, publisher, provenance, recovery ou search.
+
+TASK-012 continua suficiente sem decomposicao nova: seu objetivo e cobrir integralmente D-14 e estabilidade estrutural; o trabalho nomeia claims e empates; os testes exigem ordenacao e ties para cada colecao; e a regressao cobre TASKS-001–011. A chave atualizada fornece regra implementavel/testavel dentro dessa tarefa existente. A linha historica de hash do PLAN no cabecalho das TASKS nao foi tratada como nova exigencia normativa: a entrada aprovada para este gate e a versao exata do PLAN registrada acima, e a matriz/decomposicao vigente continua cobrindo a decisao revisada.
+
+### Matriz RF-001–RF-021 → PLAN
+
+Todos SATISFIED; sem GAP/CONFLICT identificado. Mapeamentos e limites examinados:
+
+| RF | Decisao/secao | Resultado |
+|---|---|---|
+| RF-001 | D-02/D-14; §§4.1, 5, 8 | SATISFIED — request/escopo explicitos |
+| RF-002 | D-06/D-10; §§4.4, 5, 9 | SATISFIED — classe/origem de evidence preservadas |
+| RF-003 | D-01/D-05/D-07; §§2, 5 | SATISFIED — analise precede recomendacao |
+| RF-004 | D-03/D-09; §§4.1, 5, 6 | SATISFIED — grants separados e Core nao edita |
+| RF-005 | D-03/D-11; §§5, 7 | SATISFIED — review-only nao executa mudanca |
+| RF-006 | D-11; §§4.4, 9 | SATISFIED — tres blocos canonicos |
+| RF-007 | D-07; §4.4 | SATISFIED — finding rastreavel |
+| RF-008 | D-07/D-09; §§4.4, 6 | SATISFIED — mudanca fundamentada |
+| RF-009 | D-06/D-10; §§4.4, 10 | SATISFIED — claim/evidence identificaveis |
+| RF-010 | D-04/D-06/D-13; §§4.2, 8 | SATISFIED — ausencia nao inventada |
+| RF-011 | D-04/D-08; §§4.2, 5 | SATISFIED — autoridade explicita |
+| RF-012 | D-05; §§2.1, 4.3 | SATISFIED — fronteira especializada |
+| RF-013 | D-04/D-08; §§4.2, 5, 8 | SATISFIED — conflito sem precedencia preservado |
+| RF-014 | D-08/D-13; §§5, 8 | SATISFIED — continuidade SPEC1 reutilizada |
+| RF-015 | D-01/D-11; §§1, 5, 10 | SATISFIED — proporcionalidade |
+| RF-016 | D-03/D-12/D-15; §§4.1, 7, 9 | SATISFIED — persistencia opt-in e sem externalidade |
+| RF-017 | D-02/D-11/D-15; §4.1, 9 | SATISFIED — idioma preservado, sem traducao automatica |
+| RF-018 | D-05; §§4.3, 10 | SATISFIED — aplicabilidade sem apropriar autoridade |
+| RF-019 | D-09; §6 | SATISFIED — preservacao exige base/candidata e prova delimitada |
+| RF-020 | D-10; §§4.4, 5 | SATISFIED — conclusao limitada por escopo/fonte/versao/evidence |
+| RF-021 | D-12; §7 | SATISFIED — continuidade alinhada a SPEC1 |
+
+### Matriz CA-001–CA-021
+
+Todos SATISFIED: existe estrategia testavel coerente no PLAN e alocacao nas TASKS. Pontos de atencao revalidados: CA-002 distingue classes de evidence; CA-008 exige justificativa vinculada; CA-009 testa claim com versao/evidence compativeis; CA-019 exige contrato, base/candidata e claims verificaveis e recusa historico/boolean isolado; CA-020 limita conclusao a classe/versao; CA-017 preserva idioma sem traducao automatica. O rank dos estados e derivavel da sequencia de estados declarada em D-06. Sem GAP/CONFLICT.
+
+| CA | Resultado | CA | Resultado | CA | Resultado |
+|---|---|---|---|---|---|
+| CA-001 | SATISFIED | CA-008 | SATISFIED | CA-015 | SATISFIED |
+| CA-002 | SATISFIED | CA-009 | SATISFIED | CA-016 | SATISFIED |
+| CA-003 | SATISFIED | CA-010 | SATISFIED | CA-017 | SATISFIED |
+| CA-004 | SATISFIED | CA-011 | SATISFIED | CA-018 | SATISFIED |
+| CA-005 | SATISFIED | CA-012 | SATISFIED | CA-019 | SATISFIED |
+| CA-006 | SATISFIED | CA-013 | SATISFIED | CA-020 | SATISFIED |
+| CA-007 | SATISFIED | CA-014 | SATISFIED | CA-021 | SATISFIED |
+
+### Matriz D-01–D-15 → TASKS
+
+Todas as decisoes possuem cobertura vigente; D-06 continua em TASK-003/009/012; D-09 em TASK-007/009; D-14 em TASK-005/008/012/013. Em particular, TASK-012 cobre colecao `claims`, empates, teste de cada chave, clock e regressao estrutural. Nao e necessaria alteracao de TASKS.
+
+| Decisao | TASKS que cobrem | Resultado |
+|---|---|---|
+| D-01 | 009, 013 | SATISFIED |
+| D-02 | 001, 009, 013 | SATISFIED |
+| D-03 | 001, 011, 013 | SATISFIED |
+| D-04 | 002, 006, 013 | SATISFIED |
+| D-05 | 004, 009, 013 | SATISFIED |
+| D-06 | 003, 009, 012, 013 | SATISFIED |
+| D-07 | 005, 009, 013 | SATISFIED |
+| D-08 | 006, 009, 013 | SATISFIED |
+| D-09 | 007, 009, 013 | SATISFIED |
+| D-10 | 005, 009, 013 | SATISFIED |
+| D-11 | 008, 009, 013 | SATISFIED |
+| D-12 | 010, 013 | SATISFIED |
+| D-13 | 006, 009, 013 | SATISFIED |
+| D-14 | 005, 008, 012, 013 | SATISFIED — TASK-012 abrange claim key e ties |
+| D-15 | 008, 011, 013 | SATISFIED |
+
+### Cenários A–O
+
+Todos SATISFIED pela validacao cruzada da estrategia declarada no PLAN §14, ligacoes para CA/TASK e requisitos subjacentes: A review-only; B evidence insuficiente; C mudanca autorizada; D owner especializado; E conflito; F continuidade; G alegacao de validacao; H pedido amplo limitado; I recomendacao sem necessidade; J continuidade/persistencia; K externalidade/Release; L Pattern sem fundamento; M preservacao comportamental; N revisao parcial; O verificacao nao executada. Em M, base e candidata estao explicitamente representadas por claims de versoes distintas; nenhum cenario permite extrapolar evidencia aos casos nao observados. Nenhuma lacuna de cobertura introduzida pela alteracao D-14.
+
+### Achados, resultado e limites
+
+Achados bloqueantes: nenhum. A correcao aprovada resolve a incompatibilidade demonstrada entre D-14 antigo e D-06/D-09/§6. SPEC permanece inalterada; TASKS nao requer revisao; SPEC1 permanece read-only e nao exige mudanca. Resultado deste gate: **PASS**, aguardando revisao externa. Este PASS vale exclusivamente para as entradas:
+
+- SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`;
+- PLAN `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`;
+- TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+
+Nenhum teste de implementacao foi executado. Este ANALYZE nao aprova retomada automatica: TASK-012 continua administrativamente BLOQUEADA ate publicacao deste status, revisao externa do gate e autorizacao explicita separada. TASK-013 nao iniciada; IMPLEMENT nao avanca; CONVERGE = NOT_STARTED; Release nao autorizado.
+
+### CHECKPOINT RICKCRAFT
+
+**Fase:** ANALYZE — `ANALYZE-2026-10-12-SPEC-0000000002-02`.
+
+**Objetivo:** revalidar SPEC/PLAN/TASKS apos a correcao normativa de D-14.
+
+**Estado:** PASS — aguardando revisao externa.
+
+**Versoes analisadas:** SPEC `F43B54ACBC1C6D7F4A2B1F9647E9FCBB7D46EE788C5D35E875CC5C0BC04AEFAC`; PLAN `6EDDC05AF0427A957DAD49E8E647BE650E79E14B4900D452B7F862C311C0BDA1`; TASKS `4C40D81D5B013FAA9462F0FA4F68F6160F6FB6CED991582DB19B30642A97A172`.
+
+**D-14:** `(target_ref, version_ref, status_rank, claim)` coerente com D-06/D-09/§6/§9; evidence fora da chave de claim; status rank pela sequencia declarada; mesma chave integral com conteudo diferente segue ambigua.
+
+**Matrizes:** RF-001–RF-021 SATISFIED; CA-001–CA-021 SATISFIED; D-01–D-15 cobertas por TASKS; cenarios A–O satisfeitos. Sem achado bloqueante.
+
+**Arquivos alterados:** somente este `status.md` nesta execucao. SPEC/PLAN/TASKS, runtime, testes e SPEC1 nao foram alterados.
+
+**Testes:** nenhum teste de IMPLEMENT executado, conforme o escopo ANALYZE.
+
+**Proximo passo:** publicar manualmente somente `status.md` e informar exatamente `Atualizei o GitHub do RickCraft.` para revisao externa do gate. Mesmo apos a revisao, nao retomar TASK-012 sem autorizacao explicita separada.
+
+**Nao fazer:** nao retomar TASK-012; nao iniciar TASK-013; nao executar CONVERGE; nao gerar Release; nao fazer push pelo Codex.
+
+### HANDOFF PARA REVISAO — RICKCRAFT
+
+**Fase/ID:** ANALYZE — `ANALYZE-2026-10-12-SPEC-0000000002-02`.
+
+**Estado:** PASS — aguardando revisao externa.
+
+**Escopo:** validar exclusivamente a consistencia normativa das versoes exatas SPEC/PLAN/TASKS listadas acima apos correcao de D-14.
+
+**Achados:** nenhum bloqueante. A chave version-aware elimina colisao artificial de claims base/candidata; a regra de ambiguity de chave completa permanece; TASK-012 existente cobre a nova chave sem decomposicao adicional.
+
+**Artefato para revisar:** `specs/SPEC-0000000002-protocolo-revisao-tecnica/status.md`.
+
+**Proximo passo proposto:** revisao externa read-only deste gate. TASK-012 permanece bloqueada ate essa revisao e autorizacao explicita separada.

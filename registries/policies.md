@@ -7,6 +7,7 @@
 | `POL-0000000001` | Governança documental | VIGENTE | Documentos normativos e registros controlados | Responsável pelo projeto | Nenhuma | — |
 | `POL-0000000002` | Processo de desenvolvimento orientado por Specification | VIGENTE | Unidades funcionais SDD | Responsável pelo projeto; Decision Owners somente quando delegados | `POL-0000000001` | — |
 | `POL-0000000003` | Ambientes, Runtime, Release e Workspace Operacional | VIGENTE | Ambiente de desenvolvimento, árvore canônica do RickCraft, Release, idioma do runtime e workspace operacional | Responsável pelo projeto | `POL-0000000001`, `POL-0000000002` | — |
+| `POL-0000000004` | Fontes Técnicas de Referência e Base Conceitual | VIGENTE | Base técnica de referência, fontes locais/externas, adaptação conceitual cross-language e rastreabilidade | Responsável pelo projeto | `POL-0000000001`, `POL-0000000002` | — |
 
 ## Regras de manutenção
 

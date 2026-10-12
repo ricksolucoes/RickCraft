@@ -14,6 +14,7 @@ Estabelecer identificação, autoridade, precedência, ciclo de vida e rastreabi
 - **Policy:** regra normativa obrigatória do projeto.
 - **Registry:** registro controlado por uma ou mais Policies; não cria regra normativa por si só.
 - **Specification:** descreve requisitos e comportamento de uma unidade funcional. Uma Specification funcional deve possuir sua própria unidade SDD.
+- **Technical Reference / Referência Técnica:** fonte de conhecimento técnico controlada e identificada persistentemente por Registry. Não se converte automaticamente em Policy; exemplos não criam obrigações por sua mera presença. Princípios técnicos podem fundamentar decisões do domínio competente, subordinados a regras normativas explícitas do RickCraft. A adoção, alteração ou retirada deve ser rastreável conforme POL-0000000004.
 
 Um documento só deve ser criado quando houver necessidade identificada e autoridade para defini-lo. Exemplos e hipóteses não se tornam regras sem aprovação explícita.
 

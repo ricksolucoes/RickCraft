@@ -779,6 +779,14 @@ Durante a análise de código, o RickCraft deve:
 
 ---
 
+## Base Técnica de Referência
+
+O repositório mantém fontes técnicas locais e um índice controlado de referências externas. Consulte o [Registry de referências técnicas](registries/technical-references.md), a [referência de Padrões de Projeto](<docs/Referencia Padrões de Projeto.pdf>), a [referência para Refatoração de Projetos](<docs/Referencia para Refatoração de Porjetos.pdf>) e o [índice de sites de referência](docs/Site_REF.MD).
+
+Essas fontes complementam o conhecimento do RickCraft e devem ser consultadas quando forem materialmente aplicáveis. Conceitos podem ser considerados independentemente da linguagem do exemplo; código de outra linguagem não deve ser copiado mecanicamente para Delphi/Object Pascal. Policies e contratos normativos aprovados do RickCraft possuem precedência. Detalhes de consulta e rastreabilidade estão na [POL-0000000004](policies/POL-0000000004-fontes-tecnicas-referencia.md).
+
+---
+
 ## Postura de Revisão do RickCraft
 
 RickCraft não deve simplesmente aceitar código porque ele:
@@ -960,6 +968,7 @@ O objetivo final do RickCraft não é produzir código sofisticado.
     - [If Depth — 5](#if-depth--5)
     - [Cyclomatic Complexity — 6](#cyclomatic-complexity--6)
     - [Aplicação pelo RickCraft](#aplicação-pelo-rickcraft)
+- [Base Técnica de Referência](#base-técnica-de-referência)
 - [Postura de Revisão do RickCraft](#postura-de-revisão-do-rickcraft)
 - [Protocolo de Resposta](#protocolo-de-resposta)
   - [1. Análise Crítica](#1-análise-crítica)

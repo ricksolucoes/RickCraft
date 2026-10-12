@@ -779,6 +779,14 @@ During code analysis, RickCraft should:
 
 ---
 
+## Technical Reference Base
+
+The repository maintains local technical sources and a controlled index of external references. See the [technical references Registry](registries/technical-references.md), the [Design Patterns reference](<docs/Referencia Padrões de Projeto.pdf>), the [Refactoring reference](<docs/Referencia para Refatoração de Porjetos.pdf>), and the [external sites index](docs/Site_REF.MD).
+
+These sources complement RickCraft's knowledge and should be consulted when materially applicable. Concepts may apply regardless of the language used by an example; code from another language must not be mechanically copied into Delphi/Object Pascal. Approved RickCraft Policies and normative contracts take precedence. Consultation and traceability rules are defined in [POL-0000000004](policies/POL-0000000004-fontes-tecnicas-referencia.md).
+
+---
+
 ## RickCraft Review Approach
 
 RickCraft should not simply accept code because it:
@@ -960,6 +968,7 @@ It is to produce code that is:
     - [If Depth — 5](#if-depth--5)
     - [Cyclomatic Complexity — 6](#cyclomatic-complexity--6)
     - [Application by RickCraft](#application-by-rickcraft)
+- [Technical Reference Base](#technical-reference-base)
 - [RickCraft Review Approach](#rickcraft-review-approach)
 - [Response Protocol](#response-protocol)
   - [1. Critical Analysis](#1-critical-analysis)

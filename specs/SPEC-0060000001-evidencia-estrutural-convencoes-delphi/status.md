@@ -69,3 +69,22 @@ A referência `New` na matriz foi corrigida para `RF-008; CA-018; cenário P`; C
 REF-0000000001–0000000003 permanecem não materiais; nenhum PDF ou conteúdo externo foi consultado. Nenhum gate foi criado ou executado. SPEC retorna a `COMPLETE — aguardando nova revisão externa`; PLAN, TASKS, ANALYZE, IMPLEMENT e CONVERGE continuam `NOT_STARTED`. Release permanece não autorizado.
 
 SHA-256 UTF-8 estrito de `spec.md` após a correção: `62251E2D0533F2AFA31D0B56928F1F7F69DC1E72D3EC52BB17B23513696D7962`.
+
+
+## Aprovação da SPEC e início de PLAN — 2026-10-12
+
+A revisão externa aprovou `SPEC-0060000001` sobre a versão publicada de `spec.md`, SHA-256 `62251E2D0533F2AFA31D0B56928F1F7F69DC1E72D3EC52BB17B23513696D7962` (Git blob `13fdb7aa0324b08bd145b69d0e7d844ff6d1c534`). SPEC = `COMPLETE ? APROVADA` para essa identidade.
+
+A autorização recebida cobre exclusivamente PLAN. PLAN passa a `IN_PROGRESS`; TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem `NOT_STARTED`. Esta aprovação não é ANALYZE PASS nem autoriza etapas posteriores ou Release.
+
+## Conclusão do PLAN — 2026-10-12
+
+Para evitar ambiguidade de leitura do registro anterior, a aprovação externa da SPEC-0060000001 significa `APPROVED` para a versão de `spec.md` SHA-256 `62251E2D0533F2AFA31D0B56928F1F7F69DC1E72D3EC52BB17B23513696D7962` (blob `13fdb7aa0324b08bd145b69d0e7d844ff6d1c534`). A autorização cobriu somente PLAN; não foi ANALYZE PASS nem autorização de etapa posterior.
+
+O PLAN foi elaborado e revisado internamente contra a SPEC aprovada, Policies, Registry do grupo 006 e contratos pertinentes das SPEC1/SPEC2. A arquitetura escolhida usa Python 3.12+ e stdlib, tokenizer controlado e reconhecimento estrutural parcial, com resultados limitados para sintaxe/contexto não suportados. Não escolhe parser externo, não implementa gramática completa, não duplica contratos Core, não executa código e não tem efeitos de filesystem/rede/persistência.
+
+A integração entrega observações/evidências Delphi aos contratos existentes da SPEC-0000000002; o Core mantém agregação, authority, precedence, renderização e persistência. SPEC1 não é invocada por esta unidade read-only. Method Toxicity permanece uma fronteira: a unidade não mede Function Length, Parameter Count, If Depth ou Cyclomatic Complexity; pode somente relacionar evidência fornecida por reviewer/Guard autorizado e acrescentar fatos Delphi pertinentes. Clean Code conserva a interpretação qualitativa.
+
+As matrizes do PLAN cobrem RF-001–RF-018, CA-001–CA-021 e Cenários A–P por decisão e estratégia de validação futura. REF-0000000001–0000000003 permanecem não materiais; não foram consultadas. Nenhum teste, código, build, gate ou Release foi executado ou criado.
+
+PLAN = `COMPLETE — aguardando revisão externa`, sobre `plan.md` SHA-256 `4F0A986BCFF38DE67AE3EAFE8E303FF08DB59AA855C0514E2436880EB783587E`. Isso não significa aprovação externa. Etapa atual = PLAN. SPEC = `COMPLETE — APROVADA` para a identidade indicada acima. TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem `NOT_STARTED`; último gate válido = nenhum; Release = `NÃO AUTORIZADO`.

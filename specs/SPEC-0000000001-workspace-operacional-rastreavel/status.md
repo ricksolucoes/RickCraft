@@ -1759,3 +1759,14 @@ Esta seção esclarece a leitura do estado efetivo sem alterar os registros hist
 Esta clarificação não invalida SPEC-0000000002. CONVERGE-02 da SPEC1 foi publicado antes da elaboração e aprovação das etapas dependentes da SPEC2; o PLAN da SPEC2 declara dependência em SPEC1 convergida; e nenhum contrato, implementação ou teste da SPEC1 mudou após CONVERGE-02. Esta alteração apenas torna explícita a ordem cronológica já registrada.
 
 Nenhum artefato da SPEC2 foi alterado. Nenhuma nova SPEC foi criada ou alocada; `SPEC-0060000001` continua não alocada. Release permanece não autorizado.
+
+
+## CORREÇÃO DA CLARIFICAÇÃO — identidade do status.md
+
+A expressão anterior “status.md atual permaneceu byte-idêntico” refere-se ao estado do arquivo imediatamente antes da correção documental publicada em `cc74b6cd565ac8e36b291cebf8cad39f398465e0`. Até essa correção, o blob do arquivo coincidia com `1e9b4714650ea9c945ba97562bb24d7d51b1744b`, produzido no commit `05f7de142e40a915687a382e13b9c509e47dc354`.
+
+Com a adição da clarificação naquele commit, o próprio `status.md` naturalmente deixou de ser byte-idêntico à versão anterior. Isso não modifica nem invalida `CONVERGE-2026-10-11-SPEC-0000000001-02 = CONVERGED`.
+
+Nenhuma evidência técnica, runtime, teste, SPEC, PLAN ou TASKS foi alterado. Esta correção é exclusivamente documental. O estado corrente permanece SPEC = COMPLETE, PLAN = COMPLETE, TASKS = COMPLETE, ANALYZE = PASS, IMPLEMENT = COMPLETE e CONVERGE = CONVERGED; o último gate válido é `CONVERGE-2026-10-11-SPEC-0000000001-02`. CONVERGE-01 e o estado INVALIDATED anterior permanecem históricos. SPEC-0000000002 permanece CONVERGED.
+
+`SPEC-0060000001` ainda não está alocada. Release permanece não autorizado.

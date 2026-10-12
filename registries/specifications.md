@@ -22,3 +22,4 @@ Lacunas nunca são preenchidas retroativamente. Uma alocação consome o ID perm
 |---|---|---|---|---|---|---|
 | `SPEC-0000000001` | `000` | `0000001` | `workspace-operacional-rastreavel` | Workspace Operacional Persistente e Rastreabilidade entre Agents | `specs/SPEC-0000000001-workspace-operacional-rastreavel/` | 2026-10-10 |
 | `SPEC-0000000002` | `000` | `0000002` | `protocolo-revisao-tecnica` | Protocolo de Revisão Técnica, Escopo e Resposta do RickCraft | `specs/SPEC-0000000002-protocolo-revisao-tecnica/` | 2026-10-11 |
+| `SPEC-0060000001` | `006` | `0000001` | `evidencia-estrutural-convencoes-delphi` | Evidência Estrutural e Convenções Delphi/Object Pascal | `specs/SPEC-0060000001-evidencia-estrutural-convencoes-delphi/` | 2026-10-12 |

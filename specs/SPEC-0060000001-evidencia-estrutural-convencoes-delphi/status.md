@@ -53,3 +53,19 @@ REF-0000000001, REF-0000000002 e REF-0000000003 foram considerados não materiai
 Foi criada a Specification funcional read-only para observações rastreáveis Delphi/Object Pascal, verificações objetivas e encaminhamento de interpretações/decisões ao owner competente. A revisão interna conferiu limites de autoridade, rastreabilidade das famílias de regras Delphi identificadas, critérios verificáveis, compatibilidade conceitual com SPEC2 e ausência de decisões de implementação.
 
 SPEC fica `COMPLETE — aguardando revisão externa`. PLAN, TASKS, ANALYZE, IMPLEMENT e CONVERGE permanecem `NOT_STARTED`. Nenhum teste, gate, código ou Release foi executado ou criado.
+
+
+## Correção da SPEC após revisão externa — 2026-10-12
+
+A correção partiu da baseline publicada `a166626a331b33e16e14b7f177025e841a2abe0c`; Registry, SPEC e status correspondiam às identidades confirmadas antes da edição. A primeira versão da SPEC (SHA-256 `153959624CC41A2F018AF4353FC114AA4DC9A9C6088B10129F31463CAF7A20D2`) foi revisada externamente e **NÃO APROVADA**. Foram registrados:
+
+- `SPEC006-REV-001` — bloqueante: RF-010, CA-017, Cenário O e a rastreabilidade atribuiam indevidamente ao grupo 006 a medição das quatro Method Toxicity Metrics.
+- `SPEC006-REV-002` — editorial/rastreabilidade: a linha de `New` associava incorretamente CA-021.
+
+A correção da fase SPEC preservou o ID e o Registry. RF-010, CA-017 e Cenário O agora definem que reviewer autorizado ou Guard competente fornece a medição; a unidade Delphi pode relacionar a evidência fornecida e acrescentar fatos Delphi pertinentes, mas não mede nem assume propriedade dessa verificação. Clean Code conserva a interpretação qualitativa e a decisão de remediação. Engenharia Delphi só trata questão material de linguagem/configuração dentro de sua competência. A família permanece na matriz como fronteira rastreada, não como capacidade de medição proprietária do grupo 006.
+
+A referência `New` na matriz foi corrigida para `RF-008; CA-018; cenário P`; CA-021 não é associada a `New`. A revisão adicional confirmou preservadas as fronteiras de prefixos/nomes, constantes, `SCOPEDENUMS`, contratos de interface aprovados, necessidade de interfaces, `New`, `[weak]`, SOLID, Patterns, Clean Code, Quality/Audit e Core. Nenhuma decisão de PLAN foi introduzida.
+
+REF-0000000001–0000000003 permanecem não materiais; nenhum PDF ou conteúdo externo foi consultado. Nenhum gate foi criado ou executado. SPEC retorna a `COMPLETE — aguardando nova revisão externa`; PLAN, TASKS, ANALYZE, IMPLEMENT e CONVERGE continuam `NOT_STARTED`. Release permanece não autorizado.
+
+SHA-256 UTF-8 estrito de `spec.md` após a correção: `62251E2D0533F2AFA31D0B56928F1F7F69DC1E72D3EC52BB17B23513696D7962`.

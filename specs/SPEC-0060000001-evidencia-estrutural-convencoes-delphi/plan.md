@@ -36,8 +36,8 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** Expressões regulares isoladas confundem tokens em comentários/strings e não resolvem com segurança diretivas, escopos e declarações; parser completo excede a necessidade.
 - **Alternativas:** Regex por arquivo; lexer completo Delphi; parser completo/AST; tokenizer controlado com reconhecedores parciais; compilador externo.
-- **Decisão:** Usar tokenizer manual e limitado que preserve offsets e classifique identificadores, pontuação, strings, comentários e diretivas; sobre seus tokens, reconhecer somente as formas estruturais enumeradas em D-03. A representação sintática intermediária conterá apenas declarações e relações necessárias às regras desta SPEC.
-- **Justificativa:** Separar lexicalmente comentários, strings e diretivas é necessário para evitar falsos reconhecimentos. Reconhecedores parciais são proporcionais às regras cobertas; não se afirma suporte à gramática integral.
+- **Decisão candidata:** Usar tokenizer manual e limitado que preserve offsets e classifique identificadores, pontuação, strings, comentários e diretivas; sobre seus tokens, reconhecer somente as formas estruturais enumeradas em D-03. A representação sintática intermediária conterá apenas declarações e relações necessárias às regras desta SPEC. As regras normativas RickCraft a verificar já vêm das fontes internas; `DEP-DEL-001` fundamenta como separar corretamente o texto segundo a linguagem, não quais convenções RickCraft aplicar.
+- **Justificativa:** Separar lexicalmente comentários, strings e diretivas é necessário para evitar falsos reconhecimentos. Reconhecedores parciais são proporcionais às regras cobertas; não se afirma suporte à gramática integral. A referência técnica fundamentará elementos lexicais Delphi, sem alterar as regras RickCraft.
 - **Impacto:** Não suportar sintaxe relevante resulta em `UNSUPPORTED_CONSTRUCTION` ou `INSUFFICIENT_CONTEXT`, nunca em conformidade presumida. Nenhuma biblioteca ou gramática externa fica implícita.
 - **RF/CA:** RF-003–009, RF-011–018; CA-002–009, CA-012, CA-014–015, CA-018, CA-021.
 - **Dependências/owner:** Somente stdlib. Delphi Engineering define a interpretação das formas linguísticas suportadas.
@@ -46,7 +46,7 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** Definir a menor superfície de código necessária sem fingir análise geral de Delphi.
 - **Alternativas:** Gramática completa; reconhecimento sem tipos estruturais; subconjunto declarado com falha segura.
-- **Decisão:** Reconhecer, quando a sintaxe estiver dentro do subconjunto suportado:
+- **Decisão candidata:** Reconhecer, quando a sintaxe estiver dentro do subconjunto suportado e tecnicamente fundamentado:
   - unidade/artefato fornecido e suas declarações de `type`, `const` e `var`;
   - classes, interfaces, classes que declaram implementar interfaces e suas seções de visibilidade;
   - campos, parâmetros, variáveis locais e constantes, com categoria estrutural necessária às convenções;
@@ -57,7 +57,7 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
   - atributos como `[weak]` associados a uma declaração;
   - comentário, string e diretiva como regiões lexicais, sem tratá-los como código executável ou declaração.
 
-  Corpos de métodos só serão percorridos na extensão estritamente necessária para localizar declarações locais ou reconhecer referências qualificadas. Não serão analisados para julgamento de qualidade nem para medir Function Length, Parameter Count, If Depth ou Cyclomatic Complexity.
+-  Corpos de métodos só serão percorridos na extensão estritamente necessária para localizar declarações locais ou reconhecer referências qualificadas. Não serão analisados para julgamento de qualidade nem para medir Function Length, Parameter Count, If Depth ou Cyclomatic Complexity. Uma fonte Delphi futura pode fundamentar o reconhecimento dessas formas, mas não amplia por si só o subconjunto autorizado por SPEC/PLAN nem altera regras RickCraft.
 - **Justificativa:** A superfície corresponde às famílias rastreadas pela SPEC e não incorpora gramática ou métrica alheia à unidade.
 - **Impacto:** Construções condicionais/geradas ou sintaxe não reconhecida que alterem o resultado geram limitação. Implementação futura não pode ampliar silenciosamente a superfície.
 - **RF/CA:** RF-004–012, RF-017–018; CA-004–009, CA-012, CA-014–015, CA-017–018, CA-021.
@@ -67,8 +67,8 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** Diretivas condicionais, macros e configuração podem mudar a estrutura efetivamente compilada.
 - **Alternativas:** Ignorá-las sem sinalização; implementar pré-processador completo; receber contexto e reconhecer diretivas simples, limitando expressões não resolvidas.
-- **Decisão:** Registrar diretivas vistas e manter o estado lexical de `SCOPEDENUMS ON/OFF` somente quando a sequência for explícita e incondicional no texto fornecido. Não executar diretivas, includes ou comandos. Não avaliar expressões arbitrárias de compilação, includes, macros nem configuração externa. Se condicionais puderem alterar a conclusão, exigir contexto resolvido fornecido ou retornar resultado limitado.
-- **Justificativa:** Evita inventar a configuração efetiva e impede que texto analisado cause efeitos.
+- **Decisão candidata:** Registrar diretivas vistas e manter o estado técnico de `SCOPEDENUMS ON/OFF` somente quando sua sintaxe, região e sequência forem reconhecíveis com base Delphi rastreável e estiverem explícitas no texto fornecido. A aplicabilidade normativa de `SCOPEDENUMS` continua definida pelas fontes internas RickCraft. Não executar diretivas, includes ou comandos; não avaliar expressões arbitrárias de compilação, includes, macros nem configuração externa. Se condicionais puderem alterar a conclusão, exigir contexto resolvido fornecido ou retornar resultado limitado.
+- **Justificativa:** Evita inventar a configuração efetiva e impede que texto analisado cause efeitos. A fonte técnica explica reconhecimento/efeitos da linguagem, não cria nem altera a norma RickCraft.
 - **Impacto:** O resultado descreve o texto/contexto fornecido, não certifica a configuração compilada.
 - **RF/CA:** RF-001, RF-006, RF-011–012, RF-016, RF-018; CA-001, CA-007, CA-012–013, CA-015, CA-020.
 - **Dependências/owner:** Contexto fornecido pelo chamador; interpretação material permanece com Delphi Engineering.
@@ -137,9 +137,9 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** “Único” não pode ser alegado sobre projeto ou universo não examinado.
 - **Alternativas:** Alegar unicidade global; validar formato somente; verificar formato e duplicatas em todos os contratos fornecidos e completamente reconhecidos.
-- **Decisão candidata:** A SPEC exige GUID válido e único. Procurar duplicatas somente entre declarações de interface completas, reconhecidas e fornecidas dentro do escopo autorizado da mesma avaliação; identificar esse universo e nunca alegar unicidade mais ampla. O critério técnico para validade sintática do GUID não está suficientemente definido nas fontes internas e depende de fonte técnica Delphi/Object Pascal adequada. Até resolver `DEP-DEL-001`, esta parte da decisão permanece bloqueada; não definir a sintaxe com base em conhecimento implícito.
+- **Decisão candidata:** A regra normativa RickCraft de que interfaces devem possuir GUID válido e único não está bloqueada. Procurar duplicatas somente entre declarações de interface completas, reconhecidas e fornecidas dentro do escopo autorizado da mesma avaliação; identificar esse universo e nunca alegar unicidade mais ampla. A parte bloqueada por `DEP-DEL-001` é exclusivamente como reconhecer tecnicamente uma representação sintática válida de GUID em Delphi/Object Pascal; não definir essa sintaxe por conhecimento implícito.
 - **Justificativa:** Prova somente o que foi observado.
-- **Impacto:** Não há afirmação de unicidade global do repositório.
+- **Impacto:** Não há afirmação de unicidade global do repositório. A exigência normativa de GUID válido e único permanece vigente; até haver base técnica rastreável, o analisador não pode emitir veredicto automatizado de validade sintática.
 - **RF/CA:** RF-001–003, RF-007, RF-012, RF-018; CA-001–003, CA-008, CA-013, CA-015.
 - **Dependências/owner:** Artefatos autorizados e contrato fornecidos; critério de validade sintática depende de `DEP-DEL-001`.
 
@@ -157,7 +157,7 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** Um atributo demonstrado em exemplo não define solução universal de ownership.
 - **Alternativas:** Tratar presença como finding/regra; ignorar semântica; associar atributo à declaração e fornecer interpretação contextual limitada.
-- **Decisão:** Reconhecer `[weak]` como atributo somente quando associado inequivocamente a declaração suportada. Registrar a ocorrência e, com contexto suficiente, permitir interpretação Delphi do recurso. Não avaliar arquitetura de ownership/lifetime, ciclo ou necessidade do atributo.
+- **Decisão candidata:** Reconhecer `[weak]` como atributo somente quando sua forma e associação a declaração forem fundamentadas tecnicamente e inequívocas. Registrar a ocorrência; esclarecer significado técnico apenas com base Delphi rastreável e contexto suficiente. A fonte interna apresenta `[weak]` em contexto específico, não como regra universal. Não avaliar arquitetura de ownership/lifetime, ciclo ou necessidade do atributo.
 - **Justificativa:** Mantém a distinção entre sintaxe/recurso e desenho arquitetural.
 - **Impacto:** Ausência de contexto de compilador/target quando material resulta em limitação.
 - **RF/CA:** RF-009, RF-011–014; CA-009, CA-012, CA-015.
@@ -177,8 +177,8 @@ O Delphi Engineering Specialist decide questões de sintaxe, semântica, recurso
 
 - **Problema:** Versão/compiler/target/diretivas podem alterar semântica e disponibilidade de construções.
 - **Alternativas:** Detectar automaticamente; assumir versão atual; receber contexto opcional e limitar conclusões dependentes.
-- **Decisão:** Receber como contexto explícito e opcional versão Delphi, compilador, target/plataforma e diretivas/recursos relevantes. Não autodetectar nem assumir valores padrão. A implementação pode derivar somente fatos diretamente presentes no texto fornecido, distinguindo-os de contexto declarado. Se a conclusão depende materialmente de um dado ausente, retornar limitação ou solicitar contexto.
-- **Justificativa:** Preserva evidência e evita compatibilidade inventada.
+- **Decisão candidata:** Receber como contexto explícito e opcional versão Delphi, compilador, target/plataforma e diretivas/recursos relevantes. Não autodetectar nem assumir valores padrão. A implementação pode derivar somente fatos diretamente presentes no texto fornecido, distinguindo-os de contexto declarado. Base Delphi rastreável pode fundamentar diferenças reais de reconhecimento/semântica entre versões ou targets, mas não altera regras RickCraft. Se a conclusão depende materialmente de dado ausente, retornar limitação ou solicitar contexto.
+- **Justificativa:** Preserva evidência e evita compatibilidade inventada; separa variação técnica da linguagem de regra normativa do RickCraft.
 - **Impacto:** Não há promessa de identificar ambiente real de compilação.
 - **RF/CA:** RF-002–003, RF-009, RF-011–012; CA-002–003, CA-009, CA-012, CA-015.
 - **Dependências/owner:** Host fornece contexto; Delphi Engineering interpreta impacto de linguagem.
@@ -256,26 +256,47 @@ Uma limitação aplica-se à conclusão que depende do dado ausente; não amplia
 - **Internas:** nenhuma nova infraestrutura transversal; registros privados de token/span/declaração/observação pertencem ao módulo Delphi.
 - **Externas:** nenhuma biblioteca, toolchain, serviço ou API externa.
 - **Não materiais:** REF-0000000001 (Patterns), REF-0000000002 (Refactoring) e REF-0000000003 (índice externo) permanecem não materiais: decisões aqui são de reconhecimento de linguagem, proveniência e limite de autoridade. Nenhum PDF/site foi consultado.
-- **Pendência bloqueante:** `DEP-DEL-001` — fonte técnica governada Delphi/Object Pascal adequada para fundamentar as regras lexicais, sintáticas e semânticas materiais necessárias ao tokenizer e reconhecimento estrutural. Afeta D-02, D-03, D-04, D-11, D-13 e D-15. A arquitetura permanece candidata, mas essas decisões não têm fundamento técnico rastreável suficiente para alimentar TASKS. Detalhes não podem ser preenchidos por suposição ou conhecimento implícito do modelo.
+- **Pendência bloqueante:** `DEP-DEL-001` — base técnica rastreável da linguagem Delphi/Object Pascal necessária à implementação correta do reconhecimento lexical, sintático e semântico limitado previsto neste PLAN. Afeta D-02, D-03, D-04, D-11, D-13 e D-15. Não bloqueia a existência, autoridade ou aplicabilidade das normas RickCraft já definidas pelas fontes internas. As partes de implementação dependentes não estão fundamentadas tecnicamente o suficiente para alimentar TASKS; detalhes da linguagem não podem ser preenchidos por suposição ou conhecimento implícito do modelo.
 
 ## Dependência técnica bloqueante — referência Delphi/Object Pascal
 
-A revisão externa registrou `PLAN-REV-001 = BLOCKING`: falta uma Technical Reference Delphi/Object Pascal vigente e adequada para decisões técnicas materiais da arquitetura. O desenho não foi rejeitado; permanece proposta candidata até que a base técnica seja resolvida.
+A revisão externa registrou `PLAN-REV-001 = BLOCKING`, com escopo estritamente técnico: falta base técnica rastreável Delphi/Object Pascal para implementar corretamente o reconhecimento de linguagem proposto. O desenho não foi rejeitado; permanece candidato até que a dependência seja resolvida.
 
-Materialidade por decisão:
+### Nível 1 — Norma RickCraft
 
-- **D-02 — Tokenização:** distinguir corretamente comentários, strings, diretivas, identificadores e pontuação exige regras lexicais Delphi não especificadas com suficiência nas fontes internas.
-- **D-03 — Reconhecimento estrutural:** reconhecer classes, interfaces, declarações, parâmetros, atributos, visibilidade e assinaturas exige fundamentação sintática Delphi rastreável.
-- **D-04 — Diretivas:** tratar diretivas, condições e regiões exige conhecimento técnico não substituível por exemplos internos.
-- **D-11 — GUID:** a SPEC exige GUID válido e único; a unicidade continua limitada ao universo fornecido, mas a sintaxe técnica de validade permanece indefinida até haver fonte adequada.
-- **D-13 — `[weak]`:** interpretar sua semântica Delphi exige referência técnica rastreável e contexto suficiente.
-- **D-15 — Compatibilidade:** versões, compiladores, targets e diretivas podem afetar conclusões; fatos específicos de compatibilidade exigem fonte técnica quando usados.
+As fontes internas competentes já definem as regras normativas e sua autoridade. Em particular, `README_PTBr.md`, a SPEC aprovada, o Registry e as Policies estabelecem os prefixos `T`, `I`, `F`, `A` e `L`; formato de constantes; condições normativas de uso de `SCOPEDENUMS`; regras de interfaces e de retorno de `New`; e limites de Method Toxicity. A validade/unicidade de GUID também é requisito RickCraft. Essas regras não dependem de `DEP-DEL-001` para existir, ser válidas ou permanecer aplicáveis. Uma Technical Reference não as substitui nem as redefine.
 
-REF-0000000001 (Design Patterns), REF-0000000002 (Refactoring) e REF-0000000003 (índice externo de Pattern) continuam vigentes para seus domínios, mas não cobrem esta lacuna Delphi. Não são reinterpretadas como referências Delphi nem foram consultadas para tentar resolvê-la.
+Conforme POL-0000000004, Technical Reference informa e fundamenta; não revoga silenciosamente norma vigente. Regra normativa ou decisão competente aplicável prevalece. Conflito material mantém a regra RickCraft aplicável e deve ser tratado conforme a governança; nenhuma referência transfere autoridade.
 
-Enquanto `DEP-DEL-001` estiver aberta, não iniciar TASKS. A implementação não deve substituir a consulta a uma fonte adequada por conhecimento implícito do modelo. A proposta ou adoção de nova Technical Reference requer autorização separada do responsável pelo projeto. Após eventual adoção e consulta, reavaliar somente as decisões materialmente dependentes e atualizar as estratégias de validação afetadas; não reabrir decisões independentes sem motivo.
+### Nível 2 — Reconhecimento técnico da linguagem
 
-As matrizes RF/CA/cenários permanecem como rastreabilidade do trabalho proposto, mas estratégias que dependem de D-02/D-03/D-04/D-11/D-13/D-15 não estão tecnicamente prontas para decomposição em TASKS. A cobertura listada não representa prontidão executável enquanto `DEP-DEL-001` não for resolvida.
+`DEP-DEL-001` — **Base técnica rastreável da linguagem Delphi/Object Pascal necessária à implementação correta do reconhecimento lexical, sintático e semântico limitado previsto pelo PLAN.** Ela não define, valida, substitui ou revisa as regras normativas RickCraft. Uma fonte adequada poderá fundamentar apenas como reconhecer corretamente a representação técnica da linguagem necessária ao subconjunto já aprovado:
+
+- **Léxico:** delimitadores e formas de identificadores, palavras reservadas relevantes, strings/representação de strings, comentários, pontuação, diretivas e atributos.
+- **Estrutura sintática:** classes, interfaces, declarações, parâmetros, campos, variáveis, constantes, enumerações, visibilidade, funções, constructors/destructors, `class function`, tipos de retorno, atributos e GUIDs associados a interfaces.
+- **Diretivas:** sintaxe de diretivas relevantes, comportamento técnico ON/OFF, condicionais e limites de inferência sem pré-processamento completo. A regra RickCraft sobre quando usar `SCOPEDENUMS` continua vindo das fontes internas.
+- **Recursos e compatibilidade:** significado técnico/aplicabilidade de `[weak]` e diferenças de sintaxe/semântica por versão, compilador, target ou plataforma quando material.
+
+A dependência não amplia automaticamente o subconjunto D-03. Qualquer expansão continua sujeita à SPEC, a PLAN revisado e à autorização SDD aplicável.
+
+### Nível 3 — Decisão de domínio
+
+Delphi Engineering decide somente interpretação técnica Delphi dentro de sua competência. Clean Code continua interpretando qualidade/Method Toxicity; Interface Architecture decide necessidade e fronteira de contratos; Design Patterns decide seleção de Patterns; SOLID decide princípios; Quality/Audit decide gates; Core mantém contratos transversais. Nem norma interna nem fonte técnica transfere a propriedade de decisão entre esses owners.
+
+### Decisões materialmente afetadas
+
+- **D-02 — Tokenização:** a norma a verificar já está definida internamente; a fonte Delphi é necessária para separar corretamente comentário/string/diretiva/identificador/pontuação do texto de entrada.
+- **D-03 — Subconjunto estrutural:** as construções necessárias já estão enumeradas no PLAN; fonte Delphi fundamenta sua forma sintática de reconhecimento, sem autorizar ampliar o conjunto.
+- **D-04 — Diretivas:** a regra RickCraft de `SCOPEDENUMS` permanece interna; fonte Delphi esclarece sintaxe, efeito técnico, regiões condicionais e limites sem executar diretivas nem criar regra nova.
+- **D-11 — GUID:** exigir GUID válido e único é norma RickCraft; universo de unicidade continua limitado aos artefatos completos fornecidos. Só o reconhecimento técnico da forma sintática válida depende de base Delphi.
+- **D-13 — `[weak]`:** não é regra universal RickCraft. Fonte Delphi pode esclarecer significado, contexto de aplicação e limitações/versionamento; não decide ownership, lifetime ou adoção universal.
+- **D-15 — Compatibilidade:** os campos de contexto permanecem definidos neste PLAN. Fonte Delphi pode sustentar diferenças técnicas entre versões/compiler/targets quando usadas; não muda convenção RickCraft.
+
+REF-0000000001 (Design Patterns), REF-0000000002 (Refactoring) e REF-0000000003 (índice externo de Pattern) permanecem vigentes em seus domínios originais, mas não cobrem `DEP-DEL-001`. Não são reinterpretadas como referências Delphi nem consultadas nesta execução. Nenhuma fonte Delphi foi selecionada ou adotada; isso exige autorização separada do responsável pelo projeto.
+
+Enquanto `DEP-DEL-001` estiver aberta, não iniciar TASKS. A implementação não deve substituir a consulta técnica rastreável por conhecimento implícito do modelo. Após a resolução autorizada da dependência, reavaliar somente os detalhes de implementação materialmente dependentes; preservar as normas RickCraft já estabelecidas e não reabrir decisões independentes sem motivo.
+
+As matrizes RF/CA/cenários permanecem como rastreabilidade normativa. As estratégias que dependem de D-02/D-03/D-04/D-11/D-13/D-15 não estão prontas para decomposição executável em TASKS enquanto a dependência técnica estiver aberta. Esse bloqueio atinge a implementação técnica do reconhecimento nos casos dependentes, não a autoridade nem a cobertura normativa dos RF/CA da SPEC aprovada.
 
 ## 7. Segurança, determinismo e efeitos
 
